@@ -33,5 +33,5 @@ jobs:
 
       - name: Filter and run script on changed files
         run: |
-          python3 utils/update_requirements.py ${{ steps.changed-files.outputs.list }} ${{ github.secrets.PAT }}
+          python3 utils/update_requirements.py ${{ steps.changed-files.outputs.list }} ${{ secrets.PAT }}
         shell: bash
