@@ -32,6 +32,8 @@ jobs:
             core.setOutput("list", files.join("\n")); // 출력 변수에 변경된 파일 목록을 설정합니다.
 
       - name: Filter and run script on changed files
+        env:
+          PAT: ${{ secrets.PAT }}
         run: |
-          python3 utils/update_requirements.py ${{ steps.changed-files.outputs.list }} ${{ secrets.PAT }}
+          python3 utils/update_requirements.py ${{ steps.changed-files.outputs.list }} "$PAT"
         shell: bash
