@@ -36,4 +36,4 @@
 |                       | SubComment 본인만 수정 | 로그인한 사용자는 자신이 작성한 SubComment만 수정할 수 있다. | 기능 | 2 |
 |                       | SubComment 삭제 | 사용자는 SubComment를 삭제할 수 있다. | 기능 | 1 |
 |                       | SubComment 삭제 권한 | 로그인한 사용자만이 SubComment를 삭제할 수 있다. | 기능 | 1 |
-|                       | SubComment 본인만 삭제 | 로그인한 사용자는 자신이 작성한 SubComment만 삭제할 수 있다. | 기능 | 2 |
+|                       | SubComment 본인만 삭제 | 로그인한 사용자는 자신이 작성한 SubComment만 삭제할 수 있다. | 기능 | 2  |
