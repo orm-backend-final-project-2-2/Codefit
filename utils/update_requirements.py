@@ -45,9 +45,6 @@ def check_label_exist(label_name, owner, repo, token):
         "Authorization": f"token {token}",
         "Accept": "application/vnd.github+json",
     }
-    data = {
-        "name": label_name,
-    }
     response = requests.get(url, headers=headers)
 
     if response.status_code == 200:
@@ -88,9 +85,8 @@ def update_feature_requirements_issue(
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/?labels={labels[0]}"
     response = requests.get(url, headers={"Authorization": f"token {token}"})
 
-    if response.json():
-        print(response.json())
-        issue_id = response.json()[0]["number"]
+    if response.json()["body"]:
+        issue_id = response.json()["body"][0]["id"]
         update_issue(issue_id, issue_body, owner, repo, token)
     else:
         create_new_issue(issue_title, issue_body, labels, owner, repo, token)
