@@ -128,17 +128,24 @@ def update_app_requirements(app_name, req_file):
 
 
 def update_requirements(raw_changed_files):
-    changed_req_files = [
-        file
-        for file in raw_changed_files.split("\n")
-        if file.endswith("_requirements.md")
-    ]
+    changed_files = []
+
+    # 파일 읽기 및 조건에 맞는 파일 찾기
+    with open(raw_changed_files, "r") as f:
+        for line in f:  # 파일을 직접 순회합니다.
+            file = line.strip()  # 각 줄의 앞뒤 공백과 줄바꿈 문자 제거
+            if file.endswith("_requirements.md"):
+                changed_files.append(file)
+                print(f"Found requirements file: {file}")
 
     req_file_pattern = re.compile(r"docs/requirements/(.*)_requirements.md")
 
-    for req_file in changed_req_files:
-        app_name = req_file_pattern.search(req_file).group(1)
-        update_app_requirements(app_name, req_file)
+    # 찾은 파일에 대해 처리 수행
+    for req_file in changed_files:
+        match = req_file_pattern.search(req_file)
+        if match:
+            app_name = match.group(1)
+            update_app_requirements(app_name, req_file)
 
 
 raw_changed_files = sys.argv[1]
