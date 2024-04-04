@@ -89,6 +89,7 @@ def update_feature_requirements_issue(
     response = requests.get(url, headers={"Authorization": f"token {token}"})
 
     if response.json():
+        print(response.json())
         issue_id = response.json()[0]["number"]
         update_issue(issue_id, issue_body, owner, repo, token)
     else:
