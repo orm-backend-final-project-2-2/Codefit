@@ -1,4 +1,4 @@
-# Exercise Info Requirements
+# Exercises Info Requirements
 
 | Feature          | Name                          | Description                                                                         | Functional | Priority |
 |------------------|-------------------------------|-------------------------------------------------------------------------------------|------------|----------|
