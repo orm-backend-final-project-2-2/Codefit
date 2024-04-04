@@ -3,7 +3,7 @@ name: Update Requirements Changes
 on:
   push:
     paths:
-      - 'docs/requirements/**'
+      - 'docs/requirements/34**'
 
 jobs:
   process-changed-files:
