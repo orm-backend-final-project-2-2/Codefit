@@ -18,6 +18,21 @@ class MyHealthInfoView(APIView):
 
         return Response(serializer.data)
 
+    def post(self, request):
+        user = request.user
+
+        age = request.data.get("age")
+        height = request.data.get("height")
+        weight = request.data.get("weight")
+
+        health_info = HealthInfo.objects.create(
+            user=user, age=age, height=height, weight=weight
+        )
+
+        serializer = HealthInfoSerializer(health_info)
+
+        return Response(serializer.data, status=201)
+
 
 class MyHealthInfoLastView(APIView):
     def get(self, request):
