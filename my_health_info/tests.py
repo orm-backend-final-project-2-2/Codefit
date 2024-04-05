@@ -79,7 +79,7 @@ class MyHealthInfoTestCase(TestCase):
 
         self.client.login(username="testuser", password="testpassword")
 
-        response = self.client.get(reverse("my_health_info"))
+        response = self.client.get(reverse("my_health_info_last"))
 
         self.assertEqual(response.status_code, 200)
 
