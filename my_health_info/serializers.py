@@ -6,4 +6,4 @@ class HealthInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = HealthInfo
         fields = ["user", "age", "height", "weight", "bmi", "created_at"]
-        read_only_fields = ["user"]
+        read_only_fields = ["user", "bmi", "created_at"]
