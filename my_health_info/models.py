@@ -4,7 +4,7 @@ from django.db import models
 # Create your models here.
 class HealthInfo(models.Model):
     user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
-    age = models.IntegerField()
+    age = models.PositiveIntegerField()
     height = models.FloatField()
     weight = models.FloatField()
     bmi = models.FloatField()
