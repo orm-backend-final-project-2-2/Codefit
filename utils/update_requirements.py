@@ -45,9 +45,6 @@ def check_label_exist(label_name, owner, repo, token):
         "Authorization": f"token {token}",
         "Accept": "application/vnd.github+json",
     }
-    data = {
-        "name": label_name,
-    }
     response = requests.get(url, headers=headers)
 
     if response.status_code == 200:
@@ -88,8 +85,8 @@ def update_feature_requirements_issue(
     url = f"https://api.github.com/repos/{owner}/{repo}/issues/?labels={labels[0]}"
     response = requests.get(url, headers={"Authorization": f"token {token}"})
 
-    if response.json():
-        issue_id = response.json()[0]["number"]
+    if response.json()["body"]:
+        issue_id = response.json()["body"][0]["id"]
         update_issue(issue_id, issue_body, owner, repo, token)
     else:
         create_new_issue(issue_title, issue_body, labels, owner, repo, token)
@@ -130,21 +127,16 @@ def update_app_requirements(app_name, req_file):
             )
 
 
-def update_requirements(raw_changed_files):
-    changed_req_files = [
-        file
-        for file in raw_changed_files.split("\n")
-        if file.endswith("_requirements.md")
-    ]
-
+def update_requirements(changed_requirements_file):
     req_file_pattern = re.compile(r"docs/requirements/(.*)_requirements.md")
 
-    for req_file in changed_req_files:
-        app_name = req_file_pattern.search(req_file).group(1)
-        update_app_requirements(app_name, req_file)
+    match = req_file_pattern.search(changed_requirements_file)
+    if match:
+        app_name = match.group(1)
+        update_app_requirements(app_name, changed_requirements_file)
 
 
-raw_changed_files = sys.argv[1]
+raw_changed_file = sys.argv[1]
 pat = sys.argv[2]
 
-update_requirements(raw_changed_files)
+update_requirements(raw_changed_file)
