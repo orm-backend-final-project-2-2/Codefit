@@ -17,3 +17,6 @@ class MyHealthInfoView(APIView):
         serializer = HealthInfoSerializer(health_info)
 
         return Response(serializer.data)
+
+
+class MyHealthInfoLastView(APIView): ...
