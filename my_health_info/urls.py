@@ -1,6 +1,6 @@
 from django.urls import path, include
-from .views import HelloView
+from .views import MyHealthInfoView
 
 urlpatterns = [
-    path("hello/", HelloView.as_view(), name="hello"),
+    path("my_health_info/", MyHealthInfoView.as_view(), name="my_health_info"),
 ]
