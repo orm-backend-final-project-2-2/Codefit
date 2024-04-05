@@ -2,15 +2,19 @@
 
 ```mermaid
 erDiagram
+    %% 효준
     User {
         int id PK
-        str name UK
         str email UK
+        str user_name UK
         str password
         int recent_health_info_id FK
         datetime created_at
+        datetime updated_at
+        bool is_deleted "retrieve 하실때 주의!"
     }
 
+    %% 지석
     HealthInfo {
         int id PK
         int user_id FK
@@ -26,6 +30,17 @@ erDiagram
         int likes
     }
 
+    RoutineStreak {
+        int id PK
+        int routine_id FK
+        int user_id FK
+        datetime created_at
+        bool is_routine_completed
+    }
+
+    User ||--|{ RoutineStreak : has
+    Routine ||--o{ RoutineStreak : has
+
     UsersRoutine {
         int id PK
         int user_id FK
@@ -37,8 +52,10 @@ erDiagram
         int user_id FK
         int day_index
         int routine_id FK
+        datetime week_start_date
     }
 
+    %% 빈
     Exercise {
         int id PK
         str name
@@ -47,57 +64,79 @@ erDiagram
         str video_url
     }
 
+    ExerciesFocusArea {
+        int id PK
+        int exercise_id FK
+        str focus_area
+    }
+
     ExerciseAttribute {
         int id PK
         int exercise_id FK
-        str attribute "Set, Req, Weighted, Time"
+        bool need_set
+        bool need_rep
+        bool need_weight
+        bool need_speed
+        bool need_duration
     }
 
     Exercise ||--o{ ExerciseAttribute : has
+    Exercise ||--o{ ExerciesFocusArea : has
 
-    ActivityInRoutine {
-        int id PK
-        int routine_id FK
-        int index
-    }
-
-    RestInRoutine {
-        int id PK
-        int activity_id FK
-        int duration
-    }
+    %% 지석
 
     ExerciseInRoutine {
         int id PK
-        int activity_id FK
+        int routine_id FK
         int exercise_id FK
     }
 
     ExerciseInRoutine ||--o{ Exercise : has
 
-    WeightedRepSetExercise {
+    RepsInExerciseInRoutine {
         int id PK
         int exercise_in_routine_id FK
         int reps
+    }
+
+    SetsInExerciseInRoutine {
+        int id PK
+        int exercise_in_routine_id FK
         int sets
+    }
+
+    WeightInExerciseInRoutine {
+        int id PK
+        int exercise_in_routine_id FK
         int weight
     }
 
-    WeightlessTimedExercise {
+    DurationInExerciseInRoutine {
         int id PK
         int exercise_in_routine_id FK
         int duration
     }
 
-    ExerciseInRoutine ||--o{ WeightedRepSetExercise : has
-    ExerciseInRoutine ||--o{ WeightlessTimedExercise : has
+    SpeedInExerciseInRoutine {
+        int id PK
+        int exercise_in_routine_id FK
+        int speed
+    }
 
+    ExerciseInRoutine ||--o{ RepsInExerciseInRoutine : has
+    ExerciseInRoutine ||--o{ SetsInExerciseInRoutine : has
+    ExerciseInRoutine ||--o{ WeightInExerciseInRoutine : has
+    ExerciseInRoutine ||--o{ DurationInExerciseInRoutine : has
+    ExerciseInRoutine ||--o{ SpeedInExerciseInRoutine : has
+
+    %% 수현
     Post {
         int id PK
         int user_id FK
         str title
         str content
         int likes
+        bool is_deleted "list retrieve 하실때 주의!"
     }
 
     Comment {
@@ -105,6 +144,7 @@ erDiagram
         int post_id FK
         int user_id FK
         str content
+        bool is_deleted "list retrieve 하실때 주의!"
     }
 
     SubComment {
@@ -112,6 +152,7 @@ erDiagram
         int comment_id FK
         int user_id FK
         str content
+        bool is_deleted "list retrieve 하실때 주의!"
     }
 
     User ||--o{ HealthInfo : has
@@ -121,9 +162,7 @@ erDiagram
     User ||--o{ SubComment : writes
     User ||--o{ UsersRoutine : has
     UsersRoutine ||--o{ Routine : has
-    Routine ||--o{ ActivityInRoutine : has
-    ActivityInRoutine ||--o{ RestInRoutine : has
-    ActivityInRoutine ||--o{ ExerciseInRoutine : has
+    Routine ||--o{ ExerciseInRoutine : has
     WeeklyRoutine }|--o{ Routine : uses
     Post ||--o{ Comment : has
     Comment ||--o{ SubComment : has
