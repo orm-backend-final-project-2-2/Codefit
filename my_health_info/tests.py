@@ -114,3 +114,20 @@ class MyHealthInfoTestCase(TestCase):
             data.get("bmi"),
             new_health_info["weight"] / ((new_health_info["height"] / 100) ** 2),
         )
+
+    def test_post_my_health_info_with_invalid_age(self):
+        """POST 요청으로 나이가 음수인 건강 정보를 생성할 때 400 에러를 리턴하는지 테스트"""
+        self.client.login(username="testuser", password="testpassword")
+
+        new_health_info = {
+            "age": -1,
+            "height": 180,
+            "weight": 70,
+        }
+
+        response = self.client.post(
+            reverse("my_health_info"),
+            data=new_health_info,
+        )
+
+        self.assertEqual(response.status_code, 400)
