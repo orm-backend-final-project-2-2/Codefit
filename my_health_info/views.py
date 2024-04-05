@@ -19,4 +19,14 @@ class MyHealthInfoView(APIView):
         return Response(serializer.data)
 
 
-class MyHealthInfoLastView(APIView): ...
+class MyHealthInfoLastView(APIView):
+    def get(self, request):
+        user = request.user
+
+        latest_health_info = (
+            HealthInfo.objects.filter(user=user).order_by("-created_at").first()
+        )
+
+        serializer = HealthInfoSerializer(latest_health_info)
+
+        return Response(serializer.data)
