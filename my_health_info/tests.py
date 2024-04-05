@@ -87,3 +87,30 @@ class MyHealthInfoTestCase(TestCase):
         self.assertEqual(response.json().get("height"), self.user1_health_info.height)
         self.assertEqual(response.json().get("weight"), self.user1_health_info.weight)
         self.assertEqual(response.json().get("bmi"), self.user1_bmi)
+
+    def test_post_my_health_info(self):
+        """POST 요청으로 건강 정보를 생성하는지 테스트"""
+        self.client.login(username="testuser", password="testpassword")
+
+        new_health_info = {
+            "age": 21,
+            "height": 180,
+            "weight": 70,
+        }
+
+        response = self.client.post(
+            reverse("my_health_info"),
+            data=new_health_info,
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+        data = response.json()
+
+        self.assertEqual(data.get("age"), new_health_info["age"])
+        self.assertEqual(data.get("height"), new_health_info["height"])
+        self.assertEqual(data.get("weight"), new_health_info["weight"])
+        self.assertEqual(
+            data.get("bmi"),
+            new_health_info["weight"] / ((new_health_info["height"] / 100) ** 2),
+        )
