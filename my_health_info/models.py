@@ -14,5 +14,5 @@ class HealthInfo(models.Model):
         return f"{self.user.username}의 건강 정보"
 
     def save(self, *args, **kwargs):
-        self.bmi = self.weight / ((self.height / 100) ** 2)
+        self.bmi = float(self.weight) / ((float(self.height) / 100) ** 2)
         super().save(*args, **kwargs)
