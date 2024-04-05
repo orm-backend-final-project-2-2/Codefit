@@ -18,19 +18,14 @@ class MyHealthInfoView(APIView):
 
         return Response(serializer.data)
 
-    def post(self, request):
-        user = request.user
+    def post(self, request, *args, **kwargs):
 
-        age = request.data.get("age")
-        height = request.data.get("height")
-        weight = request.data.get("weight")
+        serializer = HealthInfoSerializer(data=request.data)
 
-        health_info = HealthInfo.objects.create(
-            user=user, age=age, height=height, weight=weight
-        )
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
 
-        serializer = HealthInfoSerializer(health_info)
-
+        serializer.save(user=request.user)
         return Response(serializer.data, status=201)
 
 
