@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 from django.urls import reverse
 from my_health_info.models import HealthInfo
+from freezegun import freeze_time
 
 
 class MyHealthInfoTestCase(TestCase):
@@ -15,6 +16,10 @@ class MyHealthInfoTestCase(TestCase):
             age=20,
             height=170,
             weight=60,
+        )
+
+        self.user1_bmi = self.user1_health_info.weight / (
+            (self.user1_health_info.height / 100) ** 2
         )
 
         self.user2 = User.objects.create_user(
@@ -41,14 +46,10 @@ class MyHealthInfoTestCase(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        user1_bmi = self.user1_health_info.weight / (
-            (self.user1_health_info.height / 100) ** 2
-        )
-
         self.assertEqual(response.json().get("age"), self.user1_health_info.age)
         self.assertEqual(response.json().get("height"), self.user1_health_info.height)
         self.assertEqual(response.json().get("weight"), self.user1_health_info.weight)
-        self.assertEqual(response.json().get("bmi"), user1_bmi)
+        self.assertEqual(response.json().get("bmi"), self.user1_bmi)
 
     def test_get_my_health_info_user2(self):
         """유저2가 접근할 때 유저2의 건강 정보를 리턴하는지 테스트"""
@@ -65,3 +66,24 @@ class MyHealthInfoTestCase(TestCase):
         self.assertEqual(response.json().get("height"), self.user2_health_info.height)
         self.assertEqual(response.json().get("weight"), self.user2_health_info.weight)
         self.assertEqual(response.json().get("bmi"), user2_bmi)
+
+    @freeze_time("2023-01-01")
+    def test_get_my_health_info_last(self):
+        """접근 시 마지막으로 생성된 건강 정보를 리턴하는지 테스트"""
+        HealthInfo.objects.create(
+            user=self.user1,
+            age=19,
+            height=175,
+            weight=50,
+        )
+
+        self.client.login(username="testuser", password="testpassword")
+
+        response = self.client.get(reverse("my_health_info"))
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(response.json().get("age"), self.user1_health_info.age)
+        self.assertEqual(response.json().get("height"), self.user1_health_info.height)
+        self.assertEqual(response.json().get("weight"), self.user1_health_info.weight)
+        self.assertEqual(response.json().get("bmi"), self.user1_bmi)
