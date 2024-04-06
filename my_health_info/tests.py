@@ -5,6 +5,7 @@ from my_health_info.models import HealthInfo
 from freezegun import freeze_time
 from faker import Faker
 from datetime import datetime, timedelta
+from django.utils import timezone
 
 
 class MyHealthInfoTestCase(TestCase):
@@ -66,7 +67,7 @@ class MyHealthInfoTestCase(TestCase):
             username=self.user1.get("username"), password=self.user1.get("password")
         )
 
-        now = datetime.now()
+        now = timezone.now()
         for days_back in range(40, -1, -1):
             past_day = now - timedelta(days=days_back)
             with freeze_time(f"{past_day.strftime('%Y-%m-%d')}"):
