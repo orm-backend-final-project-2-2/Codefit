@@ -67,12 +67,17 @@ class MyHealthInfoTestCase(TestCase):
         )
 
         now = datetime.now()
-        for days_back in range(120, -1, -1):
+        for days_back in range(40, -1, -1):
             past_day = now - timedelta(days=days_back)
             with freeze_time(f"{past_day.strftime('%Y-%m-%d')}"):
                 new_health_info = self.create_fake_health_info(self.user1)
 
-        self.client.get(reverse("my-health-info-list"))
+        response = self.client.get(reverse("my-health-info-list"))
+        data = response.json()
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(len(data), 35)
 
     @freeze_time("2025-02-02")
     def test_post_my_health_info(self):
