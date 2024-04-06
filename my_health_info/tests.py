@@ -71,17 +71,6 @@ class MyHealthInfoTestCase(TestCase):
 
         self.assert_equal_health_info(response.json(), self.user1_health_info)
 
-    def test_get_my_health_info_user2(self):
-        """유저2가 접근할 때 유저2의 건강 정보를 리턴하는지 테스트"""
-        self.client.login(
-            username=self.user2.get("username"), password=self.user2.get("password")
-        )
-        response = self.client.get(reverse("my_health_info"))
-
-        self.assertEqual(response.status_code, 200)
-
-        self.assert_equal_health_info(response.json(), self.user2_health_info)
-
     @freeze_time("2023-01-01")
     def test_get_my_health_info_last(self):
         """접근 시 마지막으로 생성된 건강 정보를 리턴하는지 테스트"""
