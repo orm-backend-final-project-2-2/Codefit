@@ -29,7 +29,6 @@ class MyHealthInfoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """현재 유저의 건강 정보를 최신순으로 조회"""
-
         return HealthInfo.objects.filter(user=self.request.user).order_by("-created_at")
 
     def list(self, request, *args, **kwargs):
