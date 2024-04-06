@@ -172,3 +172,15 @@ class MyHealthInfoTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, 405)
+
+    def test_delete_my_health_info_not_allowed(self):
+        """DELETE 요청으로 건강 정보를 삭제할 때 405 에러를 리턴하는지 테스트"""
+        self.client.force_login(self.user1)
+        health_info = HealthInfo.objects.first()
+        pk = health_info.pk
+
+        response = self.client.delete(
+            reverse("my-health-info-detail", kwargs={"pk": pk})
+        )
+
+        self.assertEqual(response.status_code, 405)
