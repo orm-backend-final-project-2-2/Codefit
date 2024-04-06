@@ -120,6 +120,7 @@ class MyHealthInfoTestCase(TestCase):
         response = self.client.post(
             reverse("my-health-info-list"),
             data=new_health_info,
+            content_type="application/json",
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -139,10 +140,14 @@ class MyHealthInfoTestCase(TestCase):
         self.client.force_login(new_user)
 
         response_1 = self.client.post(
-            reverse("my-health-info-list"), data=new_health_info
+            reverse("my-health-info-list"),
+            data=new_health_info,
+            content_type="application/json",
         )
         response_2 = self.client.post(
-            reverse("my-health-info-list"), data=new_health_info
+            reverse("my-health-info-list"),
+            data=new_health_info,
+            content_type="application/json",
         )
 
         self.assertEqual(response_1.status_code, status.HTTP_201_CREATED)
@@ -164,14 +169,15 @@ class MyHealthInfoTestCase(TestCase):
     def test_retrieve_my_health_info(self):
         """GET 요청으로 특정 건강 정보를 조회하는지 테스트"""
         self.client.force_login(self.user1)
-        health_info = HealthInfo.objects.first()
+        new_health_info = self.create_fake_health_info_request()
+        health_info = HealthInfo.objects.create(user=self.user1, **new_health_info)
         pk = health_info.pk
 
         response = self.client.get(reverse("my-health-info-detail", kwargs={"pk": pk}))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assert_equal_health_info(response.json(), self.user1_health_info)
+        self.assert_equal_health_info(response.json(), new_health_info)
 
     def test_post_my_health_info_with_invalid_age(self):
         """POST 요청으로 나이가 음수인 건강 정보를 생성할 때 400 에러를 리턴하는지 테스트"""
@@ -186,6 +192,7 @@ class MyHealthInfoTestCase(TestCase):
         response = self.client.post(
             reverse("my-health-info-list"),
             data=new_health_info,
+            content_type="application/json",
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
