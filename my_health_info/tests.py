@@ -73,6 +73,17 @@ class MyHealthInfoTestCase(TestCase):
 
         self.client.get(reverse("my_health_info"))
 
+    @freeze_time("2025-01-01")
+    def test_reject_post_my_health_info_if_same_day(self):
+        """POST 요청으로 같은 날짜에 건강 정보를 생성할 때 400 에러를 리턴하는지 테스트"""
+        new_user = self.create_fake_user()
+        new_health_info = self.create_fake_health_info(new_user)
+
+        response_1 = self.client.post(reverse("my_health_info"))
+        response_2 = self.client.post(reverse("my_health_info"))
+
+        self.assertEqual(response_1.status_code, 201)
+        self.assertEqual(response_2.status_code, 400)
 
     @freeze_time("2023-01-01")
     def test_get_my_health_info_last(self):
