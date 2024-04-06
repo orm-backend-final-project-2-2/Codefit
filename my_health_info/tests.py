@@ -60,6 +60,20 @@ class MyHealthInfoTestCase(TestCase):
 
         self.assertEqual(response.status_code, 403)
 
+    def test_get_my_health_info_last_30_days(self):
+        self.client.login(
+            username=self.user1.get("username"), password=self.user1.get("password")
+        )
+
+        now = datetime.now()
+        for days_back in range(120, -1, -1):
+            past_day = now - timedelta(days=days_back)
+            with freeze_time(f"{past_day.strftime('%Y-%m-%d')}"):
+                new_health_info = self.create_fake_health_info(self.user1)
+
+        self.client.get(reverse("my_health_info"))
+
+
     @freeze_time("2023-01-01")
     def test_get_my_health_info_last(self):
         """접근 시 마지막으로 생성된 건강 정보를 리턴하는지 테스트"""
@@ -116,16 +130,3 @@ class MyHealthInfoTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-
-    def test_get_my_health_info_last_30_days(self):
-        self.client.login(
-            username=self.user1.get("username"), password=self.user1.get("password")
-        )
-
-        now = datetime.now()
-        for days_back in range(120, -1, -1):
-            past_day = now - timedelta(days=days_back)
-            with freeze_time(f"{past_day.strftime('%Y-%m-%d')}"):
-                new_health_info = self.create_fake_health_info(self.user1)
-
-        self.client.get(reverse("my_health_info"))
