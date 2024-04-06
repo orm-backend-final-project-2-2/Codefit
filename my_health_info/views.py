@@ -25,24 +25,17 @@ class MyHealthInfoViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post"]
     serializer_class = HealthInfoSerializer
     permission_classes = [IsAuthenticated]
+    days_to_show = 35
 
     def get_queryset(self):
-        """조회 범위를 최근 35일로 제한"""
-        days_back = 35
-        return HealthInfo.objects.filter(user=self.request.user).order_by(
-            "-created_at"
-        )[:days_back]
+        """현재 유저의 건강 정보를 최신순으로 조회"""
+
+        return HealthInfo.objects.filter(user=self.request.user).order_by("-created_at")
 
     def list(self, request, *args, **kwargs):
         """최근 35일간의 건강 정보를 조회"""
-        queryset = self.get_queryset()
+        queryset = self.get_queryset().all()[: self.days_to_show]
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
-    def retrieve(self, request, *args, **kwargs):
-        """특정 건강 정보 조회"""
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
     def perform_create(self, serializer):
