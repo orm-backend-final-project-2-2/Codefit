@@ -4,6 +4,7 @@ from django.urls import reverse
 from my_health_info.models import HealthInfo
 from freezegun import freeze_time
 from faker import Faker
+from datetime import datetime, timedelta
 
 
 class MyHealthInfoTestCase(TestCase):
@@ -14,10 +15,6 @@ class MyHealthInfoTestCase(TestCase):
         self.user1 = self.create_fake_user()
         self.user1_health_info = self.create_fake_health_info(self.user1)
         self.user1_bmi = self.calculate_users_bmi(self.user1_health_info)
-
-        self.user2 = self.create_fake_user()
-        self.user2_health_info = self.create_fake_health_info(self.user2)
-        self.user2_bmi = self.calculate_users_bmi(self.user2_health_info)
 
     def create_fake_user(self):
         """가짜 유저 생성"""
@@ -141,3 +138,16 @@ class MyHealthInfoTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
+
+    def test_get_my_health_info_last_30_days(self):
+        self.client.login(
+            username=self.user1.get("username"), password=self.user1.get("password")
+        )
+
+        now = datetime.now()
+        for days_back in range(120, -1, -1):
+            past_day = now - timedelta(days=days_back)
+            with freeze_time(f"{past_day.strftime('%Y-%m-%d')}"):
+                new_health_info = self.create_fake_health_info(self.user1)
+
+        self.client.get(reverse("my_health_info"))
