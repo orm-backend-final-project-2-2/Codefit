@@ -22,6 +22,7 @@ class MyHealthInfoViewSet(viewsets.ModelViewSet):
     - last: GET /my_health_info/my_health_info/last/
     """
 
+    http_method_names = ["get", "post"]
     serializer_class = HealthInfoSerializer
     permission_classes = [IsAuthenticated]
 
@@ -54,14 +55,6 @@ class MyHealthInfoViewSet(viewsets.ModelViewSet):
                 raise ValidationError("Health info already exists for today")
 
         serializer.save(user=self.request.user)
-
-    def perform_update(self, serializer):
-        """건강 정보 수정 시도 시 에러 발생"""
-        raise MethodNotAllowed("PUT")
-
-    def perform_destroy(self, instance):
-        """건강 정보 삭제 시도 시 에러 발생"""
-        raise MethodNotAllowed("DELETE")
 
     @action(detail=False, methods=["get"], url_path="last", url_name="last")
     def last(self, request, *args, **kwargs):
