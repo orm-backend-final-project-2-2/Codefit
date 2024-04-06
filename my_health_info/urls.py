@@ -1,11 +1,10 @@
 from django.urls import path, include
-from .views import MyHealthInfoView, MyHealthInfoLastView
+from my_health_info.views import MyHealthInfoViewSet
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r"my-health-info", MyHealthInfoViewSet, basename="my-health-info")
 
 urlpatterns = [
-    path("my_health_info/", MyHealthInfoView.as_view(), name="my_health_info"),
-    path(
-        "my_health_info/last/",
-        MyHealthInfoLastView.as_view(),
-        name="my_health_info_last",
-    ),
+    path("", include(router.urls)),
 ]
