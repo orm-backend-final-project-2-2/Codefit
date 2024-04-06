@@ -9,45 +9,42 @@ from django.utils import timezone
 
 
 class MyHealthInfoTestCase(TestCase):
+    @freeze_time("2020-01-01")
     def setUp(self):
         """초기설정"""
         self.fake = Faker()
 
-        self.user1 = self.create_fake_user()
-        self.user1_health_info = self.create_fake_health_info(self.user1)
-        self.user1_bmi = self.calculate_users_bmi(self.user1_health_info)
+        self.user1_info = self.create_fake_user_info()
+        self.user1 = User.objects.create_user(**self.user1_info)
 
-    def create_fake_user(self):
-        """가짜 유저 생성"""
-        fake_user_info = {
-            "username": self.fake.user_name(),
-            "password": self.fake.password(),
-        }
-
-        User.objects.create_user(**fake_user_info)
-        return fake_user_info
-
-    def create_fake_health_info(self, user):
-        """가짜 건강 정보 생성"""
-        fake_health_info = {
-            "user": User.objects.get(username=user["username"]),
-            "age": self.fake.random_int(min=1, max=70),
-            "height": self.fake.random_int(min=100, max=200),
-            "weight": self.fake.random_int(min=30, max=150),
-        }
-
-        HealthInfo.objects.create(
-            **fake_health_info,
-        )
-
-        return fake_health_info
+        self.user1_health_info = self.create_fake_health_info_request(self.user1)
+        HealthInfo.objects.create(**self.user1_health_info)
 
     def calculate_users_bmi(self, health_info):
         """BMI 계산"""
         return health_info.get("weight") / ((health_info.get("height") / 100) ** 2)
 
+    def create_fake_user_info(self):
+        """가짜 유저 생성"""
+
+        return {
+            "username": self.fake.user_name(),
+            "password": self.fake.password(),
+        }
+
+    def create_fake_health_info_request(self, user):
+        """가짜 건강 정보 생성"""
+
+        return {
+            "user": user,
+            "age": self.fake.random_int(min=20, max=80),
+            "height": self.fake.random_int(min=150, max=200),
+            "weight": self.fake.random_int(min=50, max=100),
+        }
+
     def assert_equal_health_info(self, health_info, expected_health_info):
         """건강 정보 비교"""
+
         self.assertEqual(health_info.get("age"), expected_health_info.get("age"))
         self.assertEqual(health_info.get("height"), expected_health_info.get("height"))
         self.assertEqual(health_info.get("weight"), expected_health_info.get("weight"))
@@ -63,15 +60,17 @@ class MyHealthInfoTestCase(TestCase):
 
     def test_get_my_health_info_last_30_days(self):
         """로그인한 유저가 my-health-info-list에 접근할 때 최근 35일간의 건강 정보를 리턴하는지 테스트"""
-        self.client.login(
-            username=self.user1.get("username"), password=self.user1.get("password")
-        )
+        new_user_info = self.create_fake_user_info()
+        new_user = User.objects.create_user(**new_user_info)
+
+        self.client.force_login(new_user)
 
         now = timezone.now()
         for days_back in range(40, -1, -1):
             past_day = now - timedelta(days=days_back)
             with freeze_time(f"{past_day.strftime('%Y-%m-%d')}"):
-                new_health_info = self.create_fake_health_info(self.user1)
+                new_health_info = self.create_fake_health_info_request(new_user)
+                HealthInfo.objects.create(**new_health_info)
 
         response = self.client.get(reverse("my-health-info-list"))
         data = response.json()
@@ -80,18 +79,11 @@ class MyHealthInfoTestCase(TestCase):
 
         self.assertEqual(len(data), 35)
 
-    @freeze_time("2025-02-02")
     def test_post_my_health_info(self):
         """POST 요청으로 건강 정보를 생성하는지 테스트"""
-        self.client.login(
-            username=self.user1.get("username"), password=self.user1.get("password")
-        )
+        self.client.force_login(self.user1)
 
-        new_health_info = {
-            "age": 21,
-            "height": 180,
-            "weight": 70,
-        }
+        new_health_info = self.create_fake_health_info_request(self.user1)
 
         response = self.client.post(
             reverse("my-health-info-list"),
@@ -107,16 +99,12 @@ class MyHealthInfoTestCase(TestCase):
     @freeze_time("2025-01-01")
     def test_reject_post_my_health_info_if_same_day(self):
         """POST 요청으로 같은 날짜에 건강 정보를 생성할 때 400 에러를 리턴하는지 테스트"""
-        new_user = self.create_fake_user()
-        new_health_info = {
-            "age": 51,
-            "height": 180,
-            "weight": 72,
-        }
+        new_user_info = self.create_fake_user_info()
+        new_user = User.objects.create_user(**new_user_info)
 
-        self.client.login(
-            username=new_user.get("username"), password=new_user.get("password")
-        )
+        new_health_info = self.create_fake_health_info_request(new_user)
+
+        self.client.force_login(new_user)
 
         response_1 = self.client.post(
             reverse("my-health-info-list"), data=new_health_info
@@ -128,16 +116,26 @@ class MyHealthInfoTestCase(TestCase):
         self.assertEqual(response_1.status_code, 201)
         self.assertEqual(response_2.status_code, 400)
 
-    @freeze_time("2023-01-01")
     def test_get_my_health_info_last(self):
-        """접근 시 마지막으로 생성된 건강 정보를 리턴하는지 테스트"""
-        new_health_info = self.create_fake_health_info(self.user1)
+        """GET 요청으로 가장 최근 생성된 건강 정보를 조회하는지 테스트"""
+        new_health_info = self.create_fake_health_info_request(self.user1)
+        HealthInfo.objects.create(**new_health_info)
 
-        self.client.login(
-            username=self.user1.get("username"), password=self.user1.get("password")
-        )
+        self.client.force_login(self.user1)
 
         response = self.client.get(reverse("my-health-info-last"))
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assert_equal_health_info(response.json(), new_health_info)
+
+    def test_retrieve_my_health_info(self):
+        """GET 요청으로 특정 건강 정보를 조회하는지 테스트"""
+        self.client.force_login(self.user1)
+        health_info = HealthInfo.objects.first()
+        pk = health_info.pk
+
+        response = self.client.get(reverse("my-health-info-detail", kwargs={"pk": pk}))
 
         self.assertEqual(response.status_code, 200)
 
@@ -145,9 +143,7 @@ class MyHealthInfoTestCase(TestCase):
 
     def test_post_my_health_info_with_invalid_age(self):
         """POST 요청으로 나이가 음수인 건강 정보를 생성할 때 400 에러를 리턴하는지 테스트"""
-        self.client.login(
-            username=self.user1.get("username"), password=self.user1.get("password")
-        )
+        self.client.force_login(self.user1)
 
         new_health_info = {
             "age": -1,
@@ -161,3 +157,18 @@ class MyHealthInfoTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
+
+    def test_put_my_health_info_not_allowed(self):
+        """PUT 요청으로 건강 정보를 수정할 때 405 에러를 리턴하는지 테스트"""
+        self.client.force_login(self.user1)
+        health_info = HealthInfo.objects.first()
+        pk = health_info.pk
+
+        new_health_info = self.create_fake_health_info_request(self.user1)
+
+        response = self.client.put(
+            reverse("my-health-info-detail", kwargs={"pk": pk}),
+            data=new_health_info,
+        )
+
+        self.assertEqual(response.status_code, 405)
