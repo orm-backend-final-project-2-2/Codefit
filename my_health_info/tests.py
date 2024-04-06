@@ -54,13 +54,14 @@ class MyHealthInfoTestCase(TestCase):
             health_info.get("bmi"), self.calculate_users_bmi(expected_health_info)
         )
 
-    def test_get_my_health_info_not_authenticated(self):
-        """비로그인 유저가 접근할 때 403 에러를 리턴하는지 테스트"""
-        response = self.client.get(reverse("my_health_info"))
+    def test_get_my_health_info_list_not_authenticated(self):
+        """비로그인 유저가 my-helath-info-list에 접근할 때 403 에러를 리턴하는지 테스트"""
+        response = self.client.get(reverse("my-health-info-list"))
 
         self.assertEqual(response.status_code, 403)
 
     def test_get_my_health_info_last_30_days(self):
+        """로그인한 유저가 my-health-info-list에 접근할 때 최근 35일간의 건강 정보를 리턴하는지 테스트"""
         self.client.login(
             username=self.user1.get("username"), password=self.user1.get("password")
         )
@@ -71,35 +72,9 @@ class MyHealthInfoTestCase(TestCase):
             with freeze_time(f"{past_day.strftime('%Y-%m-%d')}"):
                 new_health_info = self.create_fake_health_info(self.user1)
 
-        self.client.get(reverse("my_health_info"))
+        self.client.get(reverse("my-health-info-list"))
 
-    @freeze_time("2025-01-01")
-    def test_reject_post_my_health_info_if_same_day(self):
-        """POST 요청으로 같은 날짜에 건강 정보를 생성할 때 400 에러를 리턴하는지 테스트"""
-        new_user = self.create_fake_user()
-        new_health_info = self.create_fake_health_info(new_user)
-
-        response_1 = self.client.post(reverse("my_health_info"))
-        response_2 = self.client.post(reverse("my_health_info"))
-
-        self.assertEqual(response_1.status_code, 201)
-        self.assertEqual(response_2.status_code, 400)
-
-    @freeze_time("2023-01-01")
-    def test_get_my_health_info_last(self):
-        """접근 시 마지막으로 생성된 건강 정보를 리턴하는지 테스트"""
-        new_health_info = self.create_fake_health_info(self.user1)
-
-        self.client.login(
-            username=self.user1.get("username"), password=self.user1.get("password")
-        )
-
-        response = self.client.get(reverse("my_health_info_last"))
-
-        self.assertEqual(response.status_code, 200)
-
-        self.assert_equal_health_info(response.json(), self.user1_health_info)
-
+    @freeze_time("2025-02-02")
     def test_post_my_health_info(self):
         """POST 요청으로 건강 정보를 생성하는지 테스트"""
         self.client.login(
@@ -113,7 +88,7 @@ class MyHealthInfoTestCase(TestCase):
         }
 
         response = self.client.post(
-            reverse("my_health_info"),
+            reverse("my-health-info-list"),
             data=new_health_info,
         )
 
@@ -122,6 +97,45 @@ class MyHealthInfoTestCase(TestCase):
         data = response.json()
 
         self.assert_equal_health_info(data, new_health_info)
+
+    @freeze_time("2025-01-01")
+    def test_reject_post_my_health_info_if_same_day(self):
+        """POST 요청으로 같은 날짜에 건강 정보를 생성할 때 400 에러를 리턴하는지 테스트"""
+        new_user = self.create_fake_user()
+        new_health_info = {
+            "age": 51,
+            "height": 180,
+            "weight": 72,
+        }
+
+        self.client.login(
+            username=new_user.get("username"), password=new_user.get("password")
+        )
+
+        response_1 = self.client.post(
+            reverse("my-health-info-list"), data=new_health_info
+        )
+        response_2 = self.client.post(
+            reverse("my-health-info-list"), data=new_health_info
+        )
+
+        self.assertEqual(response_1.status_code, 201)
+        self.assertEqual(response_2.status_code, 400)
+
+    @freeze_time("2023-01-01")
+    def test_get_my_health_info_last(self):
+        """접근 시 마지막으로 생성된 건강 정보를 리턴하는지 테스트"""
+        new_health_info = self.create_fake_health_info(self.user1)
+
+        self.client.login(
+            username=self.user1.get("username"), password=self.user1.get("password")
+        )
+
+        response = self.client.get(reverse("my-health-info-last"))
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assert_equal_health_info(response.json(), self.user1_health_info)
 
     def test_post_my_health_info_with_invalid_age(self):
         """POST 요청으로 나이가 음수인 건강 정보를 생성할 때 400 에러를 리턴하는지 테스트"""
@@ -136,7 +150,7 @@ class MyHealthInfoTestCase(TestCase):
         }
 
         response = self.client.post(
-            reverse("my_health_info"),
+            reverse("my-health-info-list"),
             data=new_health_info,
         )
 
