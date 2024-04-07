@@ -113,3 +113,18 @@ class PostTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_put_update_post_not_allowed(self):
+        """post/<pk>/ PUT 요청시 405 에러를 반환하는지 테스트"""
+        update_post_info = {
+            "title": "update title",
+            "content": "update content",
+        }
+        self.client.force_login(self.user1)
+        response = self.client.put(
+            reverse("post-detail", kwargs={"pk": self.user1_post1.id}),
+            data=update_post_info,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
