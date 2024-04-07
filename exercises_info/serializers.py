@@ -10,7 +10,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ExercisesInfoSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
+    author = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), default=serializers.CurrentUserDefault()
+    )
 
     class Meta:
         model = ExercisesInfo
