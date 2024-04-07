@@ -284,7 +284,7 @@ erDiagram
         int recent_health_info_id FK
         datetime created_at
         datetime updated_at
-        bool is_deleted "retrieve 하실때 주의!"
+        bool is_deleted
     }
 
     %% 지석
@@ -405,7 +405,7 @@ erDiagram
         int like_count
         datetime created_at
         datetime updated_at
-        bool is_deleted "list retrieve 하실때 주의!"
+        bool is_deleted
     }
 
     Comment {
@@ -414,7 +414,7 @@ erDiagram
         int user_id FK
         str content
         datetime created_at
-        bool is_deleted "list retrieve 하실때 주의!"
+        bool is_deleted
     }
 
     SubComment {
@@ -423,7 +423,7 @@ erDiagram
         int user_id FK
         str content
         datetime created_at
-        bool is_deleted "list retrieve 하실때 주의!"
+        bool is_deleted
     }
 
     Like {
