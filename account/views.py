@@ -5,6 +5,13 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate, login
 from account.serializers import CustomUserSerializer
+from rest_framework import viewsets
+from account.models import CustomUser
+
+
+class CustomUserViewSet(viewsets.ModelViewSet):
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
 
 
 class SignUpView(CreateAPIView):
