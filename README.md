@@ -64,6 +64,14 @@ https://github.com/orm-backend-final-project-2-2/final-project-client
 
 ### WBS
 
+조금 더 정리해서 올리겠습니다..
+
+프로젝트 시작
+금~월 -> 아이디어 논의
+월~화 요구사항 취합
+화~수 와이어프레임 제작
+수~목 url mapping, ViewSet
+
 ### Requirements
 
 #### Account Requirements
