@@ -298,7 +298,7 @@ https://github.com/orm-backend-final-project-2-2/final-project-client
 | "profile/<int:pk>/" | GET | 프로필 조회 | IsAuthenticated |
 | "profile/<int:pk>/" | PATCH | 프로필 수정 | IsAuthenticated |
 | "deletion/" | DELETE | 회원 탈퇴 | IsAuthenticated |
-| "password-reset/<str:email> | POST | 비밀번호 재설정 | AllowAny |
+| "password-reset/<str:hashed_email> | POST | 비밀번호 재설정 | AllowAny |
 
 #### MyHealthInfo App
 
