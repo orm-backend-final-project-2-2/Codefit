@@ -12,3 +12,13 @@ class ExercisesInfo(models.Model):
 
     def __str__(self):
         return f"{self.title}"
+
+
+class FocusArea(models.Model):
+    exercise = models.ForeignKey(
+        ExercisesInfo, on_delete=models.CASCADE, related_name="focus_areas"
+    )
+    focus_area = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.focus_area}"
