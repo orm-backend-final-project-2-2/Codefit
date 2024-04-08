@@ -2,6 +2,38 @@
 
 app_name의 서버 레포지토리입니다.
 
+## 기능
+
+1. 프로필
+   - 로그인, 회원가입, 로그아웃을 기본적으로 제공한다.
+   - 프로필에서 자신의 정보를 편집할 수 있다.
+   - 비밀번호 찾기로 email을 입력해 재설정 링크를 발송한다.
+2. 커뮤니티
+   - 기본적인 커뮤니티
+   - 카테고리, 댓글, 대댓글, 좋아요 기능이 있음.
+   - 
+3. 운동정보
+   - 운동에 대한 정보(운동 이름, 난이도, 자극부위, 필요정보(세트, 속도, 반복 등..)를 조회할 수 있다.
+   - 관리자만 편집 가능한 페이지
+4. 내 운동
+    1. 건강 정보
+        - 내가 가장 최근에 입력한 건강 정보를 볼 수 있다.
+        - 내 최근 건강 정보를 입력할 수 있다.
+    2. 루틴
+        - 운동 수행정보(세트, 무게, 반복수, 시간, 속도) 와 휴식(시간)을 조합해서 하루 운동에 대한 루틴을 만들 수 있다.
+        - 해당 루틴을 남들과 공유할 수 있다.
+        - 루틴을 완료해서 기록을 남길 수 있다.
+    3. 주간 루틴
+        - 일주일에 대한 루틴 정보를 조회할 수 있다.
+        - 원하는 요일에 사용자가 가지고있는 루틴을 배치하거나 생성할 수 있다.
+    4. 식단
+       - 자신이 먹은 식단을 사진과 제목으로 기록할 수 있다.
+       - 최근 30일간의 자신의 식단을 조회할 수 있다.
+    5. 기타
+       - 최근 30일간의 내 루틴 수행 정보를 잔디 형태로 표시해줌
+       - 내 운동 정보를 간단하게 커뮤니티에 올릴 수 있는 기능 
+   
+
 ## 기술 스택
 
 ### Frontend
@@ -446,4 +478,89 @@ erDiagram
     WeeklyRoutine }|--o{ Routine : uses
     Post ||--o{ Comment : has
     Comment ||--o{ SubComment : has
+```
+
+## TDD
+
+최소한의 구조 구현(빈 url, 간단한 모델, 빈 뷰셋, 빈 시리얼라이저) 후 TC 작성
+
+django의 TestCase를 사용해 실제로는 db를 변경하지 않았고, 모든 코드에서 db를 복사해서 테스트하였음
+
+### Unit test 자동화
+
+feature-app_name/FeatureName 을 push시 python manage.py app_name.tests.FeatureNameTestCase 실행
+각 기능을 구현할 때 관련된 TC를 묶어서 테스트
+
+```
+name: Run Unit Tests
+
+on:
+  push:
+    branches:
+      - feature-**
+
+jobs:
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.12.0'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run tests
+      env:
+        DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+      run: |
+        output=$(python3 utils/parse_feature_branch.py ${{ github.ref }})
+        read app_name tc_name <<< $output
+        python3 manage.py test ${app_name}.tests.${tc_name}
+```
+
+
+### Intergration Test 자동화(미구현)
+
+중요한 작업(release, main merge)시 Intergrate Test를 실행할 예정
+아직 진도가 낮아 구현하지 않은 상태
+
+```
+name: Intergration test on Pull Request
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+    example-job:
+      runs-on: ubuntu-latest
+      steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Set up Python
+        uses: actions/setup-python@v3
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt  
+        
+      - name: Run tests
+        env:
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+        run: |
+          output=$(python3 utils/parse_feature_branch.py ${{ github.head_ref }})
+          read app_name tc_name <<< $output
+          echo "Running tests for $app_name"
+          python3 manage.py test ${app_name}.tests.${tc_name}
+          python3 manage.py test ${app_name}.tests.IntergrationTestCase
 ```
