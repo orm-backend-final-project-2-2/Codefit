@@ -48,3 +48,11 @@ class LoginView(APIView):
             return Response(
                 {"message": "로그인 실패"}, status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+class LogoutView(APIView):
+    pass
+
+
+class ProfileView(APIView):
+    pass
