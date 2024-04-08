@@ -40,10 +40,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     # third_party_apps
     "rest_framework",
     # custom_apps
     "my_health_info",  # 본인 앱
+    "exercises_info",  # 본인 앱
     "account",
 ]
 
