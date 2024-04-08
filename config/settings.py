@@ -19,7 +19,6 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -30,7 +29,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -40,13 +38,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     # third_party_apps
     "rest_framework",
     # custom_apps
     "my_health_info",  # 본인 앱
     "exercises_info",  # 본인 앱
     "account",
+    "community", # 본인 앱
 ]
 
 MIDDLEWARE = [
@@ -84,6 +82,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+
 
 DATABASES = {
     "default": {
