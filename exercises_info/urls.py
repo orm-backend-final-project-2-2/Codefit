@@ -3,8 +3,8 @@ from rest_framework.routers import DefaultRouter
 from exercises_info.views import ExercisesInfoViewSet
 
 router = DefaultRouter()
-router.register("exercises-info", ExercisesInfoViewSet)
+router.register(r"exercises-info", ExercisesInfoViewSet)
 
 urlpatterns = [
-    path("api/", include(router.urls)),
+    path("", include(router.urls)),
 ]
