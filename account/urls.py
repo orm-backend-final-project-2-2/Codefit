@@ -7,4 +7,5 @@ router.register(r"account", views.CustomUserViewSet, basename="account")
 
 urlpatterns = [
     path("", include(router.urls)),
+    path("login/", views.LoginView.as_view(), name="login"),
 ]
