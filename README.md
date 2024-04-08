@@ -101,10 +101,17 @@ https://github.com/orm-backend-final-project-2-2/final-project-client
 조금 더 정리해서 올리겠습니다..
 
 프로젝트 시작
+
 금~월 -> 아이디어 논의
+
 월~화 요구사항 취합
+
 화~수 와이어프레임 제작
-수~목 url mapping, ViewSet
+
+수~목 url mapping, ViewSet 복습
+금~일 TDD 방식 개인 설명, 첫 구현 시작!
+
+월~수 우선도 낮은 기능부터..
 
 ### Requirements
 
@@ -532,6 +539,14 @@ erDiagram
 
 django의 TestCase를 사용해 실제로는 db를 변경하지 않았고, 모든 코드에서 db를 복사해서 테스트하였음
 
+
+## 배포
+
+BE - Gunicorn, Nginx, AWS Lightsail 사용해서 서버 배포
+FE - 앱, 웹 크로스플랫폼 제작이기 때문에 기존 경험이 있는 firebase hosting과 app distribution를 사용하기로 하였음
+
+## CI & CD
+
 ### Unit test 자동화
 
 feature-app_name/FeatureName 을 push시 python manage.py app_name.tests.FeatureNameTestCase 실행
@@ -575,7 +590,7 @@ jobs:
 
 ### Intergration Test 자동화(미구현)
 
-중요한 작업(release, main merge)시 Intergrate Test를 실행할 예정
+app을 develop에 병합하거나 main에 merge할 시 각 app에 대한 Intergrate Test를 실행할 예정
 아직 진도가 낮아 구현하지 않은 상태
 
 ```
@@ -611,7 +626,51 @@ jobs:
           python3 manage.py test ${app_name}.tests.IntergrationTestCase
 ```
 
-# 배포
+### 배포
 
-Gunicorn, Nginx, AWS Lightsail 사용해서 서버 배포
-프론트엔드는 앱, 웹 크로스플랫폼 제작이기 때문에 기존 경험이 있는 firebase hosting과 app distribution 사용
+Be - 작업 중..
+
+FE - Firebase 사용
+
+#### 웹 빌드
+
+```
+name: Deploy to Firebase Hosting
+
+on:
+  pull_request_target:
+    branches:
+      - master  # main 브랜치로의 push에 반응하도록 설정
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest  # 가장 최신의 Ubuntu 버전에서 실행
+
+    steps:
+    - uses: actions/checkout@v2  # 코드 체크아웃
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.16.0'
+        channel: 'stable'
+    - name: Build Web
+      run: |
+        flutter --version
+        flutter pub get
+        flutter build web  # Flutter 웹 앱 빌드
+
+    - name: Deploy to Firebase
+      uses: FirebaseExtended/action-hosting-deploy@v0.7.1
+      with:
+        projectId: ygo-blog-client  # 여기에 Firebase 프로젝트 ID를 입력하세요.
+        firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}  # GitHub Secrets에서 설정한 이름을 사용하세요.
+        expires: 7d  # 선택 사항: 배포가 만료되는 시간입니다.
+        entryPoint: .  # 선택 사항: Firebase 프로젝트의 루트 디렉토리입니다.
+        firebaseToolsVersion: latest  # 선택 사항: 사용할 Firebase Tools의 버전입니다.
+      env:
+        FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}  # Firebase 토큰
+```
+
+
+
