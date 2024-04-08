@@ -54,4 +54,4 @@ class LoginTestCase(TestCase):
         )
         response = self.client.post(reverse("login"), data=self.user1_info)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data["message"], "로그인 실패")
+        self.assertEqual(response.data["detail"], "로그인 실패")
