@@ -22,3 +22,17 @@ class FocusArea(models.Model):
 
     def __str__(self):
         return f"{self.focus_area}"
+
+
+class ExercisesAttribute(models.Model):
+    exercise = models.ForeignKey(
+        ExercisesInfo, on_delete=models.CASCADE, related_name="exercise_attributes"
+    )
+    need_set = models.BooleanField(default=False)
+    need_rep = models.BooleanField(default=False)
+    need_weight = models.BooleanField(default=False)
+    need_duration = models.BooleanField(default=False)
+    need_speed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.attribute}"
