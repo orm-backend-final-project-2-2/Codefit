@@ -44,3 +44,14 @@ class LoginTestCase(TestCase):
         response = self.client.post(reverse("login"), data=wrong_user_info)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(response.data["message"], "로그인 실패")
+
+    def test_login_by_authenticated_user(self):
+        """
+        로그인 된 유저가 로그인 시도 시 에러 반환
+        """
+        self.client.login(
+            email=self.user1_info["email"], password=self.user1_info["password"]
+        )
+        response = self.client.post(reverse("login"), data=self.user1_info)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data["message"], "로그인 실패")
