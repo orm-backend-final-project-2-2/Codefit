@@ -18,9 +18,10 @@ erDiagram
     HealthInfo {
         int id PK
         int user_id FK
-        int weight
-        int height
+        float weight
+        float height
         int age
+        float bmi
         datetime created_at
     }
 
