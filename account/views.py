@@ -7,6 +7,13 @@ from django.contrib.auth import authenticate, login
 from account.serializers import CustomUserSerializer
 from rest_framework import viewsets
 from account.models import CustomUser
+from rest_framework.exceptions import (
+    MethodNotAllowed,
+    NotFound,
+    ValidationError,
+    PermissionDenied,
+    AuthenticationFailed,
+)
 
 
 class CustomUserViewSet(viewsets.ModelViewSet):
@@ -29,6 +36,8 @@ class LoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            raise PermissionDenied("로그인 실패")
         email = request.data.get("email")
         password = request.data.get("password")
         user = authenticate(request, email=email, password=password)
