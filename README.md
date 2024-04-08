@@ -2,6 +2,10 @@
 
 app_name의 서버 레포지토리입니다.
 
+## 프론트엔드
+
+https://github.com/orm-backend-final-project-2-2/final-project-client
+
 ## 기능
 
 1. 프로필
