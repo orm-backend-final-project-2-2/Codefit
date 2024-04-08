@@ -2,6 +2,40 @@
 
 app_name의 서버 레포지토리입니다.
 
+## 간단 소개
+
+app_name은 운동 도우미 웹/앱입니다.
+자신의 운동 기록을 관리할 수 있고, 남들과 이야기할 수 있는 앱입니다.
+app_name은 운동 도우미 웹/
+
+## 동기
+
+팀원중 한분이 운동을 하시고, 팀장인 제 친구가 트레이너이기 때문에 도움을 쉽게 구할 수 있기 때문에 선택했습니다.
+
+## 역할
+
+최지석
+- 요구사항 취합 및 정리
+- Url Mapping 기초 설계
+- CI & CD
+- 프론트엔드(기반)
+- MyHealthInfo App
+
+이수현
+- fe 디자인(Figma)
+- 와이어프레임 취합
+- Community App
+
+임빈
+- 문서화
+- 건강 정보 앱
+- ExercisesInfo App
+
+안효준
+- 문서화
+- Profile App
+- 프론트엔드(페이지)
+
 ## 프론트엔드
 
 https://github.com/orm-backend-final-project-2-2/final-project-client
@@ -576,3 +610,8 @@ jobs:
           python3 manage.py test ${app_name}.tests.${tc_name}
           python3 manage.py test ${app_name}.tests.IntergrationTestCase
 ```
+
+# 배포
+
+Gunicorn, Nginx, AWS Lightsail 사용해서 서버 배포
+프론트엔드는 앱, 웹 크로스플랫폼 제작이기 때문에 기존 경험이 있는 firebase hosting과 app distribution 사용
