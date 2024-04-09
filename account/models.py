@@ -21,8 +21,10 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractUser):
+    username = models.CharField(
+        max_length=150, blank=False, unique=True, verbose_name="닉네임"
+    )
     email = models.EmailField(unique=True, verbose_name="이메일")
-    nickname = models.CharField(max_length=30, unique=True, verbose_name="닉네임")
 
     # 추가 요구사항: 프로필 사진을 위한 필드
     profile_picture = models.ImageField(
@@ -36,7 +38,7 @@ class CustomUser(AbstractUser):
     # bio = models.TextField(max_length=300, blank=True, verbose_name='소개')
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["nickname"]
+    REQUIRED_FIELDS = ["username"]
 
     objects = CustomUserManager()
 

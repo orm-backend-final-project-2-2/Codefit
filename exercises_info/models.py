@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from account.models import CustomUser as User
 
 
 class ExercisesInfo(models.Model):
@@ -8,7 +8,7 @@ class ExercisesInfo(models.Model):
     )
     title = models.CharField(max_length=100)
     description = models.TextField()
-    video = models.ImageField(upload_to="exercises_info_video/", blank=True)
+    video = models.FileField(upload_to="exercises_info_video/", blank=True)
     # focus_areas = models.ManyToManyField("FocusArea", related_name="exercise")
     # exercise_attributes = models.OneToOneField(
     #     "ExercisesAttribute", on_delete=models.CASCADE, related_name="exercise"
