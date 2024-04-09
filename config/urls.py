@@ -5,9 +5,9 @@ from django.conf import settings
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    # path("account/", include("account.urls")),
+    path("account/", include("account.urls")),
     # path("community/", include("community.urls")),
-    # path("my_health_info/", include("my_health_info.urls")),
+    path("my_health_info/", include("my_health_info.urls")),
     path("exercises_info/", include("exercises_info.urls")),
 ]
 
