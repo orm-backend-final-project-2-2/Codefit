@@ -1,9 +1,10 @@
 from django.db import models
+from account.models import CustomUser as User
 
 
 # Create your models here.
 class HealthInfo(models.Model):
-    user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     age = models.PositiveIntegerField()
     height = models.FloatField()
     weight = models.FloatField()
