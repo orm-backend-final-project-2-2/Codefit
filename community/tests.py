@@ -129,8 +129,6 @@ class PostTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    """추가한 코드"""
-
     def test_get_only_logged_in_user_posts(self):
         """post/ GET 요청시 로그인한 사용자의 Post 객체만 반환하는지 테스트"""
         self.client.force_login(self.user1)
