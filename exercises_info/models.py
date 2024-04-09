@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from account.models import CustomUser as User
 
 
 class ExercisesInfo(models.Model):
