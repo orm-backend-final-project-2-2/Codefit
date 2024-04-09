@@ -36,6 +36,7 @@ class ExercisesInfoTestCase(TestCase):
         return {
             "title": self.fake.word(),
             "description": self.fake.text(),
+            "video": self.fake.file_name(),
         }
 
     # 모든 사용자가 운동 정보 리스트를 볼 수 있는지 확인
@@ -110,3 +111,21 @@ class ExercisesInfoTestCase(TestCase):
             ExercisesInfo.objects.get(id=self.exercise1.id).title,
             self.exercise1.title,
         )
+
+    # 관리자만 운동 정보를 삭제할 수 있는지 확인
+    def test_admin_can_delete_exercise(self):
+        self.client.login(**self.admin_info)
+        response = self.client.delete(
+            reverse("exercisesinfo-detail", args=[self.exercise1.id])
+        )
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(ExercisesInfo.objects.count(), 1)
+
+    # 일반유저가 운동 정보를 삭제할 수 있는지 확인
+    def test_user_can_delete_exercise(self):
+        self.client.login(**self.user_info)
+        response = self.client.delete(
+            reverse("exercisesinfo-detail", args=[self.exercise1.id])
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(ExercisesInfo.objects.count(), 2)
