@@ -148,3 +148,16 @@ class PostTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["title"], self.user1_post1.instance.title)
         self.assertEqual(response.data["content"], self.user1_post1.instance.content)
+
+    """추가한 테스트 케이스"""
+
+    def test_ohter_user_can_see_post(self):
+        """다른 사용자도 포스트를 볼 수 있는지 테스트"""
+        self.client.force_login(self.user2.instance)
+        response = self.client.get(
+            reverse("post-detail", kwargs={"pk": self.user1_post1.instance.id})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["title"], self.user1_post1.instance.title)
+        self.assertEqual(response.data["content"], self.user1_post1.instance.content)
