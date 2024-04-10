@@ -165,3 +165,19 @@ class PostTestCase(TestCase):
         response = self.client.get(reverse("post-list"))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_update_post_by_creator(self):
+        """포스트를 생성한 사용자만이 해당 포스트를 수정할 수 있는지 테스트"""
+        self.client.force_login(self.user1.instance)
+
+        response = self.client.patch(
+            reverse("post-detail", kwargs={"pk": self.user1_post1.instance.id}),
+            data={"title": "Updated Title", "content": "Updated Content"},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        updated_post = Post.objects.get(pk=self.user1_post1.instance.id)
+        self.assertEqual(updated_post.title, "Updated Title")
+        self.assertEqual(updated_post.content, "Updated Content")
