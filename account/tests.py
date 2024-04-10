@@ -48,3 +48,16 @@ class LoginTestCase(TestCase):
         response = self.client.post(reverse("login"), data=self.user1.request_login())
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.data["detail"], "로그인 실패")
+
+
+class SignUpTestCase(TestCase):
+    def setUp(self):
+        self.user1 = FakeUser()
+
+    def test_user_can_sign_up(self):
+        """
+        테스트 회원가입이 성공하는지 확인
+        """
+        response = self.client.post(reverse("signup"), data=self.user1.request_create())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # self.assertEqual(response.data["email"], self.user1.email)
