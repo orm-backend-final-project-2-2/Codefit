@@ -181,3 +181,16 @@ class PostTestCase(TestCase):
         updated_post = Post.objects.get(pk=self.user1_post1.instance.id)
         self.assertEqual(updated_post.title, "Updated Title")
         self.assertEqual(updated_post.content, "Updated Content")
+
+    def test_delete_post_by_creator(self):
+        """포스트를 생성한 사용자만이 해당 포스트를 삭제할 수 있는지 테스트"""
+        self.client.force_login(self.user1.instance)
+
+        response = self.client.delete(
+            reverse("post-detail", kwargs={"pk": self.user1_post1.instance.id})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        post_exists = Post.objects.filter(pk=self.user1_post1.instance.id).exists()
+        self.assertFalse(post_exists)
