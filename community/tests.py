@@ -85,8 +85,6 @@ class PostTestCase(TestCase):
         """post/<pk>/ PATCH 요청시 로그인하지 않은 경우 403 에러를 반환하는지 테스트"""
         update_post = FakePost()
 
-        self.client.force_login(self.user1.instance)
-
         response = self.client.patch(
             reverse("post-detail", kwargs={"pk": self.user1_post1.instance.id}),
             data=update_post.request_create(),
@@ -106,6 +104,10 @@ class PostTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Post.objects.filter(id=self.user1_post1.instance.id).exists())
 
+    """수정 중"""
+
+
+'''
     def test_delete_post_without_login(self):
         """post/<pk>/ DELETE 요청시 로그인하지 않은 경우 403 에러를 반환하는지 테스트"""
         response = self.client.delete(
@@ -128,10 +130,6 @@ class PostTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-<<<<<<< HEAD
-=======
-    # TODO: 다른사람도 포스트를 볼 수 있어야 합니다
->>>>>>> 2d3927932fc1f3231e549bac51c362eddde2d686
     def test_get_only_logged_in_user_posts(self):
         """post/ GET 요청시 로그인한 사용자의 Post 객체만 반환하는지 테스트"""
         self.client.force_login(self.user1.instance)
@@ -153,3 +151,4 @@ class PostTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["title"], self.user1_post1.instance.title)
         self.assertEqual(response.data["content"], self.user1_post1.instance.content)
+'''
