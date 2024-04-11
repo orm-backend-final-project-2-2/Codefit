@@ -234,3 +234,11 @@ class PostTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_post_not_found(self):
+        """존재하지 않는 포스트를 삭제할 때 404 에러를 반환하는지 테스트"""
+        self.client.force_login(self.user1.instance)
+
+        response = self.client.delete(reverse("post-detail", kwargs={"pk": 1000}))
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
