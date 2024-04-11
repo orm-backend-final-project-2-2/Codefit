@@ -254,7 +254,20 @@ class PostTestCase(TestCase):
         self.assertEqual(response.data["previous"], None)
         self.assertEqual(len(response.data["results"]), 3)
 
+    def test_create_post_missing_title(self):
+        """제목이 없는 포스트를 생성할 때 400 에러를 반환하는지 테스트"""
+        new_post = FakePost()
 
+        self.client.force_login(self.user1.instance)
+
+        response = self.client.post(
+            reverse("post-list"), {"content": new_post.request_create()["content"]}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+# 페이지네이션 테스트용 더미 데이터
 response_data = {
     "count": 3,
     "next": None,
