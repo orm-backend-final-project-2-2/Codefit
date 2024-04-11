@@ -194,3 +194,15 @@ class PostTestCase(TestCase):
 
         post_exists = Post.objects.filter(pk=self.user1_post1.instance.id).exists()
         self.assertFalse(post_exists)
+
+    def test_update_post_by_non_creator(self):
+        """포스트를 생성한 사용자가 아닌 다른 사용자가 포스트를 수정할 시도할 때 403 에러를 반환하는지 테스트"""
+        self.client.force_login(self.user2.instance)
+
+        response = self.client.patch(
+            reverse("post-detail", kwargs={"pk": self.user1_post1.instance.id}),
+            data={"title": "Updated Title", "content": "Updated Content"},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
