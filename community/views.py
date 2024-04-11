@@ -32,3 +32,9 @@ class PostViewSet(viewsets.ModelViewSet):
         if post.author != self.request.user:
             raise PermissionDenied
         serializer.save()
+
+    def perform_destroy(self, instance):
+        post = get_object_or_404(Post, pk=self.kwargs["pk"])
+        if post.author != self.request.user:
+            raise PermissionDenied
+        instance.delete()
