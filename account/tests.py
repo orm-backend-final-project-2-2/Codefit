@@ -170,3 +170,16 @@ class SignUpTestCase(TestCase):
         self.assertEqual(
             response.data["email"][0], "이 필드의 글자 수가 50 이하인지 확인하십시오."
         )
+
+    def test_sign_up_by_invalid_username(self):
+        """
+        테스트 닉네임 형식이 잘못되었을 때 실패하는지 확인
+        """
+        self.user1.fake_info["username"] = "invalid username"
+
+        response = self.client.post(reverse("signup"), data=self.user1.request_create())
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["username"][0],
+            "이 필드에는 영문자, 숫자, 밑줄만 포함할 수 있습니다.",
+        )
