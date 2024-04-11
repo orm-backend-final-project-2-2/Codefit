@@ -125,3 +125,16 @@ class SignUpTestCase(TestCase):
             response.data["password"][0],
             "이 필드의 글자 수가 20 이하인지 확인하십시오.",
         )
+
+    def test_sign_up_by_invalid_username(self):
+        """
+        테스트 닉네임이 너무 길 때 실패하는지 확인
+        """
+        self.user1.fake_info["username"] = "a" * 21
+
+        response = self.client.post(reverse("signup"), data=self.user1.request_create())
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["username"][0],
+            "이 필드의 글자 수가 20 이하인지 확인하십시오.",
+        )
