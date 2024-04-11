@@ -6,6 +6,7 @@ from .serializers import PostSerializer, CommentSerializer
 from .models import Post, Comment
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.exceptions import PermissionDenied
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -25,3 +26,9 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    def perform_update(self, serializer):
+        post = get_object_or_404(Post, pk=self.kwargs["pk"])
+        if post.author != self.request.user:
+            raise PermissionDenied
+        serializer.save()
