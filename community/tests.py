@@ -216,3 +216,9 @@ class PostTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_post_detail_not_found(self):
+        """존재하지 않는 포스트를 조회할 때 404 에러를 반환하는지 테스트"""
+        response = self.client.get(reverse("post-detail", kwargs={"pk": 1000}))
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
