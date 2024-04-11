@@ -158,3 +158,15 @@ class SignUpTestCase(TestCase):
         response = self.client.post(reverse("signup"), data=self.user1.request_create())
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data["email"][0], "이 필드는 blank일 수 없습니다.")
+
+    def test_sign_up_by_long_email(self):
+        """
+        테스트 이메일 길이 제한을 넘었을 때 실패하는지 확인
+        """
+        self.user1.fake_info["email"] = "a" * 50 + "@test.com"
+
+        response = self.client.post(reverse("signup"), data=self.user1.request_create())
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["email"][0], "이 필드의 글자 수가 50 이하인지 확인하십시오."
+        )
