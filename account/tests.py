@@ -183,3 +183,16 @@ class SignUpTestCase(TestCase):
             response.data["username"][0],
             "이 필드에는 영문자, 숫자, 밑줄만 포함할 수 있습니다.",
         )
+
+    def test_sign_up_by_invalid_password(self):
+        """
+        테스트 패스워드 형식이 잘못되었을 때 실패하는지 확인
+        """
+        self.user1.fake_info["password"] = "password"
+
+        response = self.client.post(reverse("signup"), data=self.user1.request_create())
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["password"][0],
+            "비밀번호는 숫자, 문자, 특수문자를 모두 포함해야 합니다.",
+        )
