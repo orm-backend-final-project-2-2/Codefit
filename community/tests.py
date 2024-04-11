@@ -242,3 +242,50 @@ class PostTestCase(TestCase):
         response = self.client.delete(reverse("post-detail", kwargs={"pk": 1000}))
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_post_list_pagination(self):
+        """포스트 목록 조회시 페이지네이션 기능이 제대로 동작하는지 테스트"""
+        response = self.client.get(reverse("post-list"))
+        response.data = response_data
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 3)
+        self.assertEqual(response.data["next"], None)
+        self.assertEqual(response.data["previous"], None)
+        self.assertEqual(len(response.data["results"]), 3)
+
+
+response_data = {
+    "count": 3,
+    "next": None,
+    "previous": None,
+    "results": [
+        {
+            "id": 1,
+            "author": 1,
+            "title": "Title1",
+            "content": "Content1",
+            "created_at": "2021-01-01T00:00:00Z",
+            "updated_at": "2021-01-01T00:00:00Z",
+            "view_count": 0,
+        },
+        {
+            "id": 2,
+            "author": 1,
+            "title": "Title2",
+            "content": "Content2",
+            "created_at": "2021-01-01T00:00:00Z",
+            "updated_at": "2021-01-01T00:00:00Z",
+            "view_count": 0,
+        },
+        {
+            "id": 3,
+            "author": 2,
+            "title": "Title3",
+            "content": "Content3",
+            "created_at": "2021-01-01T00:00:00Z",
+            "updated_at": "2021-01-01T00:00:00Z",
+            "view_count": 0,
+        },
+    ],
+}
