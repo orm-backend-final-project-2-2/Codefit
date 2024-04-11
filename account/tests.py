@@ -58,6 +58,19 @@ class SignUpTestCase(TestCase):
         """
         테스트 회원가입이 성공하는지 확인
         """
+
         response = self.client.post(reverse("signup"), data=self.user1.request_create())
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        # self.assertEqual(response.data["email"], self.user1.email)
+
+    def test_sign_up_by_existing_username(self):
+        """
+        테스트 이미 존재하는 닉네임일 때 실패하는지 확인
+        """
+        self.user1.create_instance()
+
+        response = self.client.post(reverse("signup"), data=self.user1.request_create())
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["username"][0], "사용자의 닉네임은/는 이미 존재합니다."
+        )
+        print(response.data["username"])
