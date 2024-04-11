@@ -206,3 +206,13 @@ class PostTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_post_by_non_creator(self):
+        """포스트를 생성한 사용자가 아닌 다른 사용자가 포스트를 삭제할 시도할 때 403 에러를 반환하는지 테스트"""
+        self.client.force_login(self.user2.instance)
+
+        response = self.client.delete(
+            reverse("post-detail", kwargs={"pk": self.user1_post1.instance.id})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
