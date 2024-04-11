@@ -222,3 +222,15 @@ class PostTestCase(TestCase):
         response = self.client.get(reverse("post-detail", kwargs={"pk": 1000}))
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_post_not_found(self):
+        """존재하지 않는 포스트를 수정할 때 404 에러를 반환하는지 테스트"""
+        self.client.force_login(self.user1.instance)
+
+        response = self.client.patch(
+            reverse("post-detail", kwargs={"pk": 1000}),
+            data={"title": "Updated Title", "content": "Updated Content"},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
