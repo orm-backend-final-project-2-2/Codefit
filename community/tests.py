@@ -278,6 +278,14 @@ class PostTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_create_post_missing_title_and_content(self):
+        """제목과 내용이 모두 없는 포스트를 생성할 때 400 에러를 반환하는지 테스트"""
+        self.client.force_login(self.user1.instance)
+
+        response = self.client.post(reverse("post-list"), {})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
 
 # 페이지네이션 테스트용 더미 데이터
 response_data = {
