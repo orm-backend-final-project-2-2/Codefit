@@ -9,7 +9,7 @@ class ExercisesInfo(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     video = models.FileField(upload_to="exercises_info_video/", blank=True)
-    # focus_areas = models.ManyToManyField("FocusArea", related_name="exercise")
+    focus_areas = models.ManyToManyField("FocusArea", related_name="exercise")
     # exercise_attributes = models.OneToOneField(
     #     "ExercisesAttribute", on_delete=models.CASCADE, related_name="exercise"
     # )
@@ -18,11 +18,21 @@ class ExercisesInfo(models.Model):
         return f"{self.title}"
 
 
-# class FocusArea(models.Model):
-#     focus_area = models.CharField(max_length=100)
+class FocusArea(models.Model):
+    FOCUS_AREA_CHOICES = [
+        ("유산소", "유산소"),
+        ("가슴", "가슴"),
+        ("등", "등"),
+        ("어깨", "어깨"),
+        ("팔", "팔"),
+        ("하체", "하체"),
+        ("코어", "코어"),
+    ]
 
-#     def __str__(self):
-#         return f"{self.focus_area}"
+    focus_area = models.CharField(max_length=20, choices=FOCUS_AREA_CHOICES)
+
+    def __str__(self):
+        return self.get_focus_area_display()
 
 
 # class ExercisesAttribute(models.Model):
