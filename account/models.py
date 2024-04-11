@@ -22,7 +22,7 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractUser):
     username = models.CharField(
-        max_length=150, blank=False, unique=True, verbose_name="닉네임"
+        max_length=20, blank=False, unique=True, verbose_name="닉네임"
     )
     email = models.EmailField(unique=True, verbose_name="이메일")
 
