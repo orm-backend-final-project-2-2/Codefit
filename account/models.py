@@ -24,7 +24,7 @@ class CustomUser(AbstractUser):
     username = models.CharField(
         max_length=20, blank=False, unique=True, verbose_name="닉네임"
     )
-    email = models.EmailField(unique=True, verbose_name="이메일")
+    email = models.EmailField(max_length=50, unique=True, verbose_name="이메일")
 
     # 추가 요구사항: 프로필 사진을 위한 필드
     profile_picture = models.ImageField(
