@@ -99,3 +99,17 @@ class SignUpTestCase(TestCase):
         self.assertEqual(
             response.data["email"][0], "유효한 이메일 주소를 입력하십시오."
         )
+
+    def test_sign_up_by_invalid_password(self):
+        """
+        테스트 비밀번호가 너무 짧을 때 실패하는지 확인
+        """
+        self.user1.fake_info["password"] = "short"
+
+        response = self.client.post(reverse("signup"), data=self.user1.request_create())
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["password"][0],
+            "이 필드의 글자 수가  적어도 8 이상인지 확인하십시오.",
+        )
+        print(response.data)
