@@ -28,10 +28,6 @@ class ExercisesInfo(models.Model):
         return f"{self.title}"
 
 
-class FocusArea(models.Model):
-    name = models.CharField(max_length=100)
-
-
 # class ExercisesAttribute(models.Model):
 #     need_set = models.BooleanField(default=False)
 #     need_rep = models.BooleanField(default=False)
