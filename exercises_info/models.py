@@ -3,6 +3,13 @@ from account.models import CustomUser as User
 from utils.enums import FocusAreaEnum
 
 
+class FocusArea(models.Model):
+    focus_area = models.CharField(max_length=20, choices=FocusAreaEnum.choices())
+
+    def __str__(self):
+        return self.get_focus_area_display()
+
+
 class ExercisesInfo(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="exercises_info"
@@ -11,7 +18,7 @@ class ExercisesInfo(models.Model):
     description = models.TextField()
     video = models.FileField(upload_to="exercises_info_video/", blank=True)
     focus_areas = models.ManyToManyField(
-        FocusAreaEnum, verbose_name="Focus Areas", related_name="exercise"
+        FocusArea, verbose_name="Focus Areas", related_name="exercise"
     )
     # exercise_attributes = models.OneToOneField(
     #     "ExercisesAttribute", on_delete=models.CASCADE, related_name="exercise"
@@ -19,6 +26,10 @@ class ExercisesInfo(models.Model):
 
     def __str__(self):
         return f"{self.title}"
+
+
+class FocusArea(models.Model):
+    name = models.CharField(max_length=100)
 
 
 # class ExercisesAttribute(models.Model):
