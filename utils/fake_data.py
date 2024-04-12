@@ -3,6 +3,7 @@ from account.models import CustomUser
 from my_health_info.models import HealthInfo
 from exercises_info.models import ExercisesInfo
 from community.models import Post
+from . import enums
 import abc
 
 
@@ -91,15 +92,21 @@ class FakeExercisesInfo(FakeModel):
         self.fake_info = self.basic_info()
 
     def basic_info(self):
+        focus_areas = enums.FocusAreaEnum.choices()
+        chosen_focus_areas = self.fake.random_choices(focus_areas)
         return {
             "title": self.fake.sentence(),
             "description": self.fake.text(),
+            "video": self.fake.url(),
+            "focus_areas": chosen_focus_areas,
         }
 
     def create_instance(self, user_instance):
+        focus_areas = self.fake_info.pop("focus_areas")
         self.instance = self.model.objects.create(
             author=user_instance, **self.fake_info
         )
+        self.instance.focus_areas.set(focus_areas)
         return self.instance
 
     def request_create(self):
