@@ -1,6 +1,7 @@
 import json
 from django.test import Client, TestCase
 from django.urls import reverse
+from rest_framework import status
 from account.models import CustomUser as User
 from exercises_info.models import ExercisesInfo
 from utils.fake_data import FakeUser, FakeExercisesInfo
@@ -12,9 +13,17 @@ class ExercisesInfoTestCase(TestCase):
     def setUp(self):
         self.admin = FakeUser()
         self.admin.create_instance(is_staff=True)
+        self.admin_info = {
+            "username": self.admin.instance.username,
+            "password": "password",
+        }
 
         self.user = FakeUser()
         self.user.create_instance()
+        self.user_info = {
+            "username": self.user.instance.username,
+            "password": "password",
+        }
 
         self.exercise1 = FakeExercisesInfo()
         self.exercise1.create_instance(user_instance=self.user.instance)
@@ -26,7 +35,7 @@ class ExercisesInfoTestCase(TestCase):
     def test_all_users_can_view_exercises_list(self):
         response = self.client.get(reverse("exercisesinfo-list"))
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, self.exercise1.instance.title)
         self.assertContains(response, self.exercise2.instance.title)
 
@@ -49,7 +58,7 @@ class ExercisesInfoTestCase(TestCase):
             data=new_exercise.request_create(),
         )
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = response.json()
 
@@ -65,7 +74,7 @@ class ExercisesInfoTestCase(TestCase):
             reverse("exercisesinfo-list"),
             data=new_exercise.request_create(),
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     # 관리자만 운동 정보를 수정할 수 있는지 확인
     def test_admin_can_update_exercise(self):
@@ -80,7 +89,7 @@ class ExercisesInfoTestCase(TestCase):
             data=data,
             content_type=content_type,
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             ExercisesInfo.objects.get(id=self.exercise1.id).title,
             self.exercise2.title,
@@ -93,7 +102,7 @@ class ExercisesInfoTestCase(TestCase):
             reverse("exercisesinfo-detail", args=[self.exercise1.id]),
             data=self.exercise2_request,
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(
             ExercisesInfo.objects.get(id=self.exercise1.id).title,
             self.exercise1.title,
@@ -105,7 +114,7 @@ class ExercisesInfoTestCase(TestCase):
         response = self.client.delete(
             reverse("exercisesinfo-detail", args=[self.exercise1.id])
         )
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(ExercisesInfo.objects.count(), 1)
 
     # 일반유저가 운동 정보를 삭제할 수 있는지 확인
@@ -114,5 +123,14 @@ class ExercisesInfoTestCase(TestCase):
         response = self.client.delete(
             reverse("exercisesinfo-detail", args=[self.exercise1.id])
         )
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(ExercisesInfo.objects.count(), 2)
+
+    # 운동 정보 생성 시 필수 필드가 누락되었을 때 에러가 발생하는지 확인
+    def test_exercise_create_error_when_required_field_is_missing(self):
+        self.client.login(**self.admin_info)
+        response = self.client.post(
+            reverse("exercisesinfo-list"),
+            data={},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
