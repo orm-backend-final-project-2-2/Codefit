@@ -9,8 +9,7 @@ from drf_writable_nested import WritableNestedModelSerializer
 class FocusAreaSerializer(serializers.ModelSerializer):
     class Meta:
         model = FocusArea
-        fields = "__all__"
-        read_only_fields = ["id"]
+        fields = ["focus_area"]
 
 
 class ExercisesInfoSerializer(WritableNestedModelSerializer):
