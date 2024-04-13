@@ -18,7 +18,7 @@ class ExercisesAttribute(models.Model):
     need_speed = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"NeedSet, NeedRep, NeedWeight, NeedDuration, NeedSpeed\n{self.need_set}, {self.need_rep}, {self.need_weight}, {self.need_duration}, {self.need_speed}"
+        return f"NeedSet: {self.need_set}\nNeedRep: {self.need_rep}\nNeedWeight: {self.need_weight}\nNeedDuration: {self.need_duration}\nNeedSpeed: {self.need_speed}"
 
 
 class ExercisesInfo(models.Model):
@@ -39,9 +39,11 @@ class ExercisesInfo(models.Model):
         ExercisesAttribute,
         on_delete=models.CASCADE,
         related_name="exercises_info",
-        blank=True,
-        null=True,
     )
 
     def __str__(self):
         return f"{self.title}"
+
+    def delete(self, *args, **kwargs):
+        self.exercises_attribute.delete()
+        super().delete(*args, **kwargs)
