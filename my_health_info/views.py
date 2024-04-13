@@ -12,6 +12,7 @@ from rest_framework.exceptions import (
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from django.utils import timezone
+from my_health_info.permissions import IsOwnerOrReadOnly
 
 
 class MyHealthInfoViewSet(viewsets.ModelViewSet):
@@ -77,6 +78,7 @@ class RoutineViewSet(viewsets.ModelViewSet):
 
     http_method_names = ["get", "post", "patch", "delete"]
     serializer_class = RoutineSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
     def get_queryset(self):
         return Routine.objects.all().order_by("-created_at")
