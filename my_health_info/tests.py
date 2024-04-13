@@ -320,3 +320,24 @@ class RoutineTestCase(TestCase):
 
         data = response.json()
         self.assertEqual(data.get("username"), self.user1.instance.username)
+
+    def test_post_routine_not_authenticated(self):
+        """
+        비로그인 유저가 루틴 생성 요청을 보낼 때 401 에러를 리턴하는지 테스트
+
+        reverse_url: routine-list
+        HTTP method: POST
+
+        테스트 시나리오:
+        1. 비로그인 유저가 /routine/에 POST 요청을 보냅니다.
+        2. 401 에러를 리턴하는지 확인합니다.
+        """
+        new_routine = FakeRoutine()
+
+        response = self.client.post(
+            reverse("routine-list"),
+            data=new_routine.request_create(),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
