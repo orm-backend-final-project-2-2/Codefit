@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from my_health_info.models import HealthInfo, Routine
+from my_health_info.models import HealthInfo, Routine, Routine_Like
 from my_health_info.serializers import HealthInfoSerializer, RoutineSerializer
 from rest_framework.exceptions import (
     MethodNotAllowed,
@@ -13,6 +13,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from django.utils import timezone
 from my_health_info.permissions import IsOwnerOrReadOnly
+from rest_framework.decorators import action
 
 
 class MyHealthInfoViewSet(viewsets.ModelViewSet):
@@ -91,14 +92,27 @@ class RoutineViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """루틴 정보 생성 시 author 정보를 추가"""
-        if not self.request.user.is_authenticated:
-            raise NotAuthenticated()
-
         serializer.save(author=self.request.user)
 
     def partial_update(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            raise NotAuthenticated()
-
         kwargs["partial"] = True
         return self.update(request, *args, **kwargs)
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="like",
+        url_name="like",
+        permission_classes=[IsAuthenticated],
+    )
+    def like(self, request, *args, **kwargs):
+        routine = self.get_object()
+        user = request.user
+
+        if Routine_Like.objects.filter(routine=routine, user=user).exists():
+            raise MethodNotAllowed("Already liked")
+
+        Routine_Like.objects.create(routine=routine, user=user)
+        return Response(
+            data={"like_count": f"{routine.like_count}"}, status=status.HTTP_201_CREATED
+        )
