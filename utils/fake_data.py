@@ -1,7 +1,7 @@
 from faker import Faker
 from account.models import CustomUser
 from my_health_info.models import HealthInfo
-from exercises_info.models import ExercisesInfo, FocusArea
+from exercises_info.models import ExercisesInfo, FocusArea, ExercisesAttribute
 from community.models import Post
 from utils.enums import FocusAreaEnum
 import abc
@@ -49,6 +49,12 @@ class FakeModel(abc.ABC):
     def create_instance(self):
         """모델을 생성하고 인스턴스를 반환합니다."""
         pass
+
+    def request_partial_update(self, **kwargs):
+        """Partial Update 요청에 필요한 정보를 반환합니다."""
+        for key, value in kwargs.items():
+            if key in self.base_attr:
+                self.base_attr[key] = value
 
 
 class FakeUser(FakeModel):
@@ -122,6 +128,31 @@ class FakeFocusArea(FakeModel):
         return self.needed_info(["focus_area"])
 
 
+class FakeExercisesAttribute(FakeModel):
+    def __init__(self):
+        super().__init__(ExercisesAttribute)
+        self.base_attr = self.set_base_attr()
+
+    def set_base_attr(self):
+        return {
+            "need_set": self.fake.boolean(),
+            "need_rep": self.fake.boolean(),
+            "need_weight": self.fake.boolean(),
+            "need_duration": self.fake.boolean(),
+            "need_speed": self.fake.boolean(),
+        }
+
+    def create_instance(self):
+        self.instance = self.model.objects.create(**self.base_attr)
+        return self.instance
+
+    def request_create(self):
+        """Create 요청에 필요한 정보를 반환합니다."""
+        return self.needed_info(
+            ["need_set", "need_rep", "need_weight", "need_duration", "need_speed"]
+        )
+
+
 class FakeExercisesInfo(FakeModel):
     def __init__(self):
         super().__init__(ExercisesInfo)
@@ -138,7 +169,11 @@ class FakeExercisesInfo(FakeModel):
 
     def set_related_fake_models(self):
         focus_areas = self.set_focus_areas()
-        return {"focus_areas": focus_areas}
+        exercises_attribute = FakeExercisesAttribute()
+        return {
+            "focus_areas": focus_areas,
+            "exercises_attribute": exercises_attribute,
+        }
 
     def set_focus_areas(self):
         sample_count = random.randint(1, 4)
@@ -154,22 +189,41 @@ class FakeExercisesInfo(FakeModel):
     def set_related_attr(self):
         related_attr = {}
 
-        if self.related_fake_models:
+        if not self.related_fake_models:
+            return related_attr
+
+        if "focus_areas" in self.related_fake_models:
             related_attr["focus_areas"] = [
                 focus_area.base_attr
                 for focus_area in self.related_fake_models.get("focus_areas")
             ]
 
+        if "exercises_attribute" in self.related_fake_models:
+            related_attr["exercises_attribute"] = self.related_fake_models[
+                "exercises_attribute"
+            ].base_attr
+
+        self.related_attr = related_attr
         return related_attr
 
     def create_instance(self, user_instance):
+        fake_exercises_attribute = self.related_fake_models.get("exercises_attribute")
+        exercises_attribute_instance = fake_exercises_attribute.create_instance()
+
         self.instance = self.model.objects.create(
-            author=user_instance, **self.base_attr
+            author=user_instance,
+            **self.base_attr,
+            exercises_attribute=exercises_attribute_instance
         )
 
-        for verbose_name, fake_models in self.related_fake_models.items():
-            for fake_model in fake_models:
-                fake_model_instance = fake_model.create_instance()
+        fake_focus_areas = self.related_fake_models.get("focus_areas")
+
+        fake_focus_area_instances = []
+        for fake_focus_area in fake_focus_areas:
+            instance = fake_focus_area.create_instance()
+            fake_focus_area_instances.append(instance)
+
+        self.instance.focus_areas.set(fake_focus_area_instances)
 
         return self.instance
 
