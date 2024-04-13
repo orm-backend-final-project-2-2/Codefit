@@ -422,7 +422,7 @@ class ExercisesAttributeTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()
-
+        print(data)
         data_exercises_attribute = data.get("exercises_attribute")
 
         self.assertEqual(len(data_exercises_attribute), len(exercises_attribute))
