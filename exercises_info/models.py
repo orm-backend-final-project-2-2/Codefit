@@ -10,6 +10,17 @@ class FocusArea(models.Model):
         return f"{self.focus_area}"
 
 
+class ExercisesAttribute(models.Model):
+    need_set = models.BooleanField(default=False)
+    need_rep = models.BooleanField(default=False)
+    need_weight = models.BooleanField(default=False)
+    need_duration = models.BooleanField(default=False)
+    need_speed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"NeedSet, NeedRep, NeedWeight, NeedDuration, NeedSpeed\n{self.need_set}, {self.need_rep}, {self.need_weight}, {self.need_duration}, {self.need_speed}"
+
+
 class ExercisesInfo(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="exercises_info"
@@ -19,16 +30,18 @@ class ExercisesInfo(models.Model):
     video = models.CharField(max_length=200)
 
     focus_areas = models.ManyToManyField(
-        FocusArea, related_name="exercises_info", blank=True
+        FocusArea,
+        related_name="exercises_info",
+        blank=True,
+    )
+
+    exercises_attribute = models.OneToOneField(
+        ExercisesAttribute,
+        on_delete=models.CASCADE,
+        related_name="exercises_info",
+        blank=True,
+        null=True,
     )
 
     def __str__(self):
         return f"{self.title}"
-
-
-# class ExercisesAttribute(models.Model):
-#     need_set = models.BooleanField(default=False)
-#     need_rep = models.BooleanField(default=False)
-#     need_weight = models.BooleanField(default=False)
-#     need_duration = models.BooleanField(default=False)
-#     need_speed = models.BooleanField(default=False)
