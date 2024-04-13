@@ -26,4 +26,4 @@ class Routine(models.Model):
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.user.username}의 루틴 정보"
+        return f"{self.author.username}의 루틴 정보"
