@@ -4,25 +4,23 @@ from utils.enums import FocusAreaEnum
 
 
 class FocusArea(models.Model):
-    focus_area = models.CharField(max_length=20, choices=FocusAreaEnum.choices())
+    focus_area = models.CharField(max_length=20)
 
     def __str__(self):
-        return self.get_focus_area_display()
+        return f"{self.focus_area}"
 
 
 class ExercisesInfo(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="exercises_info"
     )
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=200)
     description = models.TextField()
-    video = models.FileField(upload_to="exercises_info_video/", blank=True)
+    video = models.CharField(max_length=200)
+
     focus_areas = models.ManyToManyField(
-        FocusArea, verbose_name="Focus Areas", related_name="exercise"
+        FocusArea, related_name="exercises_info", blank=True
     )
-    # exercise_attributes = models.OneToOneField(
-    #     "ExercisesAttribute", on_delete=models.CASCADE, related_name="exercise"
-    # )
 
     def __str__(self):
         return f"{self.title}"
