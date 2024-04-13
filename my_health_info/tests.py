@@ -272,3 +272,25 @@ class RoutineTestCase(TestCase):
         self.assertEqual(
             data, "자격 인증데이터(authentication credentials)가 제공되지 않았습니다."
         )
+
+    def test_get_routine_authenticated(self):
+        """
+        로그인한 유저가 /routine/에 접근할 때 루틴들을 조회하는지 테스트
+
+        reverse_url: routine-list
+        HTTP method: GET
+
+        테스트 시나리오:
+        1. 로그인한 유저가 /routine/에 GET 요청을 보냅니다.
+        2. 현재 생성된 루틴들을 조회하는지 확인합니다.
+        """
+        routines_count = Routine.objects.count()
+
+        self.client.force_login(self.user1.instance)
+
+        response = self.client.get(reverse("routine-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        self.assertEqual(len(data), routines_count)
