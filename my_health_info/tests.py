@@ -1,13 +1,12 @@
 from django.test import TestCase
 from account.models import CustomUser as User
 from django.urls import reverse
-from my_health_info.models import HealthInfo
+from my_health_info.models import HealthInfo, Routine
 from freezegun import freeze_time
-from faker import Faker
 from datetime import datetime, timedelta
 from django.utils import timezone
 from rest_framework import status
-from utils.fake_data import FakeUser, FakeHealthInfo
+from utils.fake_data import FakeUser, FakeHealthInfo, FakeRoutine
 
 
 class MyHealthInfoTestCase(TestCase):
@@ -213,3 +212,63 @@ class MyHealthInfoTestCase(TestCase):
                     status.HTTP_405_METHOD_NOT_ALLOWED,
                     f"{action} did not return 405",
                 )
+
+
+class RoutineTestCase(TestCase):
+    """
+    목적: Routine 모델과 /routine/ API에 대한 테스트를 진행합니다.
+
+    Test cases:
+    1. 비로그인 유저가 /routine/에 접근할 때 401 에러를 리턴하는지 테스트
+    2. 로그인한 유저가 /routine/에 접근할 때 유저의 루틴 정보를 조회하는지 테스트
+    3. 루틴 생성 요청이 올바르게 처리되는지 테스트
+    4. 비로그인 유저가 루틴 생성 요청을 보낼 때 401 에러를 리턴하는지 테스트
+    5. 루틴 업데이트 요청이 올바르게 처리되는지 테스트
+    6. 본인이 생성한 루틴이 아닌 경우 루틴 업데이트 요청이 403 에러를 리턴하는지 테스트
+    7. 비로그인 유저가 루틴 업데이트 요청을 보낼 때 401 에러를 리턴하는지 테스트
+    8. 루틴 삭제 요청이 올바르게 처리되는지 테스트
+    9. 본인이 생성한 루틴이 아닌 경우 루틴 삭제 요청이 403 에러를 리턴하는지 테스트
+    10. 비로그인 유저가 루틴 삭제 요청을 보낼 때 401 에러를 리턴하는지 테스트
+    11. 허용되지 않은 메소드로 /routine/에 접근할 때 405 에러를 리턴하는지 테스트
+    12. 루틴에 좋아요를 누르는 요청이 올바르게 처리되는지 테스트
+    13. 루틴을 좋아요 순으로 정렬하여 조회할 수 있는지 테스트
+    14. 이미 좋아요를 누른 루틴에 좋아요를 누르는 요청이 올바르게 처리되는지 테스트
+    15. 루틴 목록에서 제작자로 검색하여 조회할 수 있는지 테스트
+    16. 루틴 목록에서 자극 부위로 검색하여 조회할 수 있는지 테스트
+    """
+
+    def setUp(self):
+        self.user1 = FakeUser()
+        self.user1.create_instance()
+
+        self.user2 = FakeUser()
+        self.user2.create_instance()
+
+        self.routine1 = FakeRoutine()
+        self.routine1.create_instance(user_instance=self.user1.instance)
+
+        self.routine2 = FakeRoutine()
+        self.routine2.create_instance(user_instance=self.user2.instance)
+
+        self.routine3 = FakeRoutine()
+        self.routine3.create_instance(user_instance=self.user1.instance)
+
+    def test_get_routine_not_authenticated(self):
+        """
+        비로그인 유저가 /routine/에 접근할 때 401 에러를 리턴하는지 테스트
+
+        reverse_url: routine-list
+        HTTP method: GET
+
+        테스트 시나리오:
+        1. 비로그인 유저가 /routine/에 GET 요청을 보냅니다.
+        2. 401 에러를 리턴하는지 확인합니다.
+        """
+        response = self.client.get(reverse("routine-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        data = response.json()
+        self.assertEqual(
+            data, "자격 인증데이터(authentication credentials)가 제공되지 않았습니다."
+        )
