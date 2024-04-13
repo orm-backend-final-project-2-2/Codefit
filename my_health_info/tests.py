@@ -633,17 +633,65 @@ class RoutineTestCase(TestCase):
 class ExerciseInRoutineTestCase(TestCase):
     """
     목적: Routine 모델과 연결되어 루틴에 포함된 운동들을 관리하는 ExerciseInRoutine 모델에 대한 테스트를 진행합니다.
-    
+
     Test cases:
     1. 루틴을 조회할 때 루틴에 포함된 운동들을 함께 조회하는지 테스트
     2. 루틴을 생성할 때 주어진 운동에 대한 정보를 함께 생성하는지 테스트
     3. 루틴을 업데이트할 때 주어진 운동에 대한 정보를 함께 업데이트하는지 테스트
     4. 루틴을 삭제할 때 함께 생성된 운동에 대한 정보도 함께 삭제하는지 테스트
     """
+
     def setUp(self):
         self.user1 = FakeUser()
         self.user1.create_instance()
 
         self.routine1 = FakeRoutine()
         self.routine1.create_instance(user_instance=self.user1.instance)
-        
+
+
+routine_format = {
+    id: 1,
+    title: "루틴 제목",
+    author: {
+        username: "유저 이름",
+        email: "유저 이메일",
+        password: "Hashed Password",
+    },
+    username: "유저 이름",
+    created_at: "2021-01-01T00:00:00",
+    like_count: 0,
+    exercises_in_routine: [
+        {
+            id: 1,
+            order: 0,
+            exercise: {
+                id: 1,
+                title: "운동 제목",
+                description: "운동 설명",
+                video: "https://www.youtube.com/watch?v=12345",
+                focus_areas: [
+                    {
+                        id: 1,
+                        name: "하체",
+                    }
+                ],
+                exercises_attribute: {
+                    id: 1,
+                    need_set: True,
+                    need_rep: True,
+                    need_weight: False,
+                    need_duration: False,
+                    need_speed: False,
+                },
+            },
+            exercise_attribute: {
+                id: 1,
+                set_count: 3,
+                rep_count: 10,
+                weight: 0,
+                duration: 0,
+                speed: 0,
+            },
+        }
+    ],
+}
