@@ -504,13 +504,13 @@ class RoutineTestCase(TestCase):
         """
         self.client.force_login(self.user1.instance)
 
-        like_count = self.routine2.instance.likes.count()
+        like_count = self.routine2.instance.like_count
 
         pk = self.routine2.instance.pk
 
         response = self.client.post(reverse("routine-like", kwargs={"pk": pk}))
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = response.json()
         self.assertTrue(data.get("like_count"), like_count + 1)
