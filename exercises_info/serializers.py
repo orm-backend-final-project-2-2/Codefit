@@ -1,14 +1,15 @@
 from account.models import CustomUser as User
 from exercises_info.models import ExercisesInfo, FocusArea
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+from utils.enums import FocusAreaEnum
 
 
 class FocusAreaSerializer(serializers.ModelSerializer):
-    focus_area = serializers.CharField(max_length=20)
-
     class Meta:
         model = FocusArea
-        fields = ["focus_area"]
+        fields = "__all__"
+        read_only_fields = ["id"]
 
 
 class ExercisesInfoSerializer(serializers.ModelSerializer):
@@ -38,6 +39,30 @@ class ExercisesInfoSerializer(serializers.ModelSerializer):
             focus_area = FocusArea.objects.create(**focus_area_data)
             instance.focus_areas.add(focus_area)
         return instance
+
+    def validate(self, data):
+        validators = {
+            "focus_areas": self.validate_focus_areas,
+        }
+
+        for attr, validator in validators.items():
+            data[attr] = validator(data.get(attr, None))
+
+        return data
+
+    def validate_focus_areas(self, attr_data):
+        if not attr_data:
+            raise ValidationError("Focus areas are required.")
+
+        valid_focus_area_names = [enum.value for enum in FocusAreaEnum]
+
+        for focus_area_data in attr_data:
+            if focus_area_data.get("focus_area") not in [
+                enum.value for enum in FocusAreaEnum
+            ]:
+                raise ValidationError("Invalid focus area name.")
+
+        return attr_data
 
     class Meta:
         model = ExercisesInfo
