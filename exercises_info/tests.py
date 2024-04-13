@@ -430,3 +430,41 @@ class ExercisesAttributeTestCase(TestCase):
             self.assertEqual(
                 data_exercises_attribute.get(attr), exercises_attribute.get(attr)
             )
+
+    def test_create_exercise_with_exercises_attribute(self):
+        """
+        새로운 운동 정보를 생성할 때 ExercisesAttribute가 제대로 생성되는지 확인
+
+        reverse_url : exercises-info-list
+        HTTP method : POST
+
+        테스트 시나리오:
+        1. 관리자 계정으로 로그인
+        2. 새 운동 정보를 생성
+        3. 서버에 POST 요청을 보내서 새로운 운동 정보 생성
+        4. 응답 코드가 201인지 확인
+        5. 응답 데이터에 ExercisesAttribute의 필드 값이 모두 정의된 값과 같은지 확인
+        """
+
+        self.client.force_login(self.admin.instance)
+
+        new_exercise = FakeExercisesInfo()
+
+        response = self.client.post(
+            reverse("exercises-info-list"),
+            data=new_exercise.request_create(),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+
+        exercises_attribute = new_exercise.request_create().get("exercises_attribute")
+
+        data_exercises_attribute = data.get("exercises_attribute")
+
+        for attr in exercises_attribute:
+            self.assertEqual(
+                data_exercises_attribute.get(attr), exercises_attribute.get(attr)
+            )
