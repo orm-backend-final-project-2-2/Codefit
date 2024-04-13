@@ -628,3 +628,22 @@ class RoutineTestCase(TestCase):
         response = self.client.post(reverse("routine-like", kwargs={"pk": pk}))
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class ExerciseInRoutineTestCase(TestCase):
+    """
+    목적: Routine 모델과 연결되어 루틴에 포함된 운동들을 관리하는 ExerciseInRoutine 모델에 대한 테스트를 진행합니다.
+    
+    Test cases:
+    1. 루틴을 조회할 때 루틴에 포함된 운동들을 함께 조회하는지 테스트
+    2. 루틴을 생성할 때 주어진 운동에 대한 정보를 함께 생성하는지 테스트
+    3. 루틴을 업데이트할 때 주어진 운동에 대한 정보를 함께 업데이트하는지 테스트
+    4. 루틴을 삭제할 때 함께 생성된 운동에 대한 정보도 함께 삭제하는지 테스트
+    """
+    def setUp(self):
+        self.user1 = FakeUser()
+        self.user1.create_instance()
+
+        self.routine1 = FakeRoutine()
+        self.routine1.create_instance(user_instance=self.user1.instance)
+        
