@@ -399,7 +399,7 @@ class ExercisesAttributeTestCase(TestCase):
         """
         기존에 생성된 운동 정보의 id로 연결된 ExercisesAttribute를 조회할 수 있는지 확인
 
-        reverse_url : exercises-info-list
+        reverse_url : exercises-info-detail
         HTTP method : GET
 
         테스트 시나리오:
@@ -413,12 +413,11 @@ class ExercisesAttributeTestCase(TestCase):
         self.client.force_login(self.admin.instance)
 
         id = self.exercise1.instance.id
+        print(id)
 
         exercises_attribute = self.exercise1.request_create().get("exercises_attribute")
 
-        response = self.client.get(
-            reverse("exercises-attribute-list", kwargs={"pk": id})
-        )
+        response = self.client.get(reverse("exercises-info-detail", kwargs={"pk": id}))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
