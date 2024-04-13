@@ -1,10 +1,10 @@
 from django.test import TestCase
 from rest_framework import status
 from django.urls import reverse
-from .models import Post, Comment  # Comment추가
-from .serializers import PostSerializer, CommentSerializer  # CommentSerializer추가
+from .models import Post, Comment
+from .serializers import PostSerializer, CommentSerializer
 from account.models import CustomUser as User
-from utils.fake_data import FakeUser, FakePost, FakeComment  # FakeComment추가
+from utils.fake_data import FakeUser, FakePost, FakeComment
 
 
 class CommentTestCase(TestCase):
