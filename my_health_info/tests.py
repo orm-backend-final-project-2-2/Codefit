@@ -535,3 +535,54 @@ class RoutineTestCase(TestCase):
         response = self.client.post(reverse("routine-like", kwargs={"pk": pk}))
 
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_list_routine_sorted_by_like(self):
+        """
+        루틴을 좋아요 순으로 정렬하여 조회할 수 있는지 테스트
+
+        reverse_url: routine-list
+        HTTP method: GET
+
+        테스트 시나리오:
+        1. 새로운 유저 몇 명을 생성합니다.
+        2. 새로운 루틴 몇 개를 생성합니다.
+        3. 기존 루틴과 새로운 루틴에 좋아요 수를 변경합니다.
+        4. 루틴을 좋아요 순으로 정렬합니다.
+        5. /routine/에 GET 요청을 보냅니다.
+        6. Response의 루틴들이 정렬해둔 루틴의 좋아요와 일치하는지 확인합니다.
+        """
+        new_user_1 = FakeUser()
+        new_user_1.create_instance()
+
+        new_user_2 = FakeUser()
+        new_user_2.create_instance()
+
+        new_user_3 = FakeUser()
+        new_user_3.create_instance()
+
+        new_routine_1 = FakeRoutine()
+        new_routine_1.create_instance(user_instance=new_user_1.instance)
+
+        new_routine_2 = FakeRoutine()
+        new_routine_2.create_instance(user_instance=new_user_2.instance)
+
+        new_routine_1.instance.like_count = 10
+        new_routine_1.instance.save()
+
+        new_routine_2.instance.like_count = 5
+        new_routine_2.instance.save()
+
+        sorted_routines = Routine.objects.all().order_by("-like_count")
+
+        self.client.force_login(self.user1.instance)
+
+        response = self.client.get(reverse("routine-list") + "?ordering=-like_count")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        for routine_instances, response_routine in zip(sorted_routines, data):
+            self.assertEqual(
+                routine_instances.like_count, response_routine.get("like_count")
+            )
