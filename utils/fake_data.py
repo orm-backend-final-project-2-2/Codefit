@@ -1,6 +1,6 @@
 from faker import Faker
 from account.models import CustomUser
-from my_health_info.models import HealthInfo
+from my_health_info.models import HealthInfo, Routine
 from exercises_info.models import ExercisesInfo, FocusArea, ExercisesAttribute
 from community.models import Post
 from utils.enums import FocusAreaEnum
@@ -84,6 +84,27 @@ class FakeUser(FakeModel):
     def request_login(self):
         """Login 요청에 필요한 정보를 반환합니다."""
         return self.needed_info(["email", "password"])
+
+
+class FakeRoutine(FakeModel):
+    def __init__(self):
+        super().__init__(Routine)
+        self.base_attr = self.set_base_attr()
+
+    def set_base_attr(self):
+        return {
+            "title": self.fake.sentence(),
+        }
+
+    def create_instance(self, user_instance):
+        self.instance = self.model.objects.create(
+            author=user_instance, **self.base_attr
+        )
+        return self.instance
+
+    def request_create(self):
+        """Create 요청에 필요한 정보를 반환합니다."""
+        return self.needed_info(["title"])
 
 
 class FakeHealthInfo(FakeModel):
