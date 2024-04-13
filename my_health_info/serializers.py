@@ -18,4 +18,5 @@ class RoutineSerializer(serializers.ModelSerializer):
         read_only_fields = ["author", "created_at", "is_deleted"]
 
     def get_username(self, obj):
+        # print(obj.author)
         return obj.author.username
