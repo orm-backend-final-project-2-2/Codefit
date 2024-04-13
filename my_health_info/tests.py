@@ -389,3 +389,29 @@ class RoutineTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        
+    def test_update_routine_not_author(self):
+        """
+        본인이 생성한 루틴이 아닌 경우 루틴 업데이트 요청이 403 에러를 리턴하는지 테스트
+
+        reverse_url: routine-detail
+        HTTP method: PATCH
+
+        테스트 시나리오:
+        1. 로그인한 유저가 /routine/<pk>/에 PATCH 요청을 보냅니다.
+        2. 403 에러를 리턴하는지 확인합니다.
+        """
+        self.client.force_login(self.user2.instance)
+
+        pk = self.routine1.instance.pk
+
+        new_routine = FakeRoutine()
+        new_routine_title = "Updated Title"
+
+        response = self.client.patch(
+            reverse("routine-detail", kwargs={"pk": pk}),
+            data={"title": new_routine_title},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
