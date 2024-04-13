@@ -1,9 +1,21 @@
 from account.models import CustomUser as User
-from exercises_info.models import ExercisesInfo, FocusArea
+from exercises_info.models import ExercisesInfo, FocusArea, ExercisesAttribute
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from utils.enums import FocusAreaEnum
 from drf_writable_nested import WritableNestedModelSerializer
+
+
+class ExercisesAttributeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExercisesAttribute
+        fields = [
+            "need_set",
+            "need_rep",
+            "need_weight",
+            "need_duration",
+            "need_speed",
+        ]
 
 
 class FocusAreaSerializer(serializers.ModelSerializer):
@@ -20,9 +32,18 @@ class FocusAreaSerializer(serializers.ModelSerializer):
 
 class ExercisesInfoSerializer(WritableNestedModelSerializer):
     focus_areas = FocusAreaSerializer(many=True)
+    exercises_attribute = ExercisesAttributeSerializer()
     username = serializers.CharField(source="author.username", read_only=True)
 
     class Meta:
         model = ExercisesInfo
-        fields = ["title", "author", "username", "description", "video", "focus_areas"]
+        fields = [
+            "title",
+            "author",
+            "username",
+            "description",
+            "video",
+            "focus_areas",
+            "exercises_attribute",
+        ]
         read_only_fields = ["author", "username"]

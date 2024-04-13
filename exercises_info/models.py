@@ -10,6 +10,17 @@ class FocusArea(models.Model):
         return f"{self.focus_area}"
 
 
+class ExercisesAttribute(models.Model):
+    need_set = models.BooleanField(default=False)
+    need_rep = models.BooleanField(default=False)
+    need_weight = models.BooleanField(default=False)
+    need_duration = models.BooleanField(default=False)
+    need_speed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"NeedSet: {self.need_set}\nNeedRep: {self.need_rep}\nNeedWeight: {self.need_weight}\nNeedDuration: {self.need_duration}\nNeedSpeed: {self.need_speed}"
+
+
 class ExercisesInfo(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="exercises_info"
@@ -19,16 +30,20 @@ class ExercisesInfo(models.Model):
     video = models.CharField(max_length=200)
 
     focus_areas = models.ManyToManyField(
-        FocusArea, related_name="exercises_info", blank=True
+        FocusArea,
+        related_name="exercises_info",
+        blank=True,
+    )
+
+    exercises_attribute = models.OneToOneField(
+        ExercisesAttribute,
+        on_delete=models.CASCADE,
+        related_name="exercises_info",
     )
 
     def __str__(self):
         return f"{self.title}"
 
-
-# class ExercisesAttribute(models.Model):
-#     need_set = models.BooleanField(default=False)
-#     need_rep = models.BooleanField(default=False)
-#     need_weight = models.BooleanField(default=False)
-#     need_duration = models.BooleanField(default=False)
-#     need_speed = models.BooleanField(default=False)
+    def delete(self, *args, **kwargs):
+        self.exercises_attribute.delete()
+        super().delete(*args, **kwargs)
