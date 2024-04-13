@@ -602,7 +602,7 @@ class RoutineTestCase(TestCase):
         self.client.force_login(self.user1.instance)
 
         response = self.client.get(
-            reverse("routine-list") + f"?author={self.user1.instance.username}"
+            reverse("routine-list") + f"?author__id={self.user1.instance.id}"
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
