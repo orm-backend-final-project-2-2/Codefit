@@ -1,17 +1,22 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from my_health_info.models import HealthInfo
-from my_health_info.serializers import HealthInfoSerializer
-from rest_framework.exceptions import MethodNotAllowed, NotFound, ValidationError
-from rest_framework import viewsets
+from my_health_info.models import HealthInfo, Routine
+from my_health_info.serializers import HealthInfoSerializer, RoutineSerializer
+from rest_framework.exceptions import (
+    MethodNotAllowed,
+    NotFound,
+    ValidationError,
+    NotAuthenticated,
+)
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from django.utils import timezone
 
 
 class MyHealthInfoViewSet(viewsets.ModelViewSet):
     """
-    내 건강 정보에 대한 VIEWSET
+    내 건강 정보에 대한 ViewSet
 
     url_prefix: /my_health_info/my_health_info/
 
@@ -56,3 +61,34 @@ class MyHealthInfoViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(queryset.first())
             return Response(serializer.data)
         raise NotFound("No health info found")
+
+
+class RoutineViewSet(viewsets.ModelViewSet):
+    """
+    루틴 정보에 대한 ViewSet
+
+    url_prefix: /my_health_info/routine/
+
+    functions:
+    - list: GET /my_health_info/routine/
+    - create: POST /my_health_info/routine/
+    - retrieve: GET /my_health_info/routine/<pk>/
+    """
+
+    http_method_names = ["get", "post", "patch", "delete"]
+    serializer_class = RoutineSerializer
+
+    def get_queryset(self):
+        return Routine.objects.all().order_by("-created_at")
+
+    def list(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response(
+                NotAuthenticated().detail, status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        return super().list(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        """루틴 정보 생성 시 author 정보를 추가"""
+        serializer.save(author=self.request.user)
