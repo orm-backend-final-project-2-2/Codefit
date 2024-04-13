@@ -2,7 +2,7 @@ from faker import Faker
 from account.models import CustomUser
 from my_health_info.models import HealthInfo
 from exercises_info.models import ExercisesInfo
-from community.models import Post
+from community.models import Post, Comment
 import abc
 
 
@@ -127,3 +127,24 @@ class FakePost(FakeModel):
     def request_create(self):
         """Create 요청에 필요한 정보를 반환합니다."""
         return self.needed_info(["title", "content"])
+
+
+class FakeComment(FakeModel):
+    def __init__(self):
+        super().__init__(Comment)
+        self.fake_info = self.basic_info()
+
+    def basic_info(self):
+        return {
+            "content": self.fake.text(),
+        }
+
+    def create_instance(self, user_instance, post_instance):
+        self.instance = self.model.objects.create(
+            author=user_instance, post=post_instance, **self.fake_info
+        )
+        return self.instance
+
+    def request_create(self):
+        """Create 요청에 필요한 정보를 반환합니다."""
+        return self.needed_info(["content"])
