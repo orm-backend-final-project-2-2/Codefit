@@ -367,3 +367,68 @@ class ExercisesInfoTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+
+class ExercisesAttributeTestCase(TestCase):
+    """
+    목적: ExercisesInfo App의 ExercisesInfo Model에서 OneToOneField로 연결된 ExercisesAttribute Model의 API 테스트
+
+    Test cases:
+    1. 생성된 운동 정보의 id로 연결된 ExercisesAttribute를 조회할 수 있는지 확인
+    2. 새로운 운동 정보를 생성할 때 ExercisesAttribute가 제대로 생성되는지 확인
+    3. 새로운 운동 정보를 생성할 때 ExercisesAttribute를 함께 생성하지 않으면 에러가 발생하는지 확인
+    4. 새로운 운동 정보를 생성할 때 ExercisesAttribute의 필수 필드가 누락되었을 때 해당 필드가 False로 생성되는지 확인
+    5. bool 이외의 타입으로 ExercisesAttribute 필드를 생성하려고 시도할 때 에러가 발생하는지 확인
+    6. ExercisesInfo 수정 시 ExercisesAttribute도 함께 수정되는지 확인
+    7. ExercisesInfo 삭제 시 ExercisesAttribute도 함께 삭제되는지 확인
+    """
+
+    def setUp(self):
+        self.admin = FakeUser()
+        self.admin.create_instance(is_staff=True)
+
+        self.user = FakeUser()
+        self.user.create_instance()
+
+        self.exercise1 = FakeExercisesInfo()
+        self.exercise1.create_instance(user_instance=self.admin.instance)
+
+        self.exercise2 = FakeExercisesInfo()
+        self.exercise2.create_instance(user_instance=self.admin.instance)
+
+    def test_retrieve_exercise_attribute(self):
+        """
+        기존에 생성된 운동 정보의 id로 연결된 ExercisesAttribute를 조회할 수 있는지 확인
+
+        reverse_url : exercises-info-list
+        HTTP method : GET
+
+        테스트 시나리오:
+        1. 관리자 계정으로 로그인
+        2. 생성된 운동 정보의 id로 GET 요청을 보냄
+        3. 응답 코드가 200인지 확인
+        4. 응답 데이터에 ExercisesAttribute의 길이가 미리 정의된 값과 같은지 확인
+        5. 응답 데이터에 ExercisesAttribute의 필드 값이 모두 정의된 값과 같은지 확인
+        """
+
+        self.client.force_login(self.admin.instance)
+
+        id = self.exercise1.instance.id
+
+        exercises_attribute = self.exercise1.request_create().get("exercises_attribute")
+
+        response = self.client.get(
+            reverse("exercises-attribute-list", kwargs={"pk": id})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        data_exercises_attribute = data.get("exercises_attribute")
+
+        self.assertEqual(len(data_exercises_attribute), len(exercises_attribute))
+
+        for attr in exercises_attribute:
+            self.assertEqual(
+                data_exercises_attribute.get(attr), exercises_attribute.get(attr)
+            )
