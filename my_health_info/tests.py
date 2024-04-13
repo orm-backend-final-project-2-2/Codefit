@@ -294,3 +294,29 @@ class RoutineTestCase(TestCase):
 
         data = response.json()
         self.assertEqual(len(data), routines_count)
+
+    def test_post_routine(self):
+        """
+        루틴 생성 요청이 올바르게 처리되는지 테스트
+
+        reverse_url: routine-list
+        HTTP method: POST
+
+        테스트 시나리오:
+        1. 로그인한 유저가 /routine/에 POST 요청을 보냅니다.
+        2. 루틴이 생성되었는지 확인합니다.
+        """
+        self.client.force_login(self.user1.instance)
+
+        new_routine = FakeRoutine()
+
+        response = self.client.post(
+            reverse("routine-list"),
+            data=new_routine.request_create(),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+        self.assertEqual(data.get("username"), self.user1.instance.username)
