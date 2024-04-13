@@ -514,3 +514,24 @@ class RoutineTestCase(TestCase):
 
         data = response.json()
         self.assertTrue(data.get("like_count"), like_count + 1)
+
+    def test_like_routine_already_liked(self):
+        """
+        이미 좋아요를 누른 루틴에 좋아요를 누르는 요청이 올바르게 처리되는지 테스트
+
+        reverse_url: routine-like
+        HTTP method: POST
+
+        테스트 시나리오:
+        1. 로그인한 유저가 /routine/<pk>/like/에 POST 요청을 두 번 보냅니다.
+        2. 405 에러를 리턴하는지 확인합니다.
+        """
+        self.client.force_login(self.user1.instance)
+
+        pk = self.routine2.instance.pk
+
+        self.client.post(reverse("routine-like", kwargs={"pk": pk}))
+
+        response = self.client.post(reverse("routine-like", kwargs={"pk": pk}))
+
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
