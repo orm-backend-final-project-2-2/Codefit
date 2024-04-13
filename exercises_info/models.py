@@ -14,8 +14,8 @@ class ExercisesInfo(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="exercises_info"
     )
-    title = models.CharField(max_length=200)
-    description = models.TextField()
+    title = models.CharField(max_length=100)
+    description = models.TextField(max_length=1000)
     video = models.CharField(max_length=200)
 
     focus_areas = models.ManyToManyField(
