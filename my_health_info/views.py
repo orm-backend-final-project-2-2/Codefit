@@ -92,8 +92,12 @@ class RoutineViewSet(viewsets.ModelViewSet):
     def order_queryset(self, queryset):
         base_ordering = ["-created_at"]
 
-        orderings = self.request.query_params.get("ordering", None).split(",")
+        orderings = self.request.query_params.get("ordering", None)
 
+        if not orderings:
+            return queryset.order_by(*base_ordering)
+
+        orderings = orderings.split(",")
         orderings = [
             ordering
             for ordering in orderings
