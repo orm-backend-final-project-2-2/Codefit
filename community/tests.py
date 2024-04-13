@@ -1,10 +1,44 @@
 from django.test import TestCase
 from rest_framework import status
 from django.urls import reverse
-from .models import Post
-from .serializers import PostSerializer
+from .models import Post, Comment  # Comment추가
+from .serializers import PostSerializer, CommentSerializer  # CommentSerializer추가
 from account.models import CustomUser as User
-from utils.fake_data import FakeUser, FakePost
+from utils.fake_data import FakeUser, FakePost, FakeComment  # FakeComment추가
+
+
+class CommentTestCase(TestCase):
+    def setUp(self):
+        self.user1 = FakeUser()
+        self.user1.create_instance()
+
+        self.user2 = FakeUser()
+        self.user2.create_instance()
+
+        self.user1_post1 = FakePost()
+        self.user1_post1.create_instance(user_instance=self.user1.instance)
+
+        self.user2_post1 = FakePost()
+        self.user2_post1.create_instance(user_instance=self.user2.instance)
+
+        self.user1_comment1 = FakeComment()
+        self.user1_comment1.create_instance(
+            user_instance=self.user1.instance, post_instance=self.user1_post1.instance
+        )
+
+        self.user1_comment2 = FakeComment()
+        self.user1_comment2.create_instance(
+            user_instance=self.user1.instance, post_instance=self.user1_post1.instance
+        )
+
+    def test_get_comment_list(self):
+        """comment/ GET 요청시 모든 Comment 객체를 반환하는지 테스트"""
+        comment_count = Comment.objects.all().count()
+
+        response = self.client.get(reverse("comment-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), comment_count)
 
 
 class PostTestCase(TestCase):
