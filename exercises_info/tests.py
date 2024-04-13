@@ -468,3 +468,32 @@ class ExercisesAttributeTestCase(TestCase):
             self.assertEqual(
                 data_exercises_attribute.get(attr), exercises_attribute.get(attr)
             )
+
+    def test_create_exercise_without_exercises_attribute(self):
+        """
+        새로운 운동 정보를 생성할 때 ExercisesAttribute를 함께 생성하지 않으면 에러가 발생하는지 확인
+
+        reverse_url : exercises-info-list
+        HTTP method : POST
+
+        테스트 시나리오:
+        1. 관리자 계정으로 로그인
+        2. 새 운동 정보를 생성
+        3. 서버에 POST 요청을 보내서 ExercisesAttribute를 함께 생성하지 않은 상태로 운동 정보 생성
+        4. 응답 코드가 400인지 확인
+        """
+
+        self.client.force_login(self.admin.instance)
+
+        new_exercise = FakeExercisesInfo()
+
+        request_data = new_exercise.request_create()
+        del request_data["exercises_attribute"]
+
+        response = self.client.post(
+            reverse("exercises-info-list"),
+            data=request_data,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
