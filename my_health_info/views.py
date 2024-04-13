@@ -93,3 +93,7 @@ class RoutineViewSet(viewsets.ModelViewSet):
             raise NotAuthenticated()
 
         serializer.save(author=self.request.user)
+
+    def partial_update(self, request, *args, **kwargs):
+        kwargs["partial"] = True
+        return self.update(request, *args, **kwargs)
