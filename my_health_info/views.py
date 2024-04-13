@@ -83,12 +83,13 @@ class RoutineViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return Response(
-                NotAuthenticated().detail, status=status.HTTP_401_UNAUTHORIZED
-            )
+            raise NotAuthenticated()
 
         return super().list(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         """루틴 정보 생성 시 author 정보를 추가"""
+        if not self.request.user.is_authenticated:
+            raise NotAuthenticated()
+
         serializer.save(author=self.request.user)
