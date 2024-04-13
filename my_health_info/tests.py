@@ -234,7 +234,7 @@ class RoutineTestCase(TestCase):
     13. 루틴을 좋아요 순으로 정렬하여 조회할 수 있는지 테스트
     14. 이미 좋아요를 누른 루틴에 좋아요를 누르는 요청 시 405 에러를 리턴하는지 테스트
     15. 루틴 목록에서 제작자로 검색하여 조회할 수 있는지 테스트
-    16. 루틴 목록에서 자극 부위로 검색하여 조회할 수 있는지 테스트
+    16. 비로그인 유저가 루틴에 좋아요를 누르는 요청이 403 에러를 리턴하는지 테스트
     """
 
     def setUp(self):
@@ -611,3 +611,20 @@ class RoutineTestCase(TestCase):
 
         for routine in data:
             self.assertEqual(routine.get("username"), self.user1.instance.username)
+
+    def test_like_routine_not_authenticated(self):
+        """
+        비로그인 유저가 루틴에 좋아요를 누르는 요청이 403 에러를 리턴하는지 테스트
+
+        reverse_url: routine-like
+        HTTP method: POST
+
+        테스트 시나리오:
+        1. 비로그인 유저가 /routine/<pk>/like/에 POST 요청을 보냅니다.
+        2. 403 에러를 리턴하는지 확인합니다.
+        """
+        pk = self.routine2.instance.pk
+
+        response = self.client.post(reverse("routine-like", kwargs={"pk": pk}))
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
