@@ -14,8 +14,15 @@ class RoutineSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Routine
-        fields = ["author", "username", "title", "created_at", "is_deleted"]
-        read_only_fields = ["author", "created_at", "is_deleted"]
+        fields = [
+            "author",
+            "username",
+            "title",
+            "created_at",
+            "is_deleted",
+            "like_count",
+        ]
+        read_only_fields = ["author", "created_at", "is_deleted", "like_count"]
 
     def get_username(self, obj):
         # print(obj.author)
