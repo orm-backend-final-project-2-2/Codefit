@@ -14,6 +14,7 @@ from rest_framework.decorators import action
 from django.utils import timezone
 from my_health_info.permissions import IsOwnerOrReadOnly
 from rest_framework.decorators import action
+from django.db.models import Q
 
 
 class MyHealthInfoViewSet(viewsets.ModelViewSet):
@@ -77,17 +78,13 @@ class RoutineViewSet(viewsets.ModelViewSet):
     - retrieve: GET /my_health_info/routine/<pk>/
     """
 
-    queryset = Routine.objects.filter(is_deleted=False)
     http_method_names = ["get", "post", "patch", "delete"]
     serializer_class = RoutineSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
     ordering_fields = ["like_count"]
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        queryset = self.order_queryset(queryset)
-
-        return queryset
+        return Routine.objects.filter(is_deleted=False)
 
     def order_queryset(self, queryset):
         base_ordering = ["-created_at"]
@@ -109,10 +106,22 @@ class RoutineViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    def search_queryset(self, queryset):
+        author__id = self.request.query_params.get("author__id", None)
+
+        if not author__id:
+            return queryset
+
+        queryset = queryset.filter(Q(author__id=author__id))
+
+        return queryset
+
     def list(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             raise NotAuthenticated()
         queryset = self.get_queryset()
+        queryset = self.search_queryset(queryset)
+        queryset = self.order_queryset(queryset)
         serializer = self.get_serializer(queryset, many=True)
 
         return Response(serializer.data)
