@@ -1,10 +1,12 @@
 import json
+
 from django.test import Client, TestCase
 from django.urls import reverse
 from rest_framework import status
+
 from account.models import CustomUser as User
 from exercises_info.models import ExercisesInfo
-from utils.fake_data import FakeUser, FakeExercisesInfo
+from utils.fake_data import FakeExercisesInfo, FakeUser
 
 
 class ExercisesInfoTestCase(TestCase):
@@ -23,6 +25,8 @@ class ExercisesInfoTestCase(TestCase):
     9. 운동 정보 생성 시 필수 필드가 누락되었을 때 에러가 발생하는지 확인
     10. Enum에 존재하지 않는 Focus Area를 입력했을 때 에러가 발생하는지 확인
     11. Focus Area의 수정 요청이 올바르게 처리되는지 확인
+    12. Title의 길이가 100자를 초과했을 때 에러가 발생하는지 확인
+    13. Description의 길이가 1000자를 초과했을 때 에러가 발생하는지 확인
     """
 
     def setUp(self):
@@ -310,3 +314,57 @@ class ExercisesInfoTestCase(TestCase):
         focus_areas = data.get("focus_areas")
 
         self.assertEqual(focus_areas, new_exercise.request_create().get("focus_areas"))
+
+    def test_title_length_error(self):
+        """
+        Title의 길이가 100자를 초과했을 때 에러가 발생하는지 확인
+
+        reverse_url : exercises-info-list
+        HTTP method : POST
+
+        테스트 시나리오:
+        1. 관리자 계정으로 로그인
+        2. 서버에 POST 요청을 보내서 Title의 길이가 100자를 초과한 상태로 운동 정보 생성
+        3. 응답 코드가 400인지 확인
+        """
+        self.client.force_login(self.admin.instance)
+
+        new_exercise = FakeExercisesInfo()
+
+        request_data = new_exercise.request_create()
+        request_data["title"] = "a" * 101
+
+        response = self.client.post(
+            reverse("exercises-info-list"),
+            data=request_data,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_description_length_error(self):
+        """
+        Description의 길이가 1000자를 초과했을 때 에러가 발생하는지 확인
+
+        reverse_url : exercises-info-list
+        HTTP method : POST
+
+        테스트 시나리오:
+        1. 관리자 계정으로 로그인
+        2. 서버에 POST 요청을 보내서 Description의 길이가 1000자를 초과한 상태로 운동 정보 생성
+        3. 응답 코드가 400인지 확인
+        """
+        self.client.force_login(self.admin.instance)
+
+        new_exercise = FakeExercisesInfo()
+
+        request_data = new_exercise.request_create()
+        request_data["description"] = "a" * 1001
+
+        response = self.client.post(
+            reverse("exercises-info-list"),
+            data=request_data,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
