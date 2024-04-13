@@ -22,6 +22,7 @@ class ExercisesInfoTestCase(TestCase):
     8. 일반유저가 운동 정보를 삭제할 수 있는지 확인
     9. 운동 정보 생성 시 필수 필드가 누락되었을 때 에러가 발생하는지 확인
     10. Enum에 존재하지 않는 Focus Area를 입력했을 때 에러가 발생하는지 확인
+    11. Focus Area의 수정 요청이 올바르게 처리되는지 확인
     """
 
     def setUp(self):
@@ -278,3 +279,36 @@ class ExercisesInfoTestCase(TestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_patch_focus_areas_successsfully(self):
+        """
+        Focus Area의 수정 요청이 올바르게 처리되는지 확인
+
+        reverse_url : exercises-info-detail
+        HTTP method : PATCH
+
+        테스트 시나리오:
+        1. 관리자 계정으로 로그인
+        2. 새 운동 정보를 생성
+        3. 서버에 PATCH 요청을 보내서 Focus Area 수정
+        4. 응답 코드가 200인지 확인
+        """
+        self.client.force_login(self.admin.instance)
+
+        new_exercise = FakeExercisesInfo()
+
+        response = self.client.patch(
+            reverse("exercises-info-detail", kwargs={"pk": self.exercise1.instance.id}),
+            data=new_exercise.request_create().get("focus_areas"),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        for focus_area in data:
+            self.assertIn(
+                focus_area.get("focus_area"),
+                new_exercise.request_create().get("focus_areas"),
+            )
