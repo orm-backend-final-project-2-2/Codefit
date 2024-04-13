@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from account.models import CustomUser as User
-from exercises_info.models import ExercisesInfo
+from exercises_info.models import ExercisesInfo, ExercisesAttribute
 from utils.fake_data import FakeExercisesInfo, FakeUser
 
 
