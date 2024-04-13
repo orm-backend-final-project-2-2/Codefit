@@ -608,3 +608,31 @@ class ExercisesAttributeTestCase(TestCase):
             self.assertEqual(
                 data_exercises_attribute.get(attr), exercises_attribute.get(attr)
             )
+
+    def test_delete_exercise_attribute(self):
+        """
+        ExercisesInfo 삭제 시 ExercisesAttribute도 함께 삭제되는지 확인
+
+        reverse_url : exercises-info-detail
+        HTTP method : DELETE
+
+        테스트 시나리오:
+        1. 관리자 계정으로 로그인
+        2. 생성된 운동 정보의 id로 DELETE 요청을 보냄
+        3. 응답 코드가 204인지 확인
+        4. ExercisesAttribute가 삭제되었는지 확인
+        """
+
+        self.client.force_login(self.admin.instance)
+
+        exercise_attribute_id = self.exercise1.instance.exercises_attribute.id
+
+        response = self.client.delete(
+            reverse("exercises-info-detail", kwargs={"pk": self.exercise1.instance.id}),
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertFalse(
+            ExercisesAttribute.objects.filter(id=exercise_attribute_id).exists()
+        )
