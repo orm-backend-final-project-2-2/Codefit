@@ -413,7 +413,6 @@ class ExercisesAttributeTestCase(TestCase):
         self.client.force_login(self.admin.instance)
 
         id = self.exercise1.instance.id
-        print(id)
 
         exercises_attribute = self.exercise1.request_create().get("exercises_attribute")
 
@@ -422,7 +421,7 @@ class ExercisesAttributeTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()
-        print(data)
+
         data_exercises_attribute = data.get("exercises_attribute")
 
         self.assertEqual(len(data_exercises_attribute), len(exercises_attribute))
