@@ -586,3 +586,28 @@ class RoutineTestCase(TestCase):
             self.assertEqual(
                 routine_instances.like_count, response_routine.get("like_count")
             )
+
+    def test_search_routine_by_author(self):
+        """
+        루틴 목록에서 제작자로 검색하여 조회할 수 있는지 테스트
+
+        reverse_url: routine-list
+        HTTP method: GET
+
+        테스트 시나리오:
+        1. 로그인한 유저가 /routine/에 GET 요청을 보냅니다.
+        2. Response의 루틴들이 로그인한 유저가 생성한 루틴들만 조회되는지 확인합니다.
+        """
+
+        self.client.force_login(self.user1.instance)
+
+        response = self.client.get(
+            reverse("routine-list") + f"?author={self.user1.instance.username}"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        for routine in data:
+            self.assertEqual(routine.get("username"), self.user1.instance.username)
