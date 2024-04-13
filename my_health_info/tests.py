@@ -364,4 +364,4 @@ class RoutineTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()
-        self.assertEqual(data.get("title"), new_routine.instance.title)
+        self.assertEqual(data.get("title"), new_routine_title)
