@@ -299,7 +299,7 @@ class ExercisesInfoTestCase(TestCase):
 
         response = self.client.patch(
             reverse("exercises-info-detail", kwargs={"pk": self.exercise1.instance.id}),
-            data=new_exercise.request_create().get("focus_areas"),
+            data={"focus_areas": new_exercise.request_create().get("focus_areas")},
             content_type="application/json",
         )
 
@@ -307,8 +307,6 @@ class ExercisesInfoTestCase(TestCase):
 
         data = response.json()
 
-        for focus_area in data:
-            self.assertIn(
-                focus_area.get("focus_area"),
-                new_exercise.request_create().get("focus_areas"),
-            )
+        focus_areas = data.get("focus_areas")
+
+        self.assertEqual(focus_areas, new_exercise.request_create().get("focus_areas"))
