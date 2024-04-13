@@ -20,7 +20,9 @@ class HealthInfo(models.Model):
 
 
 class Routine(models.Model):
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.ForeignKey(
+        User, on_delete=models.SET_DEFAULT, default="탈퇴한 유저"
+    )
     title = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     is_deleted = models.BooleanField(default=False)
