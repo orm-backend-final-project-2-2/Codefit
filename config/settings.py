@@ -40,11 +40,12 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # third_party_apps
     "rest_framework",
+    "corsheaders",
     # custom_apps
     "my_health_info",  # 본인 앱
     "exercises_info",  # 본인 앱
     "account",
-    "community", # 본인 앱
+    "community",  # 본인 앱
 ]
 
 MIDDLEWARE = [
@@ -55,6 +56,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
     # "rest_framework.middleware.AuthenticationMiddleware",
     # "rest_framework.middleware.TokenAuthenticationMiddleware",
 ]
@@ -139,3 +142,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # 기본 유저모델 변경
 AUTH_USER_MODEL = "account.CustomUser"
+
+CORS_ALLOW_ALL_ORIGINS = True

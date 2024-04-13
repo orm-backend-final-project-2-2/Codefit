@@ -1,5 +1,3 @@
-import json
-
 from django.test import Client, TestCase
 from django.urls import reverse
 from rest_framework import status
@@ -368,3 +366,4 @@ class ExercisesInfoTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
