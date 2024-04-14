@@ -38,3 +38,9 @@ class PostViewSet(viewsets.ModelViewSet):
         if post.author != self.request.user:
             raise PermissionDenied
         instance.delete()
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    http_method_names = ["get", "post", "patch", "delete"]
