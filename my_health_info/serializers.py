@@ -1,5 +1,11 @@
 from rest_framework import serializers
-from my_health_info.models import HealthInfo, Routine, ExerciseInRoutine
+from my_health_info.models import (
+    HealthInfo,
+    Routine,
+    ExerciseInRoutine,
+    UsersRoutine,
+    MirroredRoutine,
+)
 from exercises_info.models import ExercisesInfo
 from drf_writable_nested import WritableNestedModelSerializer
 from exercises_info.serializers import ExercisesInfoSerializer
@@ -39,24 +45,39 @@ class RoutineSerializer(WritableNestedModelSerializer):
             "like_count",
             "exercises_in_routine",
         ]
-        read_only_fields = ["author", "created_at", "is_deleted", "like_count"]
+        read_only_fields = [
+            "author",
+            "username",
+            "created_at",
+            "is_deleted",
+            "like_count",
+        ]
 
     def get_username(self, obj):
         return obj.author.username
 
-    def create(self, validated_data):
-        exercises_in_routine_data = validated_data.pop("exercises_in_routine")
-        routine = Routine.objects.create(**validated_data)
-        for exercise_data in exercises_in_routine_data:
-            ExerciseInRoutine.objects.create(routine=routine, **exercise_data)
-        return routine
-
     def update(self, instance, validated_data):
-        exercises_in_routine_data = validated_data.pop("exercises_in_routine")
-
-        ExerciseInRoutine.objects.filter(routine=instance).delete()
-
-        for exercise_data in exercises_in_routine_data:
-            ExerciseInRoutine.objects.create(routine=instance, **exercise_data)
-
         return super().update(instance, validated_data)
+
+
+class MirroredRoutineSerializer(serializers.ModelSerializer):
+    exercises_in_routine = ExerciseInRoutineSerializer(many=True)
+
+    class Meta:
+        model = MirroredRoutine
+        fields = ["title", "author_name", "original_routine", "exercises_in_routine"]
+        read_only_fields = [
+            "title",
+            "author_name",
+            "original_routine",
+            "exercises_in_routine",
+        ]
+
+
+class UsersRoutineSerializer(serializers.ModelSerializer):
+    mirrored_routine = MirroredRoutineSerializer(read_only=True)
+
+    class Meta:
+        model = UsersRoutine
+        fields = ["user", "routine", "mirrored_routine", "need_update"]
+        read_only_fields = ["user", "routine", "need_update"]
