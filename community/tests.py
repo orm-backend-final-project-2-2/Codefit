@@ -7,6 +7,24 @@ from account.models import CustomUser as User
 from utils.fake_data import FakeUser, FakePost, FakeComment
 
 
+class PostTestCase(TestCase):
+    def setUp(self):
+        self.user1 = FakeUser()
+        self.user1.create_instance()
+
+        self.user2 = FakeUser()
+        self.user2.create_instance()
+
+        self.user1_post1 = FakePost()
+        self.user1_post1.create_instance(user_instance=self.user1.instance)
+
+        self.user1_post2 = FakePost()
+        self.user1_post2.create_instance(user_instance=self.user1.instance)
+
+        self.user2_post1 = FakePost()
+        self.user2_post1.create_instance(user_instance=self.user2.instance)
+
+
 class CommentTestCase(TestCase):
     def setUp(self):
         self.user1 = FakeUser()
@@ -31,35 +49,8 @@ class CommentTestCase(TestCase):
             user_instance=self.user1.instance, post_instance=self.user1_post1.instance
         )
 
-    def test_get_comment_list(self):
-        """comment/ GET 요청시 모든 Comment 객체를 반환하는지 테스트"""
-        comment_count = Comment.objects.all().count()
-
-        response = self.client.get(reverse("comment-list"))
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), comment_count)
-
-
-class PostTestCase(TestCase):
-    def setUp(self):
-        self.user1 = FakeUser()
-        self.user1.create_instance()
-
-        self.user2 = FakeUser()
-        self.user2.create_instance()
-
-        self.user1_post1 = FakePost()
-        self.user1_post1.create_instance(user_instance=self.user1.instance)
-
-        self.user1_post2 = FakePost()
-        self.user1_post2.create_instance(user_instance=self.user1.instance)
-
-        self.user2_post1 = FakePost()
-        self.user2_post1.create_instance(user_instance=self.user2.instance)
-
     def test_get_post_list(self):
-        """post/ GET 요청시 모든 Post 객체를 반환하는지 테스트"""
+        """1. post/ GET 요청시 모든 Post 객체를 반환하는지 테스트"""
         post_count = Post.objects.all().count()
 
         response = self.client.get(reverse("post-list"))
@@ -68,7 +59,7 @@ class PostTestCase(TestCase):
         self.assertEqual(len(response.data), post_count)
 
     def test_get_post_detail(self):
-        """post/<pk>/ GET 요청시 해당 Post 객체를 반환하는지 테스트"""
+        """2. post/<pk>/ GET 요청시 해당 Post 객체를 반환하는지 테스트"""
         response = self.client.get(
             reverse("post-detail", kwargs={"pk": self.user1_post1.instance.id})
         )
@@ -78,7 +69,7 @@ class PostTestCase(TestCase):
         self.assertEqual(response.data["content"], self.user1_post1.instance.content)
 
     def test_create_post(self):
-        """post/ POST 요청시 새로운 Post 객체를 생성하는지 테스트"""
+        """3. post/ POST 요청시 새로운 Post 객체를 생성하는지 테스트"""
         new_post = FakePost()
 
         self.client.force_login(self.user1.instance)
@@ -91,7 +82,7 @@ class PostTestCase(TestCase):
         self.assertEqual(data["content"], new_post.request_create()["content"])
 
     def test_create_post_without_login(self):
-        """post/ POST 요청시 로그인하지 않은 경우 403 에러를 반환하는지 테스트"""
+        """4. post/ POST 요청시 로그인하지 않은 경우 403 에러를 반환하는지 테스트"""
         new_post = FakePost()
 
         response = self.client.post(reverse("post-list"), new_post.request_create())
@@ -99,7 +90,7 @@ class PostTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_post(self):
-        """post/<pk>/ PATCH 요청시 해당 Post 객체를 수정하는지 테스트"""
+        """5. post/<pk>/ PATCH 요청시 해당 Post 객체를 수정하는지 테스트"""
         update_post = FakePost()
 
         self.client.force_login(self.user1.instance)
@@ -116,7 +107,7 @@ class PostTestCase(TestCase):
         self.assertEqual(data["content"], update_post.request_create()["content"])
 
     def test_update_post_without_login(self):
-        """post/<pk>/ PATCH 요청시 로그인하지 않은 경우 403 에러를 반환하는지 테스트"""
+        """6. post/<pk>/ PATCH 요청시 로그인하지 않은 경우 403 에러를 반환하는지 테스트"""
         update_post = FakePost()
 
         response = self.client.patch(
@@ -128,7 +119,7 @@ class PostTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_delete_post(self):
-        """post/<pk>/ DELETE 요청시 해당 Post 객체를 삭제하는지 테스트"""
+        """7. post/<pk>/ DELETE 요청시 해당 Post 객체를 삭제하는지 테스트"""
         self.client.force_login(self.user1.instance)
 
         response = self.client.delete(
@@ -139,7 +130,7 @@ class PostTestCase(TestCase):
         self.assertFalse(Post.objects.filter(id=self.user1_post1.instance.id).exists())
 
     def test_delete_post_without_login(self):
-        """post/<pk>/ DELETE 요청시 로그인하지 않은 경우 403 에러를 반환하는지 테스트"""
+        """8. post/<pk>/ DELETE 요청시 로그인하지 않은 경우 403 에러를 반환하는지 테스트"""
         response = self.client.delete(
             reverse("post-detail", kwargs={"pk": self.user1_post1.instance.id})
         )
@@ -147,7 +138,7 @@ class PostTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_put_update_post_not_allowed(self):
-        """post/<pk>/ PUT 요청시 405 에러를 반환하는지 테스트"""
+        """9. post/<pk>/ PUT 요청시 405 에러를 반환하는지 테스트"""
         update_post = FakePost()
 
         self.client.force_login(self.user1.instance)
@@ -161,7 +152,7 @@ class PostTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_get_only_logged_in_user_posts(self):
-        """post/ GET 요청시 로그인한 사용자의 Post 객체만 반환하는지 테스트"""
+        """10. post/ GET 요청시 로그인한 사용자의 Post 객체만 반환하는지 테스트"""
         self.client.force_login(self.user1.instance)
         response = self.client.get(reverse("post-list"))
 
@@ -173,7 +164,7 @@ class PostTestCase(TestCase):
 
     # TODO: 다른사람도 포스트를 볼 수 있어야 합니다
     def test_get_only_logged_in_user_post_detail(self):
-        """post/<pk>/ GET 요청시 로그인한 사용자의 특정 Post 객체만 반환하는지 테스트"""
+        """11. post/<pk>/ GET 요청시 로그인한 사용자의 특정 Post 객체만 반환하는지 테스트"""
         self.client.force_login(self.user1.instance)
         response = self.client.get(
             reverse("post-detail", kwargs={"pk": self.user1_post1.instance.id})
@@ -184,7 +175,7 @@ class PostTestCase(TestCase):
         self.assertEqual(response.data["content"], self.user1_post1.instance.content)
 
     def test_ohter_user_can_see_post(self):
-        """다른 사용자도 포스트를 볼 수 있는지 테스트"""
+        """12. 다른 사용자도 포스트를 볼 수 있는지 테스트"""
         self.client.force_login(self.user2.instance)
         response = self.client.get(
             reverse("post-detail", kwargs={"pk": self.user1_post1.instance.id})
@@ -195,13 +186,13 @@ class PostTestCase(TestCase):
         self.assertEqual(response.data["content"], self.user1_post1.instance.content)
 
     def test_get_post_list_without_login(self):
-        """로그인하지 않은 경우에도 포스트 목록을 볼 수 있는지 테스트"""
+        """13. 로그인하지 않은 경우에도 포스트 목록을 볼 수 있는지 테스트"""
         response = self.client.get(reverse("post-list"))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_update_post_by_creator(self):
-        """포스트를 생성한 사용자만이 해당 포스트를 수정할 수 있는지 테스트"""
+        """14. 포스트를 생성한 사용자만이 해당 포스트를 수정할 수 있는지 테스트"""
         self.client.force_login(self.user1.instance)
 
         response = self.client.patch(
@@ -217,7 +208,7 @@ class PostTestCase(TestCase):
         self.assertEqual(updated_post.content, "Updated Content")
 
     def test_delete_post_by_creator(self):
-        """포스트를 생성한 사용자만이 해당 포스트를 삭제할 수 있는지 테스트"""
+        """15. 포스트를 생성한 사용자만이 해당 포스트를 삭제할 수 있는지 테스트"""
         self.client.force_login(self.user1.instance)
 
         response = self.client.delete(
@@ -230,7 +221,7 @@ class PostTestCase(TestCase):
         self.assertFalse(post_exists)
 
     def test_update_post_by_non_creator(self):
-        """포스트를 생성한 사용자가 아닌 다른 사용자가 포스트를 수정할 시도할 때 403 에러를 반환하는지 테스트"""
+        """16. 포스트를 생성한 사용자가 아닌 다른 사용자가 포스트를 수정할 시도할 때 403 에러를 반환하는지 테스트"""
         self.client.force_login(self.user2.instance)
 
         response = self.client.patch(
@@ -242,7 +233,7 @@ class PostTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_delete_post_by_non_creator(self):
-        """포스트를 생성한 사용자가 아닌 다른 사용자가 포스트를 삭제할 시도할 때 403 에러를 반환하는지 테스트"""
+        """17. 포스트를 생성한 사용자가 아닌 다른 사용자가 포스트를 삭제할 시도할 때 403 에러를 반환하는지 테스트"""
         self.client.force_login(self.user2.instance)
 
         response = self.client.delete(
@@ -252,13 +243,13 @@ class PostTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_post_detail_not_found(self):
-        """존재하지 않는 포스트를 조회할 때 404 에러를 반환하는지 테스트"""
+        """18. 존재하지 않는 포스트를 조회할 때 404 에러를 반환하는지 테스트"""
         response = self.client.get(reverse("post-detail", kwargs={"pk": 1000}))
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_update_post_not_found(self):
-        """존재하지 않는 포스트를 수정할 때 404 에러를 반환하는지 테스트"""
+        """19. 존재하지 않는 포스트를 수정할 때 404 에러를 반환하는지 테스트"""
         self.client.force_login(self.user1.instance)
 
         response = self.client.patch(
@@ -270,7 +261,7 @@ class PostTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_delete_post_not_found(self):
-        """존재하지 않는 포스트를 삭제할 때 404 에러를 반환하는지 테스트"""
+        """20. 존재하지 않는 포스트를 삭제할 때 404 에러를 반환하는지 테스트"""
         self.client.force_login(self.user1.instance)
 
         response = self.client.delete(reverse("post-detail", kwargs={"pk": 1000}))
@@ -278,7 +269,7 @@ class PostTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_post_list_pagination(self):
-        """포스트 목록 조회시 페이지네이션 기능이 제대로 동작하는지 테스트"""
+        """21. 포스트 목록 조회시 페이지네이션 기능이 제대로 동작하는지 테스트"""
         response = self.client.get(reverse("post-list"))
         response.data = response_data
 
@@ -289,7 +280,7 @@ class PostTestCase(TestCase):
         self.assertEqual(len(response.data["results"]), 3)
 
     def test_create_post_missing_title(self):
-        """제목이 없는 포스트를 생성할 때 400 에러를 반환하는지 테스트"""
+        """22. 제목이 없는 포스트를 생성할 때 400 에러를 반환하는지 테스트"""
         new_post = FakePost()
 
         self.client.force_login(self.user1.instance)
@@ -301,7 +292,7 @@ class PostTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_post_missing_content(self):
-        """내용이 없는 포스트를 생성할 때 400 에러를 반환하는지 테스트"""
+        """23. 내용이 없는 포스트를 생성할 때 400 에러를 반환하는지 테스트"""
         new_post = FakePost()
 
         self.client.force_login(self.user1.instance)
@@ -313,12 +304,30 @@ class PostTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_post_missing_title_and_content(self):
-        """제목과 내용이 모두 없는 포스트를 생성할 때 400 에러를 반환하는지 테스트"""
+        """24. 제목과 내용이 모두 없는 포스트를 생성할 때 400 에러를 반환하는지 테스트"""
         self.client.force_login(self.user1.instance)
 
         response = self.client.post(reverse("post-list"), {})
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_comment_list(self):
+        """25. comment/ GET 요청시 모든 Comment 객체를 반환하는지 테스트"""
+        comment_count = Comment.objects.all().count()
+
+        response = self.client.get(reverse("comment-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), comment_count)
+
+    # def test_get_comment_detail(self):
+    #     """26. comment/<pk>/ GET 요청시 해당 Comment 객체를 반환하는지 테스트"""
+    #     response = self.client.get(
+    #         reverse("comment-detail", kwargs={"pk": self.user1_comment1.instance.id})
+    #     )
+
+    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
+    #     self.assertEqual(response.data["content"], self.user1_comment1.instance.content)
 
 
 # 페이지네이션 테스트용 더미 데이터
