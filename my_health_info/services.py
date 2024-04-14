@@ -24,11 +24,12 @@ class UsersRoutineManagementService:
         if UsersRoutine.objects.filter(user=self.user, routine=self.routine).exists():
             raise ValueError("이미 구독 중인 루틴입니다.")
 
-        print(f"mirrored_routine: {self.routine.mirrored_routine}")
+        mirrored_routine = self.routine.mirrored_routine.first()
 
         UsersRoutine.objects.create(
             user=self.user,
             routine=self.routine,
+            mirrored_routine=mirrored_routine,
         )
 
     def user_create_routine(self, mirrored_routine):
