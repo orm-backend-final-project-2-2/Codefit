@@ -1,6 +1,12 @@
 from faker import Faker
 from account.models import CustomUser
-from my_health_info.models import HealthInfo, Routine, ExerciseInRoutine
+from my_health_info.models import (
+    HealthInfo,
+    Routine,
+    ExerciseInRoutine,
+    MirroredRoutine,
+)
+from my_health_info.services import UsersRoutineManagementService
 from exercises_info.models import ExercisesInfo, FocusArea, ExercisesAttribute
 from community.models import Post
 from utils.enums import FocusAreaEnum
@@ -110,7 +116,7 @@ class FakeExerciseInRoutine(FakeModel):
             ).request_create(),
         }
 
-    def create_instance(self, routine_instance):
+    def create_instance(self, routine_instance, mirrored_routine_instance):
         fake_exercise_info = self.related_fake_models.get("exercises_info")
 
         if not fake_exercise_info.instance:
@@ -118,6 +124,7 @@ class FakeExerciseInRoutine(FakeModel):
 
         self.instance = self.model.objects.create(
             routine=routine_instance,
+            mirrored_routine=mirrored_routine_instance,
             exercise=fake_exercise_info.instance,
             **self.base_attr
         )
@@ -174,6 +181,7 @@ class FakeRoutine(FakeModel):
                     "exercises_in_routine"
                 )
             ]
+
         return related_attr
 
     def create_instance(self, user_instance):
@@ -181,10 +189,25 @@ class FakeRoutine(FakeModel):
             author=user_instance, **self.base_attr
         )
 
+        self.mirrored_routine = MirroredRoutine.objects.create(
+            title=self.instance.title,
+            author_name=user_instance.username,
+            original_routine=self.instance,
+        )
+
         for fake_exercise_in_routine in self.related_fake_models.get(
             "exercises_in_routine"
         ):
-            fake_exercise_in_routine.create_instance(routine_instance=self.instance)
+            fake_exercise_in_routine.create_instance(
+                routine_instance=self.instance,
+                mirrored_routine_instance=self.mirrored_routine,
+            )
+
+        service = UsersRoutineManagementService(
+            user=user_instance, routine=self.instance
+        )
+        
+        service.user_create_routine(self.mirrored_routine)
 
         return self.instance
 
