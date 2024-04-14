@@ -1,7 +1,13 @@
 from django.test import TestCase
 from account.models import CustomUser as User
 from django.urls import reverse
-from my_health_info.models import HealthInfo, Routine, ExerciseInRoutine, UsersRoutine
+from my_health_info.models import (
+    HealthInfo,
+    Routine,
+    ExerciseInRoutine,
+    UsersRoutine,
+    MirroredRoutine,
+)
 from exercises_info.models import ExercisesInfo
 from my_health_info.services import UsersRoutineManagementService
 from freezegun import freeze_time
@@ -950,7 +956,8 @@ class UsersRoutineTestCase(TestCase):
 
         self.assertTrue(len(data), routine_count)
         for user1_routine, response_routine in zip(user1_routines, data):
-            user1_routine.routine == response_routine.get("routine")
+            user1_routine_id = user1_routine.routine.id
+            self.assertEqual(user1_routine.routine.id, response_routine.get("routine"))
 
     def test_create_users_routine_when_create_routine(self):
         """
@@ -989,4 +996,12 @@ class UsersRoutineTestCase(TestCase):
         self.assertEqual(UsersRoutine.objects.count(), users_routine_count + 1)
 
         self.assertEqual(UsersRoutine.objects.last().user, self.user2.instance)
-        self.assertEqual(UsersRoutine.objects.last().routine, data.get("id"))
+
+        self.assertEqual(
+            UsersRoutine.objects.last().routine.author.username,
+            self.user2.instance.username,
+        )
+        self.assertEqual(
+            UsersRoutine.objects.last().mirrored_routine.id,
+            MirroredRoutine.objects.last().id,
+        )
