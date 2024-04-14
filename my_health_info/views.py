@@ -222,7 +222,7 @@ class RoutineViewSet(viewsets.ModelViewSet):
         serializer.save()
 
         data = self.get_serializer(instance).data
-        print(data)
+
         return Response(data, status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
