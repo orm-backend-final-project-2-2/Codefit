@@ -24,6 +24,11 @@ class UsersRoutineManagementService:
         if UsersRoutine.objects.filter(user=self.user, routine=self.routine).exists():
             raise ValueError("이미 구독 중인 루틴입니다.")
 
+    def user_create_routine(self, mirrored_routine):
+        """
+        유저가 루틴을 생성했을 때, UsersRoutine 모델에도 등록하는 메서드
+        """
+
         UsersRoutine.objects.create(
-            user=self.user, routine=self.routine, need_update=False
+            user=self.user, routine=self.routine, mirrored_routine=mirrored_routine
         )
