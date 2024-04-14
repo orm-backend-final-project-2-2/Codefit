@@ -1,7 +1,14 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from my_health_info.models import HealthInfo, Routine, Routine_Like, UsersRoutine
+from my_health_info.models import (
+    HealthInfo,
+    Routine,
+    Routine_Like,
+    UsersRoutine,
+    MirroredRoutine,
+    ExerciseInRoutine,
+)
 from my_health_info.serializers import (
     HealthInfoSerializer,
     RoutineSerializer,
@@ -19,6 +26,7 @@ from django.utils import timezone
 from my_health_info.permissions import IsOwnerOrReadOnly
 from rest_framework.decorators import action
 from django.db.models import Q
+from my_health_info.services import UsersRoutineManagementService
 
 
 class MyHealthInfoViewSet(viewsets.ModelViewSet):
@@ -139,8 +147,33 @@ class RoutineViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def perform_create(self, serializer):
-        """루틴 정보 생성 시 author 정보를 추가"""
-        serializer.save(author=self.request.user)
+        exercises_in_routine_data = serializer.validated_data.pop(
+            "exercises_in_routine", []
+        )
+
+        routine = serializer.save(author=self.request.user)
+
+        try:
+            mirrored_routine = MirroredRoutine.objects.create(
+                title=routine.title,
+                author_name=routine.author.username,
+                original_routine=routine,
+            )
+        except Exception as e:
+            raise ValidationError(str(e))
+
+        for exercise_data in exercises_in_routine_data:
+            ExerciseInRoutine.objects.create(
+                routine=routine, mirrored_routine=mirrored_routine, **exercise_data
+            )
+
+        service = UsersRoutineManagementService(
+            user=self.request.user, routine=serializer.instance
+        )
+
+        service.user_create_routine(mirrored_routine=mirrored_routine)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def partial_update(self, request, *args, **kwargs):
         kwargs["partial"] = True
