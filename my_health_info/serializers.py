@@ -54,21 +54,9 @@ class RoutineSerializer(WritableNestedModelSerializer):
         ]
 
     def get_username(self, obj):
-
         return obj.author.username
 
     def update(self, instance, validated_data):
-        exercises_in_routine_data = validated_data.pop("exercises_in_routine")
-
-        existing_exercises = ExerciseInRoutine.objects.filter(routine=instance)
-
-        for existing_exercise in existing_exercises:
-            existing_exercise.routine = None
-            existing_exercise.save()
-
-        for exercise_data in exercises_in_routine_data:
-            ExerciseInRoutine.objects.create(routine=instance, **exercise_data)
-
         return super().update(instance, validated_data)
 
 
