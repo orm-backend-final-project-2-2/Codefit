@@ -921,4 +921,33 @@ class UsersRoutineTestCase(TestCase):
             routine=self.routine2.instance, user=self.user1.instance
         )
 
-        service.subscribe()
+        service.subscribe_routine()
+
+    def test_get_users_routine(self):
+        """
+        유저가 보유한 루틴을 조회하는지 테스트
+
+        reverse_url: routine-users-routine-list
+        HTTP method: GET
+
+        테스트 시나리오:
+        1. 유저 1이 보유한 루틴을 조회합니다.
+        2. 그 수를 확인하고 배열에 저장합니다.
+        3. /users-routine/에 GET 요청을 보냅니다.
+        4. Response의 루틴들 수가 같은지 확인합니다.
+        5. 미리 저장한 배열과 Response의 루틴들이 같은지 확인합니다.
+        """
+        self.client.force_login(self.user1.instance)
+
+        users_routines = UsersRoutine.objects.filter(user=self.user1.instance)
+        routine_count = users_routines.count()
+
+        response = self.client.get(reverse("users-routine-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        self.assertTrue(len(data), routine_count)
+        for routine, response_routine in zip(routines, data):
+            self.assertEqual(routine.routine.title, response_routine.get("title"))
