@@ -128,6 +128,10 @@ class FakeExerciseInRoutine(FakeModel):
         base_attr = self.base_attr
         related_attr = self.related_attr
 
+        related_attr["exercises_info"] = self.related_fake_models.get(
+            "exercises_info"
+        ).instance.id
+
         return {**base_attr, **related_attr}
 
 
