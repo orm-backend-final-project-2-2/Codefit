@@ -1192,16 +1192,22 @@ class UsersRoutineTestCase(TestCase):
 
         pk = self.routine2.instance.pk
 
-        response = self.client.delete(reverse("routine-detail", kwargs={"pk": pk}))
+        mirrored_routine = self.routine2.instance.mirrored_routine.last()
 
+        response = self.client.delete(reverse("routine-detail", kwargs={"pk": pk}))
+        
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         self.assertFalse(Routine.objects.filter(pk=pk).exists())
 
         self.assertFalse(
-            UsersRoutine.objects.filter(routine=pk, user=self.user2.instance).exists()
+            UsersRoutine.objects.filter(
+                user=self.user2.instance, mirrored_routine=mirrored_routine
+            ).exists()
         )
 
         self.assertTrue(
-            UsersRoutine.objects.filter(routine=pk, user=self.user1.instance).exists()
+            UsersRoutine.objects.filter(
+                user=self.user1.instance, mirrored_routine=mirrored_routine
+            ).exists()
         )
