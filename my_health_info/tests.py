@@ -832,7 +832,7 @@ class ExerciseInRoutineTestCase(TestCase):
 
     def test_delete_exercise_in_ExerciseInRoutine(self):
         """
-        루틴을 삭제할 때 함께 생성된 운동에 대한 정보도 함께 삭제하는지 테스트
+        루틴을 삭제할 때 함께 생성된 운동에 대한 정보는 삭제되지 않는지 테스트
 
         reverse_url: routine-detail
         HTTP method: DELETE
@@ -843,8 +843,8 @@ class ExerciseInRoutineTestCase(TestCase):
         3. /routine/<pk>/에 DELETE 요청을 보냅니다.
         4. response가 204를 리턴하는지 확인합니다.
         5. 해당 루틴이 삭제되었는지 확인합니다.
-        6. 해당 루틴에 포함된 운동들이 삭제되었는지 확인합니다.
-        7. 해당 루틴 내의 운동이 참조하는 운동 정보는 삭제되지 않았는지 확인합니다.
+        6. 해당 루틴 내의 운동이 삭제되지 않았는지 확인합니다.
+        7. 해당 루틴 내의 운동들이 삭제되지 않았는지 확인합니다.
         """
         self.client.force_login(self.user1.instance)
 
@@ -865,7 +865,7 @@ class ExerciseInRoutineTestCase(TestCase):
         self.assertFalse(Routine.objects.filter(pk=pk).exists())
 
         for id in exercise_in_routine_ids:
-            self.assertFalse(ExerciseInRoutine.objects.filter(pk=id).exists())
+            self.assertTrue(ExerciseInRoutine.objects.filter(pk=id).exists())
 
         for id in exercise_ids:
             self.assertTrue(ExercisesInfo.objects.filter(pk=id).exists())
