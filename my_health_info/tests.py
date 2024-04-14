@@ -951,3 +951,42 @@ class UsersRoutineTestCase(TestCase):
         self.assertTrue(len(data), routine_count)
         for user1_routine, response_routine in zip(user1_routines, data):
             user1_routine.routine == response_routine.get("routine")
+
+    def test_create_users_routine_when_create_routine(self):
+        """
+        유저가 루틴을 생성했을 시 UsersRoutine이 함께 생성되는지 테스트
+
+        reverse_url: routine-list
+        HTTP method: POST
+
+        테스트 시나리오:
+        1. UsersRoutine의 개수를 저장합니다.
+        2. 새로운 루틴 데이터를 생성합니다.
+        3. 유저2로 로그인합니다.
+        4. /routine/에 POST 요청을 보냅니다.
+        5. Response의 응답 코드가 201인지 확인합니다.
+        6. UsersRoutine의 개수가 1 증가했는지 확인합니다.
+        7. 가장 최근에 생성된 UsersRoutine의 유저가 2인지 확인합니다.
+        8. 가장 최근에 생성된 UsersRoutine의 루틴이 Response의 루틴과 같은지 확인합니다.
+        """
+
+        users_routine_count = UsersRoutine.objects.count()
+
+        new_routine = FakeRoutine([self.exercise1, self.exercise2])
+
+        self.client.force_login(self.user2.instance)
+
+        response = self.client.post(
+            reverse("routine-list"),
+            data=new_routine.request_create(),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+
+        self.assertEqual(UsersRoutine.objects.count(), users_routine_count + 1)
+
+        self.assertEqual(UsersRoutine.objects.last().user, self.user2.instance)
+        self.assertEqual(UsersRoutine.objects.last().routine, data.get("id"))
