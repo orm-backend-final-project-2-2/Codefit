@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from my_health_info.models import HealthInfo, Routine
+from my_health_info.models import HealthInfo, Routine, ExerciseInRoutine
+from drf_writable_nested import WritableNestedModelSerializer
+from exercises_info.serializers import ExercisesInfoSerializer
 
 
 class HealthInfoSerializer(serializers.ModelSerializer):
@@ -9,8 +11,17 @@ class HealthInfoSerializer(serializers.ModelSerializer):
         read_only_fields = ["user", "bmi", "created_at"]
 
 
-class RoutineSerializer(serializers.ModelSerializer):
+class ExerciseInRoutineSerializer(serializers.ModelSerializer):
+    exercise = ExercisesInfoSerializer()
+
+    class Meta:
+        model = ExerciseInRoutine
+        fields = ["routine", "exercise", "order"]
+
+
+class RoutineSerializer(WritableNestedModelSerializer):
     username = serializers.SerializerMethodField()
+    exercises_in_routine = ExerciseInRoutineSerializer(many=True)
 
     class Meta:
         model = Routine
@@ -21,9 +32,9 @@ class RoutineSerializer(serializers.ModelSerializer):
             "created_at",
             "is_deleted",
             "like_count",
+            "exercises_in_routine",
         ]
         read_only_fields = ["author", "created_at", "is_deleted", "like_count"]
 
     def get_username(self, obj):
-        # print(obj.author)
         return obj.author.username
