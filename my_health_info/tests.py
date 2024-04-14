@@ -1038,7 +1038,7 @@ class UsersRoutineTestCase(TestCase):
         self.assertEqual(UsersRoutine.objects.last().routine.pk, data.get("routine"))
 
         self.assertEqual(
-            self.routine1.instance.mirrored_routine.exercises_in_routine.count(),
+            self.routine1.instance.mirrored_routine.last().exercises_in_routine.count(),
             len(data.get("mirrored_routine").get("exercises_in_routine")),
         )
 
@@ -1194,7 +1194,7 @@ class UsersRoutineTestCase(TestCase):
         mirrored_routine = self.routine2.instance.mirrored_routine.last()
 
         response = self.client.delete(reverse("routine-detail", kwargs={"pk": pk}))
-        
+
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         self.assertFalse(Routine.objects.filter(pk=pk).exists())
