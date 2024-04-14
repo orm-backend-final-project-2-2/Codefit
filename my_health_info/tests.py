@@ -946,7 +946,7 @@ class UsersRoutineTestCase(TestCase):
         self.client.force_login(self.user1.instance)
 
         user1_routines = UsersRoutine.objects.filter(user=self.user1.instance)
-        
+
         routine_count = user1_routines.count()
 
         response = self.client.get(reverse("users-routine-list"))
@@ -1005,4 +1005,40 @@ class UsersRoutineTestCase(TestCase):
         self.assertEqual(
             UsersRoutine.objects.last().mirrored_routine.id,
             MirroredRoutine.objects.last().id,
+        )
+
+    def test_create_users_routine_when_subscribe_routine(self):
+        """
+        유저가 루틴을 구독했을 시 UsersRoutine이 생성되는지 테스트
+
+        reverse_url: routine-subscribe
+        HTTP method: POST
+
+        테스트 시나리오:
+        1. UsersRoutine의 개수를 저장합니다.
+        2. 유저 2가 로그인합니다.
+        3. 유저 2가 유저 1의 루틴에 구독 요청을 보냅니다.
+        4. 응답 코드가 201인지 확인합니다.
+        5. UsersRoutine의 개수가 1 증가했는지 확인합니다.
+        6. 가장 최근에 생성된 UsersRoutine의 유저가 2이고, 루틴이 유저 1의 루틴인지 확인합니다.
+        """
+        users_routine_count = UsersRoutine.objects.count()
+
+        self.client.force_login(self.user2.instance)
+
+        pk = self.routine1.instance.pk
+
+        response = self.client.post(reverse("routine-subscribe", kwargs={"pk": pk}))
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.assertEqual(UsersRoutine.objects.count(), users_routine_count + 1)
+
+        data = response.json()
+
+        self.assertEqual(
+            UsersRoutine.objects.last().user.pk, data.get("user").get("id")
+        )
+        self.assertEqual(
+            UsersRoutine.objects.last().routine.pk, data.get("routine").get("id")
         )
