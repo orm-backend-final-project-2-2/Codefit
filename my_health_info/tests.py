@@ -682,7 +682,7 @@ class ExerciseInRoutineTestCase(TestCase):
         self.routine2.create_instance(user_instance=self.user2.instance)
 
     def test_get_exercise_in_ExerciseInRoutine(self):
-        """PASSED
+        """
         루틴을 조회할 때 루틴에 포함된 운동들을 함께 조회하는지 테스트
 
         reverse_url: routine-detail
@@ -713,7 +713,8 @@ class ExerciseInRoutineTestCase(TestCase):
             exercises, data.get("exercises_in_routine")
         ):
             self.assertEqual(
-                exercise.exercise.id, response_exercise.get("exercise").get("id")
+                exercise.exercise.title,
+                response_exercise.get("exercise_info").get("title"),
             )
 
     def test_create_exercise_in_ExerciseInRoutine(self):
@@ -748,7 +749,7 @@ class ExerciseInRoutineTestCase(TestCase):
             data=new_routine.request_create(),
             content_type="application/json",
         )
-
+        print(new_routine.request_create())
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = response.json()
@@ -757,6 +758,6 @@ class ExerciseInRoutineTestCase(TestCase):
             new_exercises_in_routine, data.get("exercises_in_routine")
         ):
             self.assertEqual(
-                exercise.related_fake_models.get("exercise").base_attr.get("title"),
-                response_exercise.get("exercise").get("title"),
+                exercise.related_fake_models.get("exercises_info").instance.title,
+                response_exercise.get("exercise_info").get("title"),
             )
