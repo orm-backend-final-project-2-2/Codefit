@@ -7,7 +7,13 @@ from freezegun import freeze_time
 from datetime import datetime, timedelta
 from django.utils import timezone
 from rest_framework import status
-from utils.fake_data import FakeUser, FakeHealthInfo, FakeRoutine, FakeExercisesInfo
+from utils.fake_data import (
+    FakeUser,
+    FakeHealthInfo,
+    FakeRoutine,
+    FakeExercisesInfo,
+    FakeExerciseInRoutine,
+)
 
 
 class MyHealthInfoTestCase(TestCase):
@@ -749,7 +755,7 @@ class ExerciseInRoutineTestCase(TestCase):
             data=new_routine.request_create(),
             content_type="application/json",
         )
-        print(new_routine.request_create())
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = response.json()
@@ -759,5 +765,70 @@ class ExerciseInRoutineTestCase(TestCase):
         ):
             self.assertEqual(
                 exercise.related_fake_models.get("exercises_info").instance.title,
+                response_exercise.get("exercise_info").get("title"),
+            )
+
+    def test_update_exercise_in_ExerciseInRoutine(self):
+        """
+        루틴을 업데이트할 때 주어진 운동에 대한 정보를 함께 업데이트하는지 테스트
+
+        reverse_url: routine-detail
+        HTTP method: PATCH
+
+        테스트 시나리오:
+        1. 새로운 운동을 생성합니다.
+        2. 새 운동에 대한 정보와 순서가 담긴 ExerciseInRoutine 배열을 생성합니다.
+        3. /routine/<pk>/에 PATCH 요청을 보냅니다.
+        4. Response의 운동들이 예상한 운동들과 같은지 확인합니다.
+        """
+        new_exercise1 = FakeExercisesInfo()
+        new_exercise1.create_instance(self.admin.instance)
+
+        new_exercise2 = FakeExercisesInfo()
+        new_exercise2.create_instance(self.admin.instance)
+
+        new_exercise_in_routine1 = FakeExerciseInRoutine(
+            order=1, fake_exercises_info=new_exercise1
+        )
+        new_exercise_in_routine2 = FakeExerciseInRoutine(
+            order=2, fake_exercises_info=new_exercise2
+        )
+
+        existed_exercise_in_routines = self.routine1.instance.exercises_in_routine.all()
+        print(
+            [
+                {
+                    "order": exercise_in_routine.order,
+                    "exercise": exercise_in_routine.exercise.id,
+                }
+                for exercise_in_routine in existed_exercise_in_routines
+            ]
+        )
+
+        request_update = [
+            new_exercise_in_routine1.request_create(),
+            new_exercise_in_routine2.request_create(),
+        ]
+        print(request_update)
+
+        pk = self.routine1.instance.pk
+
+        self.client.force_login(self.user1.instance)
+
+        response = self.client.patch(
+            reverse("routine-detail", kwargs={"pk": pk}),
+            data={"exercises_in_routine": request_update},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        for exercise, response_exercise in zip(
+            request_update, data.get("exercises_in_routine")
+        ):
+            self.assertEqual(
+                ExercisesInfo.objects.get(pk=exercise.get("exercise")).title,
                 response_exercise.get("exercise_info").get("title"),
             )
