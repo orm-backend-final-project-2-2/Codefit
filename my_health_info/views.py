@@ -1,8 +1,12 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from my_health_info.models import HealthInfo, Routine, Routine_Like
-from my_health_info.serializers import HealthInfoSerializer, RoutineSerializer
+from my_health_info.models import HealthInfo, Routine, Routine_Like, UsersRoutine
+from my_health_info.serializers import (
+    HealthInfoSerializer,
+    RoutineSerializer,
+    UsersRoutineSerializer,
+)
 from rest_framework.exceptions import (
     MethodNotAllowed,
     NotFound,
@@ -117,12 +121,20 @@ class RoutineViewSet(viewsets.ModelViewSet):
         return queryset
 
     def list(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            raise NotAuthenticated()
         queryset = self.get_queryset()
         queryset = self.search_queryset(queryset)
         queryset = self.order_queryset(queryset)
+        queryset = queryset.filter(is_mirrored=False)
+
         serializer = self.get_serializer(queryset, many=True)
+
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.is_mirrored:
+            raise PermissionDenied("You cannot access mirrored routine")
+        serializer = self.get_serializer(instance)
 
         return Response(serializer.data)
 
@@ -152,3 +164,29 @@ class RoutineViewSet(viewsets.ModelViewSet):
         return Response(
             data={"like_count": f"{routine.like_count}"}, status=status.HTTP_201_CREATED
         )
+
+
+class UsersRoutineViewSet(viewsets.ModelViewSet):
+    """
+    유저의 루틴 정보에 대한 ViewSet
+
+    url_prefix: /my_health_info/users_routine/
+
+    functions:
+    - list: GET /my_health_info/users_routine/
+    - retrieve: GET /my_health_info/users_routine/<pk>/
+    - unsubscribe: DELETE /my_health_info/users_routine/<pk>/unsubscribe/
+    """
+
+    http_method_names = ["get", "delete"]
+    serializer_class = UsersRoutineSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return UsersRoutine.objects.filter(user=self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+
+        return Response(serializer.data)
