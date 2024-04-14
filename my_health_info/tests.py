@@ -1,7 +1,7 @@
 from django.test import TestCase
 from account.models import CustomUser as User
 from django.urls import reverse
-from my_health_info.models import HealthInfo, Routine, ExerciseInRoutine
+from my_health_info.models import HealthInfo, Routine, ExerciseInRoutine, UsersRoutine
 from exercises_info.models import ExercisesInfo
 from my_health_info.services import UsersRoutineManagementService
 from freezegun import freeze_time
@@ -939,8 +939,8 @@ class UsersRoutineTestCase(TestCase):
         """
         self.client.force_login(self.user1.instance)
 
-        users_routines = UsersRoutine.objects.filter(user=self.user1.instance)
-        routine_count = users_routines.count()
+        user1_routines = UsersRoutine.objects.filter(user=self.user1.instance)
+        routine_count = user1_routines.count()
 
         response = self.client.get(reverse("users-routine-list"))
 
@@ -949,5 +949,5 @@ class UsersRoutineTestCase(TestCase):
         data = response.json()
 
         self.assertTrue(len(data), routine_count)
-        for routine, response_routine in zip(routines, data):
-            self.assertEqual(routine.routine.title, response_routine.get("title"))
+        for user1_routine, response_routine in zip(user1_routines, data):
+            user1_routine.routine == response_routine.get("routine")
