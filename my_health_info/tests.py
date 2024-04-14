@@ -1052,11 +1052,14 @@ class UsersRoutineTestCase(TestCase):
 
         테스트 시나리오:
         1. 새 ExerciseInfo 목록을 생성합니다.
+        2. 루틴 1의 mirrored_routine을 저장합니다.
         2. 유저 1이 로그인합니다
         3. 유저 1이 routine/1/에 변경된 운동 정보로 PATCH 요청을 보냅니다.
         4. 상태 코드가 200인지 확인합니다.
-        5. UsersRoutine의 need_update가 그대로 False인지 확인합니다.
-        6. MirroredRoutine이 새로 변경된 루틴으로 변경되었는지 확인합니다.
+        5. 유저 1의 루틴 1에 대한 UsersRoutine의 need_update가 False인지 확인합니다.
+        6. 루틴 1의 MirroredRoutine이 유저 1의 루틴 1에 대한 MirroredRoutine과 같은지 확인합니다.
+        7. 루틴 1의 MirroredRoutine이 저장한 mirrored_routine과 다른지 확인합니다.
+        8. 유저 1의 루틴 1에 대한 UsersRoutine의 MirroredRoutine이 저장된 mirrored_routine과 다른지 확인합니다.
         """
 
         new_exercise_infos = [self.exercise1, self.exercise2, self.exercise4]
@@ -1071,6 +1074,8 @@ class UsersRoutineTestCase(TestCase):
 
         pk = self.routine1.instance.pk
 
+        existing_mirrored_routine = self.routine1.instance.mirrored_routine
+
         response = self.client.patch(
             reverse("routine-detail", kwargs={"pk": pk}),
             data={"exercises_in_routine": new_exercise_in_routines},
@@ -1079,14 +1084,26 @@ class UsersRoutineTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        data = response.json()
-
         self.assertFalse(
             self.routine1.instance.subscribers.get(user=self.user1.instance).need_update
         )
 
-        self.assertEqual(
+        self.assertEquals(
             self.routine1.instance.mirrored_routine.id,
+            self.routine1.instance.subscribers.get(
+                user=self.user1.instance
+            ).mirrored_routine.id,
+        )
+
+        self.assertNotEqual(
+            existing_mirrored_routine.id,
+            self.routine1.instance.subscribers.get(
+                user=self.user1.instance
+            ).mirrored_routine.id,
+        )
+
+        self.assertNotEqual(
+            existing_mirrored_routine.id,
             self.routine1.instance.subscribers.get(
                 user=self.user1.instance
             ).mirrored_routine.id,
