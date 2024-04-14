@@ -678,7 +678,7 @@ class ExerciseInRoutineTestCase(TestCase):
         )
 
     def test_get_exercise_in_ExerciseInRoutine(self):
-        """
+        """PASSED
         루틴을 조회할 때 루틴에 포함된 운동들을 함께 조회하는지 테스트
 
         reverse_url: routine-detail
