@@ -862,3 +862,19 @@ class ExerciseInRoutineTestCase(TestCase):
 
         for id in exercise_ids:
             self.assertTrue(ExercisesInfo.objects.filter(pk=id).exists())
+
+
+class UsersRoutineTestCase(TestCase):
+    """
+    목적: 유저가 보유한 루틴을 관리하는 UsersRoutine 모델에 대한 테스트를 진행합니다.
+    
+    Test cases:
+    1. 유저가 보유한 루틴을 조회하는지 테스트
+    2. 유저가 루틴을 생성했을 시 UsersRoutine이 함께 생성되는지 테스트
+    4. 유저가 루틴을 구독했을 시 UsersRoutine이 생성되는지 테스트
+    5. 유저가 생성한 루틴이 업데이트되었을 시 UsersRoutine의 need_update가 그대로 False인지 테스트
+    6. 유저가 구독한 루틴이 업데이트되었을 시 UsersRoutine의 need_update가 True로 변경되는지 테스트
+    7. 유저가 루틴을 삭제했을 시, 해당되는 본인의 UsersRoutine이 삭제되는지 테스트
+    8. 유저가 루틴을 삭제했을 시, 해당되는 다른 유저의 UsersRoutine은 삭제되지 않는지 테스트
+    """
+    ...
