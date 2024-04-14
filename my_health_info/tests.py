@@ -2,11 +2,12 @@ from django.test import TestCase
 from account.models import CustomUser as User
 from django.urls import reverse
 from my_health_info.models import HealthInfo, Routine
+from exercises_info.models import ExercisesInfo
 from freezegun import freeze_time
 from datetime import datetime, timedelta
 from django.utils import timezone
 from rest_framework import status
-from utils.fake_data import FakeUser, FakeHealthInfo, FakeRoutine
+from utils.fake_data import FakeUser, FakeHealthInfo, FakeRoutine, FakeExercisesInfo
 
 
 class MyHealthInfoTestCase(TestCase):
@@ -642,11 +643,39 @@ class ExerciseInRoutineTestCase(TestCase):
     """
 
     def setUp(self):
+        """
+        초기 설정
+
+        1. 어드민 유저 생성
+        2. 운동을 5 개 생성
+        3. 유저 2 명 생성
+        4. 유저 1과 2가 각각 루틴을 생성
+        """
+        self.admin = FakeUser()
+        self.admin.create_instance(is_staff=True)
+
+        self.exercise1 = FakeExercisesInfo()
+        self.exercise1.create_instance(self.admin.instance)
+
+        self.exercise2 = FakeExercisesInfo()
+        self.exercise2.create_instance(self.admin.instance)
+
+        self.exercise3 = FakeExercisesInfo()
+        self.exercise3.create_instance(self.admin.instance)
+
+        self.exercise4 = FakeExercisesInfo()
+        self.exercise4.create_instance(self.admin.instance)
+
+        self.exercise5 = FakeExercisesInfo()
+        self.exercise5.create_instance(self.admin.instance)
+
         self.user1 = FakeUser()
         self.user1.create_instance()
 
         self.routine1 = FakeRoutine()
-        self.routine1.create_instance(user_instance=self.user1.instance)
+        self.routine1.create_instance(
+            user_instance=self.user1.instance, exercise_author=self.admin.instance
+        )
 
     def test_get_exercise_in_ExerciseInRoutine(self):
         """
@@ -656,15 +685,18 @@ class ExerciseInRoutineTestCase(TestCase):
         HTTP method: GET
 
         테스트 시나리오:
-        1. 로그인한 유저가 /routine/<pk>/에 GET 요청을 보냅니다.
-        2. Response에 운동들이 함께 조회되는지 확인합니다.
+        1. routine1에 포함된 운동들을 조회합니다.
+        2. 그 수를 확인하고 배열에 저장합니다.
+        3. /routine/<pk>/에 GET 요청을 보냅니다.
+        4. Response의 운동들 수가 같은지 확인합니다.
+        5. 미리 저장한 배열과 Response의 운동들이 같은지 확인합니다.
         """
         self.client.force_login(self.user1.instance)
 
         pk = self.routine1.instance.pk
 
-        exercise_count = self.routine1.instance.exercises_in_routine.count()
-        title = self.routine1.instance.exercises_in_routine.first().exercise.title
+        exercises = self.routine1.instance.exercises_in_routine.all()
+        exercise_count = exercises.count()
 
         response = self.client.get(reverse("routine-detail", kwargs={"pk": pk}))
 
@@ -673,56 +705,9 @@ class ExerciseInRoutineTestCase(TestCase):
         data = response.json()
 
         self.assertTrue(len(data.get("exercises_in_routine")), exercise_count)
-        self.assertTrue(
-            data.get("exercises_in_routine")[0].get("exercise").get("title"), title
-        )
-
-
-"""
-routine_format = {
-    id: 1,
-    title: "루틴 제목",
-    author: {
-        username: "유저 이름",
-        email: "유저 이메일",
-        password: "Hashed Password",
-    },
-    username: "유저 이름",
-    created_at: "2021-01-01T00:00:00",
-    like_count: 0,
-    exercises_in_routine: [
-        {
-            id: 1,
-            order: 0,
-            exercise: {
-                id: 1,
-                title: "운동 제목",
-                description: "운동 설명",
-                video: "https://www.youtube.com/watch?v=12345",
-                focus_areas: [
-                    {
-                        id: 1,
-                        name: "하체",
-                    }
-                ],
-                exercises_attribute: {
-                    id: 1,
-                    need_set: True,
-                    need_rep: True,
-                    need_weight: False,
-                    need_duration: False,
-                    need_speed: False,
-                },
-            },
-            exercise_attribute: {
-                id: 1,
-                set_count: 3,
-                rep_count: 10,
-                weight: 0,
-                duration: 0,
-                speed: 0,
-            },
-        }
-    ],
-}
-"""
+        for exercise, response_exercise in zip(
+            exercises, data.get("exercises_in_routine")
+        ):
+            self.assertEqual(
+                exercise.exercise.id, response_exercise.get("exercise").get("id")
+            )
