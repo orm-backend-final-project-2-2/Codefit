@@ -3,6 +3,7 @@ from account.models import CustomUser as User
 from django.urls import reverse
 from my_health_info.models import HealthInfo, Routine, ExerciseInRoutine
 from exercises_info.models import ExercisesInfo
+from my_health_info.services import UsersRoutineManagementService
 from freezegun import freeze_time
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -916,4 +917,8 @@ class UsersRoutineTestCase(TestCase):
         self.routine2 = FakeRoutine([self.exercise3, self.exercise4])
         self.routine2.create_instance(user_instance=self.user2.instance)
 
-        
+        service = UsersRoutineManagementService(
+            routine=self.routine2.instance, user=self.user1.instance
+        )
+
+        service.subscribe()
