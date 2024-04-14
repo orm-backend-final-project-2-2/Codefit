@@ -53,7 +53,7 @@ class Routine_Like(models.Model):
 class MirroredRoutine(models.Model):
     title = models.CharField(max_length=50)
     author_name = models.CharField(max_length=50)
-    original_routine = models.ForeignKey(
+    original_routine = models.OneToOneField(
         Routine, related_name="mirrored_routine", on_delete=models.SET_NULL, null=True
     )
 
@@ -91,13 +91,13 @@ class ExerciseInRoutine(models.Model):
 
 class UsersRoutine(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    routine = models.ForeignKey(
+    routine = models.OneToOneField(
         Routine,
         related_name="subscribing_routines",
         on_delete=models.SET_NULL,
         null=True,
     )
-    mirrored_routine = models.ForeignKey(
+    mirrored_routine = models.OneToOneField(
         MirroredRoutine,
         related_name="subscribers",
         on_delete=models.SET_NULL,
@@ -106,7 +106,7 @@ class UsersRoutine(models.Model):
     need_update = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = ["user", "routine"]
+        unique_together = (("user", "routine"), ("user", "mirrored_routine"))
 
     def __str__(self):
         if self.routine:
