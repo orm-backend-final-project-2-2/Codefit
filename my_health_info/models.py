@@ -53,7 +53,7 @@ class Routine_Like(models.Model):
 class MirroredRoutine(models.Model):
     title = models.CharField(max_length=50)
     author_name = models.CharField(max_length=50)
-    original_routine = models.OneToOneField(
+    original_routine = models.ForeignKey(
         Routine, related_name="mirrored_routine", on_delete=models.SET_NULL, null=True
     )
 
