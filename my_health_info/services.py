@@ -18,4 +18,12 @@ class UsersRoutineManagementService:
         만약 이미 구독 중인 루틴이라면, 이미 구독 중이라는 에러를 발생시킨다.
         만약 작성자 본인의 루틴을 구독하려고 한다면, 작성자 본인의 루틴을 구독할 수 없다는 에러를 발생시킨다.
         """
-        ...
+
+        if self.user == self.routine.author:
+            raise ValueError("자신의 루틴을 구독할 수 없습니다.")
+        if UsersRoutine.objects.filter(user=self.user, routine=self.routine).exists():
+            raise ValueError("이미 구독 중인 루틴입니다.")
+
+        UsersRoutine.objects.create(
+            user=self.user, routine=self.routine, need_update=False
+        )
