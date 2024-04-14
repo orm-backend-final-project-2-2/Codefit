@@ -87,10 +87,10 @@ class FakeUser(FakeModel):
 
 
 class FakeExerciseInRoutine(FakeModel):
-    def __init__(self, order):
+    def __init__(self, order, fake_exercises_info):
         super().__init__(ExerciseInRoutine)
         self.base_attr = self.set_base_attr(order)
-        self.related_fake_models = self.set_related_fake_models()
+        self.related_fake_models = self.set_related_fake_models(fake_exercises_info)
         self.related_attr = self.set_related_attr()
 
     def set_base_attr(self, order):
@@ -98,9 +98,9 @@ class FakeExerciseInRoutine(FakeModel):
             "order": order,
         }
 
-    def set_related_fake_models(self):
+    def set_related_fake_models(self, fake_exercises_info):
         return {
-            "exercises_info": FakeExercisesInfo(),
+            "exercises_info": fake_exercises_info,
         }
 
     def set_related_attr(self):
@@ -110,15 +110,16 @@ class FakeExerciseInRoutine(FakeModel):
             ).request_create(),
         }
 
-    def create_instance(self, routine_instance, exercise_author):
-        fake_exercises_info = self.related_fake_models.get("exercises_info")
+    def create_instance(self, routine_instance):
+        fake_exercise_info = self.related_fake_models.get("exercises_info")
 
-        exercises_info_instance = fake_exercises_info.create_instance(
-            user_instance=exercise_author
-        )
+        if not fake_exercise_info.instance:
+            return
 
         self.instance = self.model.objects.create(
-            routine=routine_instance, exercise=exercises_info_instance, **self.base_attr
+            routine=routine_instance,
+            exercise=fake_exercise_info.instance,
+            **self.base_attr
         )
 
         return self.instance
@@ -131,10 +132,10 @@ class FakeExerciseInRoutine(FakeModel):
 
 
 class FakeRoutine(FakeModel):
-    def __init__(self):
+    def __init__(self, fake_exercises_infos):
         super().__init__(Routine)
         self.base_attr = self.set_base_attr()
-        self.related_fake_models = self.set_related_fake_models()
+        self.related_fake_models = self.set_related_fake_models(fake_exercises_infos)
         self.related_attr = self.set_related_attr()
 
     def set_base_attr(self):
@@ -142,15 +143,20 @@ class FakeRoutine(FakeModel):
             "title": self.fake.sentence(),
         }
 
-    def set_related_fake_models(self):
-        exercises_in_routine = self.set_exercises_in_routine()
+    def set_related_fake_models(self, fake_exercises_infos):
+        exercises_in_routine = self.set_exercises_in_routine(fake_exercises_infos)
         return {
             "exercises_in_routine": exercises_in_routine,
         }
 
-    def set_exercises_in_routine(self):
-        exercise_count = random.randint(2, 5)
-        return [FakeExerciseInRoutine(order) for order in range(exercise_count)]
+    def set_exercises_in_routine(self, fake_exercises_infos):
+        fake_exercises_in_routine = []
+
+        for order, fake_exercises_info in enumerate(fake_exercises_infos, start=1):
+            fake_exercise_in_routine = FakeExerciseInRoutine(order, fake_exercises_info)
+            fake_exercises_in_routine.append(fake_exercise_in_routine)
+
+        return fake_exercises_in_routine
 
     def set_related_attr(self):
         related_attr = {}
@@ -164,7 +170,7 @@ class FakeRoutine(FakeModel):
             ]
         return related_attr
 
-    def create_instance(self, user_instance, exercise_author):
+    def create_instance(self, user_instance):
         self.instance = self.model.objects.create(
             author=user_instance, **self.base_attr
         )
@@ -172,9 +178,7 @@ class FakeRoutine(FakeModel):
         for fake_exercise_in_routine in self.related_fake_models.get(
             "exercises_in_routine"
         ):
-            fake_exercise_in_routine.create_instance(
-                routine_instance=self.instance, exercise_author=exercise_author
-            )
+            fake_exercise_in_routine.create_instance(routine_instance=self.instance)
 
         return self.instance
 
