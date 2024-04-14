@@ -1171,3 +1171,37 @@ class UsersRoutineTestCase(TestCase):
                 user=self.user1.instance
             ).mirrored_routine.id,
         )
+
+    def test_delete_users_routine_when_delete_routine_if_user_equal_author(self):
+        """
+        작성자가 루틴을 삭제했을 시, 해당되는 작성자의 UsersRoutine이 삭제되는지 테스트
+
+        reverse_url: routine-detail
+        HTTP method: DELETE
+
+        테스트 시나리오:
+        1. 유저 2가 로그인합니다.
+        2. 유저 2가 루틴 2를 삭제합니다.
+        3. 상태 코드가 204인지 확인합니다.
+        4. 삭제한 루틴 2가 존재하지 않는지 확인합니다.
+        5. 유저 2의 루틴 2에 대한 UsersRoutine이 존재하지 않는지 확인합니다.
+        6. 유저 1의 루틴 2에 대한 UsersRoutine이 존재하는지 확인합니다.
+        """
+
+        self.client.force_login(self.user2.instance)
+
+        pk = self.routine2.instance.pk
+
+        response = self.client.delete(reverse("routine-detail", kwargs={"pk": pk}))
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertFalse(Routine.objects.filter(pk=pk).exists())
+
+        self.assertFalse(
+            UsersRoutine.objects.filter(routine=pk, user=self.user2.instance).exists()
+        )
+
+        self.assertTrue(
+            UsersRoutine.objects.filter(routine=pk, user=self.user1.instance).exists()
+        )
