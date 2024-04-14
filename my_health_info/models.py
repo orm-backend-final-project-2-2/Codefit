@@ -91,15 +91,15 @@ class ExerciseInRoutine(models.Model):
 
 class UsersRoutine(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    routine = models.OneToOneField(
+    routine = models.ForeignKey(
         Routine,
-        related_name="subscribing_routines",
+        related_name="subscribers",
         on_delete=models.SET_NULL,
         null=True,
     )
-    mirrored_routine = models.OneToOneField(
+    mirrored_routine = models.ForeignKey(
         MirroredRoutine,
-        related_name="subscribers",
+        related_name="mirrored_subscribers",
         on_delete=models.SET_NULL,
         null=True,
     )
