@@ -927,7 +927,7 @@ class UsersRoutineTestCase(TestCase):
             routine=self.routine2.instance, user=self.user1.instance
         )
 
-        service.subscribe_routine()
+        service.user_subscribe_routine()
 
     def test_get_users_routine(self):
         """
@@ -946,6 +946,7 @@ class UsersRoutineTestCase(TestCase):
         self.client.force_login(self.user1.instance)
 
         user1_routines = UsersRoutine.objects.filter(user=self.user1.instance)
+        
         routine_count = user1_routines.count()
 
         response = self.client.get(reverse("users-routine-list"))
@@ -954,7 +955,7 @@ class UsersRoutineTestCase(TestCase):
 
         data = response.json()
 
-        self.assertTrue(len(data), routine_count)
+        self.assertEqual(len(data), routine_count)
         for user1_routine, response_routine in zip(user1_routines, data):
             user1_routine_id = user1_routine.routine.id
             self.assertEqual(user1_routine.routine.id, response_routine.get("routine"))
