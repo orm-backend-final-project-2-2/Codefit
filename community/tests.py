@@ -320,14 +320,14 @@ class CommentTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), comment_count)
 
-    # def test_get_comment_detail(self):
-    #     """26. comment/<pk>/ GET 요청시 해당 Comment 객체를 반환하는지 테스트"""
-    #     response = self.client.get(
-    #         reverse("comment-detail", kwargs={"pk": self.user1_comment1.instance.id})
-    #     )
+    def test_get_comment_detail(self):
+        """26. comment/<pk>/ GET 요청시 해당 Comment 객체를 반환하는지 테스트"""
+        response = self.client.get(
+            reverse("comment-detail", kwargs={"pk": self.user1_comment1.instance.id})
+        )
 
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(response.data["content"], self.user1_comment1.instance.content)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["content"], self.user1_comment1.instance.content)
 
 
 # 페이지네이션 테스트용 더미 데이터
