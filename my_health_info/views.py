@@ -173,8 +173,10 @@ class RoutineViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, *args, **kwargs):
         kwargs["partial"] = True
+
+        instance = self.get_object()
+
         if request.data.get("exercises_in_routine"):
-            instance = self.get_object()
 
             serializer = self.get_serializer(instance, data=request.data, partial=True)
 
