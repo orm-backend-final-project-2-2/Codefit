@@ -867,7 +867,7 @@ class ExerciseInRoutineTestCase(TestCase):
 class UsersRoutineTestCase(TestCase):
     """
     목적: 유저가 보유한 루틴을 관리하는 UsersRoutine 모델에 대한 테스트를 진행합니다.
-    
+
     Test cases:
     1. 유저가 보유한 루틴을 조회하는지 테스트
     2. 유저가 루틴을 생성했을 시 UsersRoutine이 함께 생성되는지 테스트
@@ -877,4 +877,43 @@ class UsersRoutineTestCase(TestCase):
     7. 유저가 루틴을 삭제했을 시, 해당되는 본인의 UsersRoutine이 삭제되는지 테스트
     8. 유저가 루틴을 삭제했을 시, 해당되는 다른 유저의 UsersRoutine은 삭제되지 않는지 테스트
     """
-    ...
+
+    def setUp(self):
+        """
+        초기 설정
+
+        1. 관리자 유저 생성
+        2. 운동 4개 생성
+        3. 유저 2명 생성
+        4. 유저 1이 루틴 1개 생성
+        5. 유저 2가 루틴 1개 생성
+        6. 유저 1이 유저 2의 루틴을 구독
+        """
+        self.admin = FakeUser()
+        self.admin.create_instance(is_staff=True)
+
+        self.exercise1 = FakeExercisesInfo()
+        self.exercise1.create_instance(self.admin.instance)
+
+        self.exercise2 = FakeExercisesInfo()
+        self.exercise2.create_instance(self.admin.instance)
+
+        self.exercise3 = FakeExercisesInfo()
+        self.exercise3.create_instance(self.admin.instance)
+
+        self.exercise4 = FakeExercisesInfo()
+        self.exercise4.create_instance(self.admin.instance)
+
+        self.user1 = FakeUser()
+        self.user1.create_instance()
+
+        self.routine1 = FakeRoutine([self.exercise1, self.exercise2])
+        self.routine1.create_instance(user_instance=self.user1.instance)
+
+        self.user2 = FakeUser()
+        self.user2.create_instance()
+
+        self.routine2 = FakeRoutine([self.exercise3, self.exercise4])
+        self.routine2.create_instance(user_instance=self.user2.instance)
+
+        
