@@ -189,7 +189,7 @@ class FakeRoutine(FakeModel):
             author=user_instance, **self.base_attr
         )
 
-        self.mirrored_routine = MirroredRoutine.objects.create(
+        mirrored_routine = MirroredRoutine.objects.create(
             title=self.instance.title,
             author_name=user_instance.username,
             original_routine=self.instance,
@@ -200,14 +200,14 @@ class FakeRoutine(FakeModel):
         ):
             fake_exercise_in_routine.create_instance(
                 routine_instance=self.instance,
-                mirrored_routine_instance=self.mirrored_routine,
+                mirrored_routine_instance=mirrored_routine,
             )
 
         service = UsersRoutineManagementService(
             user=user_instance, routine=self.instance
         )
-        
-        service.user_create_routine(self.mirrored_routine)
+
+        service.user_create_routine(mirrored_routine)
 
         return self.instance
 
