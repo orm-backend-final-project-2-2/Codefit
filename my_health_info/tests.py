@@ -648,7 +648,37 @@ class ExerciseInRoutineTestCase(TestCase):
         self.routine1 = FakeRoutine()
         self.routine1.create_instance(user_instance=self.user1.instance)
 
+    def test_get_exercise_in_ExerciseInRoutine(self):
+        """
+        루틴을 조회할 때 루틴에 포함된 운동들을 함께 조회하는지 테스트
 
+        reverse_url: routine-detail
+        HTTP method: GET
+
+        테스트 시나리오:
+        1. 로그인한 유저가 /routine/<pk>/에 GET 요청을 보냅니다.
+        2. Response에 운동들이 함께 조회되는지 확인합니다.
+        """
+        self.client.force_login(self.user1.instance)
+
+        pk = self.routine1.instance.pk
+
+        exercise_count = self.routine1.instance.exercises_in_routine.count()
+        title = self.routine1.instance.exercises_in_routine.first().exercise.title
+
+        response = self.client.get(reverse("routine-detail", kwargs={"pk": pk}))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        self.assertTrue(len(data.get("exercises_in_routine")), exercise_count)
+        self.assertTrue(
+            data.get("exercises_in_routine")[0].get("exercise").get("title"), title
+        )
+
+
+"""
 routine_format = {
     id: 1,
     title: "루틴 제목",
@@ -695,3 +725,4 @@ routine_format = {
         }
     ],
 }
+"""
