@@ -1,5 +1,11 @@
 from rest_framework import serializers
-from my_health_info.models import HealthInfo, Routine, ExerciseInRoutine, UsersRoutine
+from my_health_info.models import (
+    HealthInfo,
+    Routine,
+    ExerciseInRoutine,
+    UsersRoutine,
+    MirroredRoutine,
+)
 from exercises_info.models import ExercisesInfo
 from drf_writable_nested import WritableNestedModelSerializer
 from exercises_info.serializers import ExercisesInfoSerializer
@@ -39,22 +45,26 @@ class RoutineSerializer(WritableNestedModelSerializer):
             "like_count",
             "exercises_in_routine",
         ]
-        read_only_fields = ["author", "created_at", "is_deleted", "like_count"]
+        read_only_fields = [
+            "author",
+            "username",
+            "created_at",
+            "is_deleted",
+            "like_count",
+        ]
 
     def get_username(self, obj):
+        
         return obj.author.username
-
-    def create(self, validated_data):
-        exercises_in_routine_data = validated_data.pop("exercises_in_routine")
-        routine = Routine.objects.create(**validated_data)
-        for exercise_data in exercises_in_routine_data:
-            ExerciseInRoutine.objects.create(routine=routine, **exercise_data)
-        return routine
 
     def update(self, instance, validated_data):
         exercises_in_routine_data = validated_data.pop("exercises_in_routine")
 
-        ExerciseInRoutine.objects.filter(routine=instance).delete()
+        existing_exercises = ExerciseInRoutine.objects.filter(routine=instance)
+
+        for existing_exercise in existing_exercises:
+            existing_exercise.routine = None
+            existing_exercise.save()
 
         for exercise_data in exercises_in_routine_data:
             ExerciseInRoutine.objects.create(routine=instance, **exercise_data)
@@ -65,5 +75,5 @@ class RoutineSerializer(WritableNestedModelSerializer):
 class UsersRoutineSerializer(serializers.ModelSerializer):
     class Meta:
         model = UsersRoutine
-        fields = ["user", "routine", "need_update"]
-        read_only_fields = ["user", "routine", "need_update"]
+        fields = ["user", "routine", "mirrored_routine", "need_update"]
+        read_only_fields = ["user", "routine", "mirrored_routine", "need_update"]
