@@ -56,9 +56,6 @@ class RoutineSerializer(WritableNestedModelSerializer):
     def get_username(self, obj):
         return obj.author.username
 
-    def update(self, instance, validated_data):
-        return super().update(instance, validated_data)
-
 
 class MirroredRoutineSerializer(serializers.ModelSerializer):
     exercises_in_routine = ExerciseInRoutineSerializer(many=True)
