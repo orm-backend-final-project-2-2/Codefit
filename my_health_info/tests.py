@@ -1,12 +1,19 @@
 from django.test import TestCase
 from account.models import CustomUser as User
 from django.urls import reverse
-from my_health_info.models import HealthInfo, Routine
+from my_health_info.models import HealthInfo, Routine, ExerciseInRoutine
+from exercises_info.models import ExercisesInfo
 from freezegun import freeze_time
 from datetime import datetime, timedelta
 from django.utils import timezone
 from rest_framework import status
-from utils.fake_data import FakeUser, FakeHealthInfo, FakeRoutine
+from utils.fake_data import (
+    FakeUser,
+    FakeHealthInfo,
+    FakeRoutine,
+    FakeExercisesInfo,
+    FakeExerciseInRoutine,
+)
 
 
 class MyHealthInfoTestCase(TestCase):
@@ -628,3 +635,230 @@ class RoutineTestCase(TestCase):
         response = self.client.post(reverse("routine-like", kwargs={"pk": pk}))
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class ExerciseInRoutineTestCase(TestCase):
+    """
+    목적: Routine 모델과 연결되어 루틴에 포함된 운동들을 관리하는 ExerciseInRoutine 모델에 대한 테스트를 진행합니다.
+
+    Test cases:
+    1. 루틴을 조회할 때 루틴에 포함된 운동들을 함께 조회하는지 테스트
+    2. 루틴을 생성할 때 주어진 운동에 대한 정보를 함께 생성하는지 테스트
+    3. 루틴을 업데이트할 때 주어진 운동에 대한 정보를 함께 업데이트하는지 테스트
+    4. 루틴을 삭제할 때 함께 생성된 운동에 대한 정보도 함께 삭제하는지 테스트
+    """
+
+    def setUp(self):
+        """
+        초기 설정
+
+        1. 어드민 유저 생성
+        2. 운동을 5 개 생성
+        3. 유저 2 명 생성
+        4. 유저 1과 2가 각각 루틴을 생성
+        """
+        self.admin = FakeUser()
+        self.admin.create_instance(is_staff=True)
+
+        self.exercise1 = FakeExercisesInfo()
+        self.exercise1.create_instance(self.admin.instance)
+
+        self.exercise2 = FakeExercisesInfo()
+        self.exercise2.create_instance(self.admin.instance)
+
+        self.exercise3 = FakeExercisesInfo()
+        self.exercise3.create_instance(self.admin.instance)
+
+        self.exercise4 = FakeExercisesInfo()
+        self.exercise4.create_instance(self.admin.instance)
+
+        self.exercise5 = FakeExercisesInfo()
+        self.exercise5.create_instance(self.admin.instance)
+
+        self.user1 = FakeUser()
+        self.user1.create_instance()
+
+        self.routine1 = FakeRoutine([self.exercise1, self.exercise2, self.exercise3])
+        self.routine1.create_instance(user_instance=self.user1.instance)
+
+        self.user2 = FakeUser()
+        self.user2.create_instance()
+
+        self.routine2 = FakeRoutine([self.exercise4, self.exercise5])
+        self.routine2.create_instance(user_instance=self.user2.instance)
+
+    def test_get_exercise_in_ExerciseInRoutine(self):
+        """
+        루틴을 조회할 때 루틴에 포함된 운동들을 함께 조회하는지 테스트
+
+        reverse_url: routine-detail
+        HTTP method: GET
+
+        테스트 시나리오:
+        1. routine1에 포함된 운동들을 조회합니다.
+        2. 그 수를 확인하고 배열에 저장합니다.
+        3. /routine/<pk>/에 GET 요청을 보냅니다.
+        4. Response의 운동들 수가 같은지 확인합니다.
+        5. 미리 저장한 배열과 Response의 운동들이 같은지 확인합니다.
+        """
+        self.client.force_login(self.user1.instance)
+
+        pk = self.routine1.instance.pk
+
+        exercises = self.routine1.instance.exercises_in_routine.all()
+        exercise_count = exercises.count()
+
+        response = self.client.get(reverse("routine-detail", kwargs={"pk": pk}))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        self.assertTrue(len(data.get("exercises_in_routine")), exercise_count)
+        for exercise, response_exercise in zip(
+            exercises, data.get("exercises_in_routine")
+        ):
+            self.assertEqual(
+                exercise.exercise.title,
+                response_exercise.get("exercise_info").get("title"),
+            )
+
+    def test_create_exercise_in_ExerciseInRoutine(self):
+        """
+        루틴을 생성할 때 주어진 운동에 대한 정보를 함께 생성하는지 테스트
+
+        reverse_url: routine-list
+        HTTP method: POST
+
+        테스트 시나리오:
+        1. 새로운 운동을 생성합니다.
+        2. 새로운 루틴을 생성하고 생성된 운동들을 루틴에 추가합니다.
+        3. /routine/에 POST 요청을 보냅니다.
+        4. Response의 운동들이 생성된 운동들과 같은지 확인합니다.
+        """
+        new_exercise1 = FakeExercisesInfo()
+        new_exercise1.create_instance(self.admin.instance)
+
+        new_exercise2 = FakeExercisesInfo()
+        new_exercise2.create_instance(self.admin.instance)
+
+        new_routine = FakeRoutine([new_exercise1, new_exercise2])
+
+        new_exercises_in_routine = new_routine.related_fake_models.get(
+            "exercises_in_routine"
+        )
+
+        self.client.force_login(self.user1.instance)
+
+        response = self.client.post(
+            reverse("routine-list"),
+            data=new_routine.request_create(),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+
+        for exercise, response_exercise in zip(
+            new_exercises_in_routine, data.get("exercises_in_routine")
+        ):
+            self.assertEqual(
+                exercise.related_fake_models.get("exercises_info").instance.title,
+                response_exercise.get("exercise_info").get("title"),
+            )
+
+    def test_update_exercise_in_ExerciseInRoutine(self):
+        """
+        루틴을 업데이트할 때 주어진 운동에 대한 정보를 함께 업데이트하는지 테스트
+
+        reverse_url: routine-detail
+        HTTP method: PATCH
+
+        테스트 시나리오:
+        1. 새로운 운동을 생성합니다.
+        2. 새 운동에 대한 정보와 순서가 담긴 ExerciseInRoutine 배열을 생성합니다.
+        3. /routine/<pk>/에 PATCH 요청을 보냅니다.
+        4. Response의 운동들이 예상한 운동들과 같은지 확인합니다.
+        """
+        new_exercise1 = FakeExercisesInfo()
+        new_exercise1.create_instance(self.admin.instance)
+
+        new_exercise2 = FakeExercisesInfo()
+        new_exercise2.create_instance(self.admin.instance)
+
+        new_exercise_in_routine1 = FakeExerciseInRoutine(
+            order=1, fake_exercises_info=new_exercise1
+        )
+        new_exercise_in_routine2 = FakeExerciseInRoutine(
+            order=2, fake_exercises_info=new_exercise2
+        )
+
+        existed_exercise_in_routines = self.routine1.instance.exercises_in_routine.all()
+
+        request_update = [
+            new_exercise_in_routine1.request_create(),
+            new_exercise_in_routine2.request_create(),
+        ]
+
+        pk = self.routine1.instance.pk
+
+        self.client.force_login(self.user1.instance)
+
+        response = self.client.patch(
+            reverse("routine-detail", kwargs={"pk": pk}),
+            data={"exercises_in_routine": request_update},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        for exercise, response_exercise in zip(
+            request_update, data.get("exercises_in_routine")
+        ):
+            self.assertEqual(
+                ExercisesInfo.objects.get(pk=exercise.get("exercise")).title,
+                response_exercise.get("exercise_info").get("title"),
+            )
+
+    def test_delete_exercise_in_ExerciseInRoutine(self):
+        """
+        루틴을 삭제할 때 함께 생성된 운동에 대한 정보도 함께 삭제하는지 테스트
+
+        reverse_url: routine-detail
+        HTTP method: DELETE
+
+        테스트 시나리오:
+        1. routine1에 포함된 운동들을 조회합니다.
+        2. 그 id를 배열에 저장합니다.
+        3. /routine/<pk>/에 DELETE 요청을 보냅니다.
+        4. response가 204를 리턴하는지 확인합니다.
+        5. 해당 루틴이 삭제되었는지 확인합니다.
+        6. 해당 루틴에 포함된 운동들이 삭제되었는지 확인합니다.
+        7. 해당 루틴 내의 운동이 참조하는 운동 정보는 삭제되지 않았는지 확인합니다.
+        """
+        self.client.force_login(self.user1.instance)
+
+        pk = self.routine1.instance.pk
+
+        exercise_in_routines = self.routine1.instance.exercises_in_routine.all()
+        exercise_in_routine_ids = [
+            exercise_in_routine.pk for exercise_in_routine in exercise_in_routines
+        ]
+        exercise_ids = [
+            exercise_in_routine.exercise.pk
+            for exercise_in_routine in exercise_in_routines
+        ]
+
+        response = self.client.delete(reverse("routine-detail", kwargs={"pk": pk}))
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Routine.objects.filter(pk=pk).exists())
+
+        for id in exercise_in_routine_ids:
+            self.assertFalse(ExerciseInRoutine.objects.filter(pk=id).exists())
+
+        for id in exercise_ids:
+            self.assertTrue(ExercisesInfo.objects.filter(pk=id).exists())

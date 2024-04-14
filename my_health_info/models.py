@@ -1,5 +1,6 @@
 from django.db import models
 from account.models import CustomUser as User
+from exercises_info.models import ExercisesInfo
 
 
 # Create your models here.
@@ -47,3 +48,19 @@ class Routine_Like(models.Model):
         self.routine.like_count += 1
         self.routine.save()
         super().save(*args, **kwargs)
+
+
+class ExerciseInRoutine(models.Model):
+    routine = models.ForeignKey(
+        Routine, related_name="exercises_in_routine", on_delete=models.CASCADE
+    )
+    exercise = models.ForeignKey(
+        ExercisesInfo, related_name="exercises_in_routine", on_delete=models.CASCADE
+    )
+    order = models.PositiveIntegerField()
+
+    class Meta:
+        unique_together = ["routine", "order"]
+
+    def __str__(self):
+        return f"{self.routine.title}의 {self.order}번째 운동: {self.exercise.title}"

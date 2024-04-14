@@ -1,6 +1,6 @@
 from faker import Faker
 from account.models import CustomUser
-from my_health_info.models import HealthInfo, Routine
+from my_health_info.models import HealthInfo, Routine, ExerciseInRoutine
 from exercises_info.models import ExercisesInfo, FocusArea, ExercisesAttribute
 from community.models import Post
 from utils.enums import FocusAreaEnum
@@ -86,25 +86,113 @@ class FakeUser(FakeModel):
         return self.needed_info(["email", "password"])
 
 
+class FakeExerciseInRoutine(FakeModel):
+    def __init__(self, order, fake_exercises_info):
+        super().__init__(ExerciseInRoutine)
+        self.base_attr = self.set_base_attr(order)
+        self.related_fake_models = self.set_related_fake_models(fake_exercises_info)
+        self.related_attr = self.set_related_attr()
+
+    def set_base_attr(self, order):
+        return {
+            "order": order,
+        }
+
+    def set_related_fake_models(self, fake_exercises_info):
+        return {
+            "exercises_info": fake_exercises_info,
+        }
+
+    def set_related_attr(self):
+        return {
+            "exercises_info": self.related_fake_models.get(
+                "exercises_info"
+            ).request_create(),
+        }
+
+    def create_instance(self, routine_instance):
+        fake_exercise_info = self.related_fake_models.get("exercises_info")
+
+        if not fake_exercise_info.instance:
+            return
+
+        self.instance = self.model.objects.create(
+            routine=routine_instance,
+            exercise=fake_exercise_info.instance,
+            **self.base_attr
+        )
+
+        return self.instance
+
+    def request_create(self):
+        base_attr = self.base_attr
+        related_attr = self.related_attr
+
+        related_attr["exercise"] = self.related_fake_models.get(
+            "exercises_info"
+        ).instance.id
+
+        related_attr.pop("exercises_info")
+
+        return {**base_attr, **related_attr}
+
+
 class FakeRoutine(FakeModel):
-    def __init__(self):
+    def __init__(self, fake_exercises_infos):
         super().__init__(Routine)
         self.base_attr = self.set_base_attr()
+        self.related_fake_models = self.set_related_fake_models(fake_exercises_infos)
+        self.related_attr = self.set_related_attr()
 
     def set_base_attr(self):
         return {
             "title": self.fake.sentence(),
         }
 
+    def set_related_fake_models(self, fake_exercises_infos):
+        exercises_in_routine = self.set_exercises_in_routine(fake_exercises_infos)
+        return {
+            "exercises_in_routine": exercises_in_routine,
+        }
+
+    def set_exercises_in_routine(self, fake_exercises_infos):
+        fake_exercises_in_routine = []
+
+        for order, fake_exercises_info in enumerate(fake_exercises_infos, start=1):
+            fake_exercise_in_routine = FakeExerciseInRoutine(order, fake_exercises_info)
+            fake_exercises_in_routine.append(fake_exercise_in_routine)
+
+        return fake_exercises_in_routine
+
+    def set_related_attr(self):
+        related_attr = {}
+
+        if "exercises_in_routine" in self.related_fake_models:
+            related_attr["exercises_in_routine"] = [
+                fake_exercise_in_routine.request_create()
+                for fake_exercise_in_routine in self.related_fake_models.get(
+                    "exercises_in_routine"
+                )
+            ]
+        return related_attr
+
     def create_instance(self, user_instance):
         self.instance = self.model.objects.create(
             author=user_instance, **self.base_attr
         )
+
+        for fake_exercise_in_routine in self.related_fake_models.get(
+            "exercises_in_routine"
+        ):
+            fake_exercise_in_routine.create_instance(routine_instance=self.instance)
+
         return self.instance
 
     def request_create(self):
-        """Create 요청에 필요한 정보를 반환합니다."""
-        return self.needed_info(["title"])
+        base_attr = self.base_attr
+        related_attr = self.related_attr
+
+        return {**base_attr, **related_attr}
 
 
 class FakeHealthInfo(FakeModel):
@@ -215,7 +303,7 @@ class FakeExercisesInfo(FakeModel):
 
         if "focus_areas" in self.related_fake_models:
             related_attr["focus_areas"] = [
-                focus_area.base_attr
+                focus_area.request_create()
                 for focus_area in self.related_fake_models.get("focus_areas")
             ]
 
@@ -224,7 +312,6 @@ class FakeExercisesInfo(FakeModel):
                 "exercises_attribute"
             ].base_attr
 
-        self.related_attr = related_attr
         return related_attr
 
     def create_instance(self, user_instance):
