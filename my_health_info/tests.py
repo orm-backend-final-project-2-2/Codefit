@@ -252,19 +252,37 @@ class RoutineTestCase(TestCase):
     """
 
     def setUp(self):
+        self.admin = FakeUser(is_staff=True)
+        self.admin.create_instance()
+
         self.user1 = FakeUser()
         self.user1.create_instance()
 
         self.user2 = FakeUser()
         self.user2.create_instance()
 
-        self.routine1 = FakeRoutine()
+        self.exercise1 = FakeExercisesInfo()
+        self.exercise1.create_instance(self.admin.instance)
+
+        self.exercise2 = FakeExercisesInfo()
+        self.exercise2.create_instance(self.admin.instance)
+
+        self.exercise3 = FakeExercisesInfo()
+        self.exercise3.create_instance(self.admin.instance)
+
+        self.exercise4 = FakeExercisesInfo()
+        self.exercise4.create_instance(self.admin.instance)
+
+        self.exercise5 = FakeExercisesInfo()
+        self.exercise5.create_instance(self.admin.instance)
+
+        self.routine1 = FakeRoutine([self.exercise1, self.exercise2])
         self.routine1.create_instance(user_instance=self.user1.instance)
 
-        self.routine2 = FakeRoutine()
+        self.routine2 = FakeRoutine([self.exercise3, self.exercise4, self.exercise5])
         self.routine2.create_instance(user_instance=self.user2.instance)
 
-        self.routine3 = FakeRoutine()
+        self.routine3 = FakeRoutine([self.exercise4, self.exercise2, self.exercise3])
         self.routine3.create_instance(user_instance=self.user1.instance)
 
     def test_get_routine_not_authenticated(self):
