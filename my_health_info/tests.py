@@ -335,7 +335,7 @@ class RoutineTestCase(TestCase):
         """
         self.client.force_login(self.user1.instance)
 
-        new_routine = FakeRoutine()
+        new_routine = FakeRoutine([self.exercise2, self.exercise4])
 
         response = self.client.post(
             reverse("routine-list"),
@@ -359,7 +359,7 @@ class RoutineTestCase(TestCase):
         1. 비로그인 유저가 /routine/에 POST 요청을 보냅니다.
         2. 403 에러를 리턴하는지 확인합니다.
         """
-        new_routine = FakeRoutine()
+        new_routine = FakeRoutine([self.exercise1, self.exercise5])
 
         response = self.client.post(
             reverse("routine-list"),
