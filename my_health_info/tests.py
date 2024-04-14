@@ -992,8 +992,6 @@ class UsersRoutineTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        data = response.json()
-
         self.assertEqual(UsersRoutine.objects.count(), users_routine_count + 1)
 
         self.assertEqual(UsersRoutine.objects.last().user, self.user2.instance)
@@ -1020,7 +1018,8 @@ class UsersRoutineTestCase(TestCase):
         3. 유저 2가 유저 1의 루틴에 구독 요청을 보냅니다.
         4. 응답 코드가 201인지 확인합니다.
         5. UsersRoutine의 개수가 1 증가했는지 확인합니다.
-        6. 가장 최근에 생성된 UsersRoutine의 유저가 2이고, 루틴이 유저 1의 루틴인지 확인합니다.
+        6. 가장 최근에 생성된 UsersRoutine의 유저와 응답 데이터의 유저가 같은지 확인합니다.
+        7. 가장 최근에 생성된 UsersRoutine의 루틴과 응답 데이터의 루틴이 같은지 확인합니다.
         """
         users_routine_count = UsersRoutine.objects.count()
 
@@ -1036,9 +1035,10 @@ class UsersRoutineTestCase(TestCase):
 
         data = response.json()
 
+        self.assertEqual(UsersRoutine.objects.last().user.pk, data.get("user"))
+        self.assertEqual(UsersRoutine.objects.last().routine.pk, data.get("routine"))
+
         self.assertEqual(
-            UsersRoutine.objects.last().user.pk, data.get("user").get("id")
-        )
-        self.assertEqual(
-            UsersRoutine.objects.last().routine.pk, data.get("routine").get("id")
+            self.routine1.instance.mirrored_routine.exercises_in_routine.count(),
+            len(data.get("mirrored_routine").get("exercises_in_routine")),
         )
