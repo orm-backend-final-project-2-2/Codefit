@@ -7,7 +7,7 @@ class UsersRoutineManagementService:
     Routine 모델의 변경으로 인한 UsersRoutine 모델의 변경을 담당하는 서비스 클래스
     """
 
-    def __init__(self, user: User, routine: Routine):
+    def __init__(self, user, routine):
         self.user = user
         self.routine = routine
 
@@ -24,12 +24,12 @@ class UsersRoutineManagementService:
         if UsersRoutine.objects.filter(user=self.user, routine=self.routine).exists():
             raise ValueError("이미 구독 중인 루틴입니다.")
 
-        mirrored_routine = self.routine.mirrored_routine
+        last_mirrored_routine = self.routine.mirrored_routine.last()
 
         users_routine = UsersRoutine.objects.create(
             user=self.user,
             routine=self.routine,
-            mirrored_routine=mirrored_routine,
+            mirrored_routine=last_mirrored_routine,
         )
 
         return users_routine
