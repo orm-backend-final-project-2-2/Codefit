@@ -52,10 +52,10 @@ class Routine_Like(models.Model):
 
 class ExerciseInRoutine(models.Model):
     routine = models.ForeignKey(
-        Routine, related_name="exercise_in_routine", on_delete=models.CASCADE
+        Routine, related_name="exercises_in_routine", on_delete=models.CASCADE
     )
-    exercise_info = models.ForeignKey(
-        ExercisesInfo, related_name="exercise_in_routine", on_delete=models.CASCADE
+    exercise = models.ForeignKey(
+        ExercisesInfo, related_name="exercises_in_routine", on_delete=models.CASCADE
     )
     order = models.PositiveIntegerField()
 
