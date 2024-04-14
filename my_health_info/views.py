@@ -134,7 +134,6 @@ class RoutineViewSet(viewsets.ModelViewSet):
         queryset = self.get_queryset()
         queryset = self.search_queryset(queryset)
         queryset = self.order_queryset(queryset)
-        queryset = queryset.filter(is_mirrored=False)
 
         serializer = self.get_serializer(queryset, many=True)
 
@@ -174,18 +173,20 @@ class RoutineViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, *args, **kwargs):
         kwargs["partial"] = True
+
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+
+        if not serializer.is_valid():
+            raise ValidationError(serializer.errors)
+
         if request.data.get("exercises_in_routine"):
-            instance = self.get_object()
-
-            serializer = self.get_serializer(instance, data=request.data, partial=True)
-
-            if not serializer.is_valid():
-                raise ValidationError(serializer.errors)
 
             ExerciseInRoutine.objects.filter(routine=instance).update(routine=None)
 
             last_mirrored_routine = instance.mirrored_routine.last()
             last_mirrored_routine.original_routine = None
+            last_mirrored_routine.save()
 
             new_mirrored_routine = MirroredRoutine.objects.create(
                 title=instance.title,
@@ -218,7 +219,7 @@ class RoutineViewSet(viewsets.ModelViewSet):
                 subscribers, ["mirrored_routine", "need_update"]
             )
 
-        instance.save()
+        serializer.save()
 
         data = self.get_serializer(instance).data
 

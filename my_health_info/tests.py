@@ -252,19 +252,37 @@ class RoutineTestCase(TestCase):
     """
 
     def setUp(self):
+        self.admin = FakeUser()
+        self.admin.create_instance(is_staff=True)
+
         self.user1 = FakeUser()
         self.user1.create_instance()
 
         self.user2 = FakeUser()
         self.user2.create_instance()
 
-        self.routine1 = FakeRoutine()
+        self.exercise1 = FakeExercisesInfo()
+        self.exercise1.create_instance(self.admin.instance)
+
+        self.exercise2 = FakeExercisesInfo()
+        self.exercise2.create_instance(self.admin.instance)
+
+        self.exercise3 = FakeExercisesInfo()
+        self.exercise3.create_instance(self.admin.instance)
+
+        self.exercise4 = FakeExercisesInfo()
+        self.exercise4.create_instance(self.admin.instance)
+
+        self.exercise5 = FakeExercisesInfo()
+        self.exercise5.create_instance(self.admin.instance)
+
+        self.routine1 = FakeRoutine([self.exercise1, self.exercise2])
         self.routine1.create_instance(user_instance=self.user1.instance)
 
-        self.routine2 = FakeRoutine()
+        self.routine2 = FakeRoutine([self.exercise3, self.exercise4, self.exercise5])
         self.routine2.create_instance(user_instance=self.user2.instance)
 
-        self.routine3 = FakeRoutine()
+        self.routine3 = FakeRoutine([self.exercise4, self.exercise2, self.exercise3])
         self.routine3.create_instance(user_instance=self.user1.instance)
 
     def test_get_routine_not_authenticated(self):
@@ -317,7 +335,7 @@ class RoutineTestCase(TestCase):
         """
         self.client.force_login(self.user1.instance)
 
-        new_routine = FakeRoutine()
+        new_routine = FakeRoutine([self.exercise2, self.exercise4])
 
         response = self.client.post(
             reverse("routine-list"),
@@ -341,7 +359,7 @@ class RoutineTestCase(TestCase):
         1. 비로그인 유저가 /routine/에 POST 요청을 보냅니다.
         2. 403 에러를 리턴하는지 확인합니다.
         """
-        new_routine = FakeRoutine()
+        new_routine = FakeRoutine([self.exercise1, self.exercise5])
 
         response = self.client.post(
             reverse("routine-list"),
@@ -366,7 +384,6 @@ class RoutineTestCase(TestCase):
 
         pk = self.routine1.instance.pk
 
-        new_routine = FakeRoutine()
         new_routine_title = "Updated Title"
 
         response = self.client.patch(
@@ -393,7 +410,6 @@ class RoutineTestCase(TestCase):
         """
         pk = self.routine1.instance.pk
 
-        new_routine = FakeRoutine()
         new_routine_title = "Updated Title"
 
         response = self.client.patch(
@@ -419,7 +435,6 @@ class RoutineTestCase(TestCase):
 
         pk = self.routine1.instance.pk
 
-        new_routine = FakeRoutine()
         new_routine_title = "Updated Title"
 
         response = self.client.patch(
@@ -574,10 +589,10 @@ class RoutineTestCase(TestCase):
         new_user_3 = FakeUser()
         new_user_3.create_instance()
 
-        new_routine_1 = FakeRoutine()
+        new_routine_1 = FakeRoutine([self.exercise1, self.exercise2])
         new_routine_1.create_instance(user_instance=new_user_1.instance)
 
-        new_routine_2 = FakeRoutine()
+        new_routine_2 = FakeRoutine([self.exercise3, self.exercise4])
         new_routine_2.create_instance(user_instance=new_user_2.instance)
 
         new_routine_1.instance.like_count = 10
