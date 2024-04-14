@@ -134,7 +134,6 @@ class RoutineViewSet(viewsets.ModelViewSet):
         queryset = self.get_queryset()
         queryset = self.search_queryset(queryset)
         queryset = self.order_queryset(queryset)
-        queryset = queryset.filter(is_mirrored=False)
 
         serializer = self.get_serializer(queryset, many=True)
 
