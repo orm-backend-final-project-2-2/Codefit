@@ -252,8 +252,8 @@ class RoutineTestCase(TestCase):
     """
 
     def setUp(self):
-        self.admin = FakeUser(is_staff=True)
-        self.admin.create_instance()
+        self.admin = FakeUser()
+        self.admin.create_instance(is_staff=True)
 
         self.user1 = FakeUser()
         self.user1.create_instance()
@@ -384,7 +384,6 @@ class RoutineTestCase(TestCase):
 
         pk = self.routine1.instance.pk
 
-        new_routine = FakeRoutine()
         new_routine_title = "Updated Title"
 
         response = self.client.patch(
@@ -411,7 +410,6 @@ class RoutineTestCase(TestCase):
         """
         pk = self.routine1.instance.pk
 
-        new_routine = FakeRoutine()
         new_routine_title = "Updated Title"
 
         response = self.client.patch(
@@ -437,7 +435,6 @@ class RoutineTestCase(TestCase):
 
         pk = self.routine1.instance.pk
 
-        new_routine = FakeRoutine()
         new_routine_title = "Updated Title"
 
         response = self.client.patch(
