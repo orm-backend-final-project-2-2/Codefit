@@ -13,6 +13,7 @@ from my_health_info.serializers import (
     HealthInfoSerializer,
     RoutineSerializer,
     UsersRoutineSerializer,
+    ExerciseInRoutineSerializer,
 )
 from rest_framework.exceptions import (
     MethodNotAllowed,
@@ -173,7 +174,55 @@ class RoutineViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, *args, **kwargs):
         kwargs["partial"] = True
-        return self.update(request, *args, **kwargs)
+        if request.data.get("exercises_in_routine"):
+            instance = self.get_object()
+
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
+
+            if not serializer.is_valid():
+                raise ValidationError(serializer.errors)
+
+            ExerciseInRoutine.objects.filter(routine=instance).update(routine=None)
+
+            last_mirrored_routine = instance.mirrored_routine.last()
+            last_mirrored_routine.original_routine = None
+
+            new_mirrored_routine = MirroredRoutine.objects.create(
+                title=instance.title,
+                author_name=instance.author.username,
+                original_routine=instance,
+            )
+
+            exercises_in_routine_data = serializer.validated_data.pop(
+                "exercises_in_routine", []
+            )
+
+            new_exercise_in_routines = [
+                ExerciseInRoutine(
+                    routine=instance,
+                    mirrored_routine=new_mirrored_routine,
+                    **exercise_data,
+                )
+                for exercise_data in exercises_in_routine_data
+            ]
+            ExerciseInRoutine.objects.bulk_create(new_exercise_in_routines)
+
+            subscribers = list(instance.subscribers.all())
+            for users_routine in subscribers:
+                if users_routine.user.id == instance.author.id:
+                    users_routine.mirrored_routine = new_mirrored_routine
+                else:
+                    users_routine.need_update = True
+
+            UsersRoutine.objects.bulk_update(
+                subscribers, ["mirrored_routine", "need_update"]
+            )
+
+        instance.save()
+
+        data = self.get_serializer(instance).data
+
+        return Response(data, status=status.HTTP_200_OK)
 
     @action(
         detail=True,
