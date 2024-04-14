@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from my_health_info.models import HealthInfo, Routine, ExerciseInRoutine
+from my_health_info.models import HealthInfo, Routine, ExerciseInRoutine, UsersRoutine
 from exercises_info.models import ExercisesInfo
 from drf_writable_nested import WritableNestedModelSerializer
 from exercises_info.serializers import ExercisesInfoSerializer
@@ -60,3 +60,10 @@ class RoutineSerializer(WritableNestedModelSerializer):
             ExerciseInRoutine.objects.create(routine=instance, **exercise_data)
 
         return super().update(instance, validated_data)
+
+
+class UsersRoutineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UsersRoutine
+        fields = ["user", "routine", "need_update"]
+        read_only_fields = ["user", "routine", "need_update"]
