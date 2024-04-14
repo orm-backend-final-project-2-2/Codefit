@@ -54,7 +54,7 @@ class RoutineSerializer(WritableNestedModelSerializer):
         ]
 
     def get_username(self, obj):
-        
+
         return obj.author.username
 
     def update(self, instance, validated_data):
@@ -72,8 +72,24 @@ class RoutineSerializer(WritableNestedModelSerializer):
         return super().update(instance, validated_data)
 
 
+class MirroredRoutineSerializer(serializers.ModelSerializer):
+    exercises_in_routine = ExerciseInRoutineSerializer(many=True)
+
+    class Meta:
+        model = MirroredRoutine
+        fields = ["title", "author_name", "original_routine", "exercises_in_routine"]
+        read_only_fields = [
+            "title",
+            "author_name",
+            "original_routine",
+            "exercises_in_routine",
+        ]
+
+
 class UsersRoutineSerializer(serializers.ModelSerializer):
+    mirrored_routine = MirroredRoutineSerializer(read_only=True)
+
     class Meta:
         model = UsersRoutine
         fields = ["user", "routine", "mirrored_routine", "need_update"]
-        read_only_fields = ["user", "routine", "mirrored_routine", "need_update"]
+        read_only_fields = ["user", "routine", "need_update"]
