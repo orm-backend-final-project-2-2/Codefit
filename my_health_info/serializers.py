@@ -11,12 +11,13 @@ class HealthInfoSerializer(serializers.ModelSerializer):
         read_only_fields = ["user", "bmi", "created_at"]
 
 
-class ExerciseInRoutineSerializer(serializers.ModelSerializer):
-    exercise = ExercisesInfoSerializer()
+class ExerciseInRoutineSerializer(WritableNestedModelSerializer):
+    # exercise_info = ExercisesInfoSerializer(source="exercise", read_only=True)
 
     class Meta:
         model = ExerciseInRoutine
         fields = ["routine", "exercise", "order"]
+        read_only_fields = ["routine"]
 
 
 class RoutineSerializer(WritableNestedModelSerializer):
