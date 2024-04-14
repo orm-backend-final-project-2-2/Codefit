@@ -1,4 +1,4 @@
-name: Run Unit Tests
+name: Run Feature Branch Tests
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   test:
-    name: Run Unit Tests
+    name: Run Feature Branch Tests
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code

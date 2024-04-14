@@ -38,6 +38,7 @@ class ExercisesInfoSerializer(WritableNestedModelSerializer):
     class Meta:
         model = ExercisesInfo
         fields = [
+            "id",
             "title",
             "author",
             "username",
@@ -46,4 +47,4 @@ class ExercisesInfoSerializer(WritableNestedModelSerializer):
             "focus_areas",
             "exercises_attribute",
         ]
-        read_only_fields = ["author", "username"]
+        read_only_fields = ["id", "author", "username"]
