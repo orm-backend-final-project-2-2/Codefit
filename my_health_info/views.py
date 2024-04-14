@@ -18,7 +18,7 @@ from rest_framework.exceptions import (
     MethodNotAllowed,
     NotFound,
     ValidationError,
-    NotAuthenticated,
+    PermissionDenied,
 )
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -88,6 +88,7 @@ class RoutineViewSet(viewsets.ModelViewSet):
     - list: GET /my_health_info/routine/
     - create: POST /my_health_info/routine/
     - retrieve: GET /my_health_info/routine/<pk>/
+    - subscribe: POST /my_health_info/routine/<pk>/subscribe/
     """
 
     http_method_names = ["get", "post", "patch", "delete"]
@@ -140,8 +141,6 @@ class RoutineViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.is_mirrored:
-            raise PermissionDenied("You cannot access mirrored routine")
         serializer = self.get_serializer(instance)
 
         return Response(serializer.data)
@@ -153,14 +152,11 @@ class RoutineViewSet(viewsets.ModelViewSet):
 
         routine = serializer.save(author=self.request.user)
 
-        try:
-            mirrored_routine = MirroredRoutine.objects.create(
-                title=routine.title,
-                author_name=routine.author.username,
-                original_routine=routine,
-            )
-        except Exception as e:
-            raise ValidationError(str(e))
+        mirrored_routine = MirroredRoutine.objects.create(
+            title=routine.title,
+            author_name=routine.author.username,
+            original_routine=routine,
+        )
 
         for exercise_data in exercises_in_routine_data:
             ExerciseInRoutine.objects.create(
@@ -197,6 +193,24 @@ class RoutineViewSet(viewsets.ModelViewSet):
         return Response(
             data={"like_count": f"{routine.like_count}"}, status=status.HTTP_201_CREATED
         )
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="subscribe",
+        url_name="subscribe",
+        permission_classes=[IsAuthenticated],
+    )
+    def subscribe(self, request, *args, **kwargs):
+        routine = self.get_object()
+        user = request.user
+        service = UsersRoutineManagementService(user=user, routine=routine)
+
+        users_routine = service.user_subscribe_routine()
+
+        data = UsersRoutineSerializer(users_routine).data
+
+        return Response(data, status=status.HTTP_201_CREATED)
 
 
 class UsersRoutineViewSet(viewsets.ModelViewSet):
