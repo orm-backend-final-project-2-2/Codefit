@@ -589,10 +589,10 @@ class RoutineTestCase(TestCase):
         new_user_3 = FakeUser()
         new_user_3.create_instance()
 
-        new_routine_1 = FakeRoutine()
+        new_routine_1 = FakeRoutine([self.exercise1, self.exercise2])
         new_routine_1.create_instance(user_instance=new_user_1.instance)
 
-        new_routine_2 = FakeRoutine()
+        new_routine_2 = FakeRoutine([self.exercise3, self.exercise4])
         new_routine_2.create_instance(user_instance=new_user_2.instance)
 
         new_routine_1.instance.like_count = 10
