@@ -1,7 +1,7 @@
 from django.test import TestCase
 from account.models import CustomUser as User
 from django.urls import reverse
-from my_health_info.models import HealthInfo, Routine
+from my_health_info.models import HealthInfo, Routine, ExerciseInRoutine
 from exercises_info.models import ExercisesInfo
 from freezegun import freeze_time
 from datetime import datetime, timedelta
@@ -795,21 +795,11 @@ class ExerciseInRoutineTestCase(TestCase):
         )
 
         existed_exercise_in_routines = self.routine1.instance.exercises_in_routine.all()
-        print(
-            [
-                {
-                    "order": exercise_in_routine.order,
-                    "exercise": exercise_in_routine.exercise.id,
-                }
-                for exercise_in_routine in existed_exercise_in_routines
-            ]
-        )
 
         request_update = [
             new_exercise_in_routine1.request_create(),
             new_exercise_in_routine2.request_create(),
         ]
-        print(request_update)
 
         pk = self.routine1.instance.pk
 
@@ -832,3 +822,43 @@ class ExerciseInRoutineTestCase(TestCase):
                 ExercisesInfo.objects.get(pk=exercise.get("exercise")).title,
                 response_exercise.get("exercise_info").get("title"),
             )
+
+    def test_delete_exercise_in_ExerciseInRoutine(self):
+        """
+        루틴을 삭제할 때 함께 생성된 운동에 대한 정보도 함께 삭제하는지 테스트
+
+        reverse_url: routine-detail
+        HTTP method: DELETE
+
+        테스트 시나리오:
+        1. routine1에 포함된 운동들을 조회합니다.
+        2. 그 id를 배열에 저장합니다.
+        3. /routine/<pk>/에 DELETE 요청을 보냅니다.
+        4. response가 204를 리턴하는지 확인합니다.
+        5. 해당 루틴이 삭제되었는지 확인합니다.
+        6. 해당 루틴에 포함된 운동들이 삭제되었는지 확인합니다.
+        7. 해당 루틴 내의 운동이 참조하는 운동 정보는 삭제되지 않았는지 확인합니다.
+        """
+        self.client.force_login(self.user1.instance)
+
+        pk = self.routine1.instance.pk
+
+        exercise_in_routines = self.routine1.instance.exercises_in_routine.all()
+        exercise_in_routine_ids = [
+            exercise_in_routine.pk for exercise_in_routine in exercise_in_routines
+        ]
+        exercise_ids = [
+            exercise_in_routine.exercise.pk
+            for exercise_in_routine in exercise_in_routines
+        ]
+
+        response = self.client.delete(reverse("routine-detail", kwargs={"pk": pk}))
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Routine.objects.filter(pk=pk).exists())
+
+        for id in exercise_in_routine_ids:
+            self.assertFalse(ExerciseInRoutine.objects.filter(pk=id).exists())
+
+        for id in exercise_ids:
+            self.assertTrue(ExercisesInfo.objects.filter(pk=id).exists())
