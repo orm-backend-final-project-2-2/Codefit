@@ -1074,13 +1074,14 @@ class UsersRoutineTestCase(TestCase):
 
         pk = self.routine1.instance.pk
 
-        existing_mirrored_routine = self.routine1.instance.mirrored_routine
+        existing_mirrored_routine = self.routine1.instance.mirrored_routine.last()
 
         response = self.client.patch(
             reverse("routine-detail", kwargs={"pk": pk}),
             data={"exercises_in_routine": new_exercise_in_routines},
             content_type="application/json",
         )
+        self.routine1.instance.refresh_from_db()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -1088,8 +1089,8 @@ class UsersRoutineTestCase(TestCase):
             self.routine1.instance.subscribers.get(user=self.user1.instance).need_update
         )
 
-        self.assertEquals(
-            self.routine1.instance.mirrored_routine.id,
+        self.assertEqual(
+            self.routine1.instance.mirrored_routine.last().id,
             self.routine1.instance.subscribers.get(
                 user=self.user1.instance
             ).mirrored_routine.id,
@@ -1097,7 +1098,7 @@ class UsersRoutineTestCase(TestCase):
 
         self.assertNotEqual(
             existing_mirrored_routine.id,
-            self.routine1.mirrored_routine.id,
+            self.routine1.instance.mirrored_routine.last().id,
         )
 
         self.assertNotEqual(
@@ -1134,7 +1135,7 @@ class UsersRoutineTestCase(TestCase):
             "exercises_in_routine"
         )
 
-        existing_mirrored_routine = self.routine2.instance.mirrored_routine
+        existing_mirrored_routine = self.routine2.instance.mirrored_routine.last()
 
         self.client.force_login(self.user2.instance)
 
@@ -1153,7 +1154,7 @@ class UsersRoutineTestCase(TestCase):
         )
 
         self.assertNotEqual(
-            self.routine2.instance.mirrored_routine.id,
+            self.routine2.instance.mirrored_routine.last().id,
             self.routine2.instance.subscribers.get(
                 user=self.user1.instance
             ).mirrored_routine.id,
@@ -1161,7 +1162,7 @@ class UsersRoutineTestCase(TestCase):
 
         self.assertNotEqual(
             existing_mirrored_routine.id,
-            self.routine2.instance.mirrored_routine.id,
+            self.routine2.instance.mirrored_routine.last().id,
         )
 
         self.assertEqual(
