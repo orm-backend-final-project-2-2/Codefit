@@ -672,10 +672,14 @@ class ExerciseInRoutineTestCase(TestCase):
         self.user1 = FakeUser()
         self.user1.create_instance()
 
-        self.routine1 = FakeRoutine()
-        self.routine1.create_instance(
-            user_instance=self.user1.instance, exercise_author=self.admin.instance
-        )
+        self.routine1 = FakeRoutine([self.exercise1, self.exercise2, self.exercise3])
+        self.routine1.create_instance(user_instance=self.user1.instance)
+
+        self.user2 = FakeUser()
+        self.user2.create_instance()
+
+        self.routine2 = FakeRoutine([self.exercise4, self.exercise5])
+        self.routine2.create_instance(user_instance=self.user2.instance)
 
     def test_get_exercise_in_ExerciseInRoutine(self):
         """PASSED
@@ -710,4 +714,49 @@ class ExerciseInRoutineTestCase(TestCase):
         ):
             self.assertEqual(
                 exercise.exercise.id, response_exercise.get("exercise").get("id")
+            )
+
+    def test_create_exercise_in_ExerciseInRoutine(self):
+        """
+        루틴을 생성할 때 주어진 운동에 대한 정보를 함께 생성하는지 테스트
+
+        reverse_url: routine-list
+        HTTP method: POST
+
+        테스트 시나리오:
+        1. 새로운 운동을 생성합니다.
+        2. 새로운 루틴을 생성하고 생성된 운동들을 루틴에 추가합니다.
+        3. /routine/에 POST 요청을 보냅니다.
+        4. Response의 운동들이 생성된 운동들과 같은지 확인합니다.
+        """
+        new_exercise1 = FakeExercisesInfo()
+        new_exercise1.create_instance(self.admin.instance)
+
+        new_exercise2 = FakeExercisesInfo()
+        new_exercise2.create_instance(self.admin.instance)
+
+        new_routine = FakeRoutine([new_exercise1, new_exercise2])
+
+        new_exercises_in_routine = new_routine.related_fake_models.get(
+            "exercises_in_routine"
+        )
+
+        self.client.force_login(self.user1.instance)
+
+        response = self.client.post(
+            reverse("routine-list"),
+            data=new_routine.request_create(),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+
+        for exercise, response_exercise in zip(
+            new_exercises_in_routine, data.get("exercises_in_routine")
+        ):
+            self.assertEqual(
+                exercise.related_fake_models.get("exercise").base_attr.get("title"),
+                response_exercise.get("exercise").get("title"),
             )
