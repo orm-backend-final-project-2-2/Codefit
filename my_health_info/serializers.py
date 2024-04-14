@@ -48,6 +48,15 @@ class RoutineSerializer(WritableNestedModelSerializer):
         exercises_in_routine_data = validated_data.pop("exercises_in_routine")
         routine = Routine.objects.create(**validated_data)
         for exercise_data in exercises_in_routine_data:
-            print(exercise_data)
             ExerciseInRoutine.objects.create(routine=routine, **exercise_data)
         return routine
+
+    def update(self, instance, validated_data):
+        exercises_in_routine_data = validated_data.pop("exercises_in_routine")
+
+        ExerciseInRoutine.objects.filter(routine=instance).delete()
+
+        for exercise_data in exercises_in_routine_data:
+            ExerciseInRoutine.objects.create(routine=instance, **exercise_data)
+
+        return super().update(instance, validated_data)
