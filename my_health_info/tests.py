@@ -881,8 +881,7 @@ class UsersRoutineTestCase(TestCase):
     3. 유저가 루틴을 구독했을 시 UsersRoutine이 생성되는지 테스트
     4. 유저가 생성한 루틴이 업데이트되었을 시 UsersRoutine의 need_update가 그대로 False인지, MirroredRoutine이 변경되는지 테스트
     5. 유저가 구독한 루틴이 업데이트되었을 시 UsersRoutine의 need_update가 True로 변경되는지, MirroredRoutine이 변경되지 않았는지 테스트
-    6. 작성자가 루틴을 삭제했을 시, 해당되는 작성자의 UsersRoutine이 삭제되는지 테스트
-    7. 유저가 루틴을 삭제했을 시, 해당되는 다른 유저의 UsersRoutine은 삭제되지 않는지 테스트
+    6. 작성자가 루틴을 삭제했을 시, 해당되는 작성자의 UsersRoutine이 삭제되는지 테스트, 작성자가 아닌 유저의 UsersRoutine은 삭제되지 않는지 테스트
     """
 
     def setUp(self):
