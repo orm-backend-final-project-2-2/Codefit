@@ -1053,13 +1053,13 @@ class UsersRoutineTestCase(TestCase):
         테스트 시나리오:
         1. 새 ExerciseInfo 목록을 생성합니다.
         2. 루틴 1의 mirrored_routine을 저장합니다.
-        2. 유저 1이 로그인합니다
-        3. 유저 1이 routine/1/에 변경된 운동 정보로 PATCH 요청을 보냅니다.
-        4. 상태 코드가 200인지 확인합니다.
-        5. 유저 1의 루틴 1에 대한 UsersRoutine의 need_update가 False인지 확인합니다.
-        6. 루틴 1의 MirroredRoutine이 유저 1의 루틴 1에 대한 MirroredRoutine과 같은지 확인합니다.
-        7. 루틴 1의 MirroredRoutine이 저장한 mirrored_routine과 다른지 확인합니다.
-        8. 유저 1의 루틴 1에 대한 UsersRoutine의 MirroredRoutine이 저장된 mirrored_routine과 다른지 확인합니다.
+        3. 유저 1이 로그인합니다
+        4. 유저 1이 routine/1/에 변경된 운동 정보로 PATCH 요청을 보냅니다.
+        5. 상태 코드가 200인지 확인합니다.
+        6. 유저 1의 루틴 1에 대한 UsersRoutine의 need_update가 False인지 확인합니다.
+        7. 루틴 1의 MirroredRoutine이 유저 1의 루틴 1에 대한 MirroredRoutine과 같은지 확인합니다.
+        8. 루틴 1의 MirroredRoutine이 저장한 mirrored_routine과 다른지 확인합니다.
+        9. 유저 1의 루틴 1에 대한 UsersRoutine의 MirroredRoutine이 저장된 mirrored_routine과 다른지 확인합니다.
         """
 
         new_exercise_infos = [self.exercise1, self.exercise2, self.exercise4]
@@ -1097,14 +1097,76 @@ class UsersRoutineTestCase(TestCase):
 
         self.assertNotEqual(
             existing_mirrored_routine.id,
+            self.routine1.mirrored_routine.id,
+        )
+
+        self.assertNotEqual(
+            existing_mirrored_routine.id,
             self.routine1.instance.subscribers.get(
+                user=self.user1.instance
+            ).mirrored_routine.id,
+        )
+
+    def test_change_need_update_when_update_routine_if_author_not_equal_user(self):
+        """
+        본인이 작성하지 않은 루틴이 업데이트되었을 시 UsersRoutine의 need_update가 True로 변경되는지, MirroredRoutine이 변경되지 않는지 테스트
+
+        reverse_url: routine-detail
+        HTTP method: PATCH
+
+        테스트 시나리오:
+        1. 새 ExerciseInfo 목록을 생성합니다.
+        2. 루틴 2의 mirrored_routine을 저장합니다.
+        3. 유저 2가 로그인합니다
+        4. 유저 2가 routine/2/에 변경된 운동 정보로 PATCH 요청을 보냅니다.
+        5. 상태 코드가 200인지 확인합니다.
+        6. 유저 1의 루틴 2에 대한 UsersRoutine의 need_update가 True인지 확인합니다.
+        7. 루틴 2의 MirroredRoutine이 유저 1의 루틴 2에 대한 MirroredRoutine과 다른지 확인합니다.
+        8. 루틴 2의 MirroredRoutine이 저장한 mirrored_routine과 다른지 확인합니다.
+        9. 유저 1의 루틴 2에 대한 UsersRoutine의 MirroredRoutine이 저장된 mirrored_routine과 같은지 확인합니다.
+        """
+
+        new_exercise_infos = [self.exercise1, self.exercise2, self.exercise4]
+
+        new_routine = FakeRoutine(new_exercise_infos)
+
+        new_exercise_in_routines = new_routine.request_create().get(
+            "exercises_in_routine"
+        )
+
+        existing_mirrored_routine = self.routine2.instance.mirrored_routine
+
+        self.client.force_login(self.user2.instance)
+
+        pk = self.routine2.instance.pk
+
+        response = self.client.patch(
+            reverse("routine-detail", kwargs={"pk": pk}),
+            data={"exercises_in_routine": new_exercise_in_routines},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertTrue(
+            self.routine2.instance.subscribers.get(user=self.user1.instance).need_update
+        )
+
+        self.assertNotEqual(
+            self.routine2.instance.mirrored_routine.id,
+            self.routine2.instance.subscribers.get(
                 user=self.user1.instance
             ).mirrored_routine.id,
         )
 
         self.assertNotEqual(
             existing_mirrored_routine.id,
-            self.routine1.instance.subscribers.get(
+            self.routine2.instance.mirrored_routine.id,
+        )
+
+        self.assertEqual(
+            existing_mirrored_routine.id,
+            self.routine2.instance.subscribers.get(
                 user=self.user1.instance
             ).mirrored_routine.id,
         )
