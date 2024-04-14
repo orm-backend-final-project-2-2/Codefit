@@ -11,7 +11,7 @@ class UsersRoutineManagementService:
         self.user = user
         self.routine = routine
 
-    def subscribe_routine(self):
+    def user_subscribe_routine(self):
         """
         등록된 유저가 등록된 루틴을 구독하는 메서드
 
@@ -23,6 +23,13 @@ class UsersRoutineManagementService:
             raise ValueError("자신의 루틴을 구독할 수 없습니다.")
         if UsersRoutine.objects.filter(user=self.user, routine=self.routine).exists():
             raise ValueError("이미 구독 중인 루틴입니다.")
+
+        print(f"mirrored_routine: {self.routine.mirrored_routine}")
+
+        UsersRoutine.objects.create(
+            user=self.user,
+            routine=self.routine,
+        )
 
     def user_create_routine(self, mirrored_routine):
         """
