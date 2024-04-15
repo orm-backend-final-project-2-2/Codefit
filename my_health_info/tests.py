@@ -1656,3 +1656,17 @@ class WeeklyRoutineTestCase(TestCase):
         self.assertFalse(
             WeeklyRoutine.objects.filter(user=self.user1.instance).exists()
         )
+
+
+class RoutineStreakTestCase(TestCase):
+    """
+    목적: 유저의 루틴 수행 기록을 관리하는 RoutineStreak 모델에 대한 테스트를 진행합니다.
+
+    Test cases:
+    1. 유저가 루틴을 수행한 기록을 조회하는지 테스트
+    2. 유저가 루틴을 수행한 기록을 생성하는지 테스트
+    3. 유저가 이미 루틴을 수행한 상태에서 루틴을 수행한 기록을 생성하려 할 때 실패하는지 테스트
+    4. 유저가 루틴이 등록되지 않은 요일에 루틴을 수행한 기록을 생성하려 할 때 실패하는지 테스트
+    5. 최근 수행 루틴을 조회하는지 테스트
+    6. 허용되지 않은 요청으로 접근 시 405 에러를 반환하는지 테스트
+    """
