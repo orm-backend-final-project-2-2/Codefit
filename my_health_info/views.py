@@ -573,3 +573,23 @@ class RoutineStreakViewSet(viewsets.ModelViewSet):
             raise ValidationError("Routine streak already exists for today")
 
         serializer.save()
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="last",
+        url_name="last",
+        permission_classes=[IsAuthenticated],
+    )
+    def last(self, request):
+        """
+        가장 최근의 루틴 수행 여부 조회
+
+        1. 쿼리셋에서 유저의 루틴 수행 여부를 조회 후 날짜 역순으로 정렬
+        2. serializer를 사용하여 데이터 반환
+        """
+        queryset = RoutineStreak.objects.filter(user=request.user).order_by("-date")
+        if queryset.exists():
+            serializer = self.get_serializer(queryset.first())
+            return Response(serializer.data)
+        raise NotFound("No routine streak found")
