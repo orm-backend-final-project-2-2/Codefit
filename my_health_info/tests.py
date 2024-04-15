@@ -20,6 +20,7 @@ from utils.fake_data import (
     FakeRoutine,
     FakeExercisesInfo,
     FakeExerciseInRoutine,
+    FakeWeeklyRoutine,
 )
 
 
@@ -1295,10 +1296,30 @@ class WeeklyRoutineTestCase(TestCase):
         """
 
         fake_weekly_routines = [
-            FakeWeeklyRoutine(day_index=0, routine=self.routine1),
-            FakeWeeklyRoutine(day_index=1, routine=self.routine4),
-            FakeWeeklyRoutine(day_index=2, routine=self.routine2),
-            FakeWeeklyRoutine(day_index=3, routine=self.routine3),
+            FakeWeeklyRoutine(
+                day_index=0,
+                users_routine=self.routine1.instance.subscribers.get(
+                    user=self.user1.instance
+                ),
+            ),
+            FakeWeeklyRoutine(
+                day_index=1,
+                users_routine=self.routine2.instance.subscribers.get(
+                    user=self.user1.instance
+                ),
+            ),
+            FakeWeeklyRoutine(
+                day_index=2,
+                users_routine=self.routine2.instance.subscribers.get(
+                    user=self.user1.instance
+                ),
+            ),
+            FakeWeeklyRoutine(
+                day_index=3,
+                users_routine=self.routine3.instance.subscribers.get(
+                    user=self.user1.instance
+                ),
+            ),
         ]
 
         for fake_weekly_routine in fake_weekly_routines:
@@ -1306,7 +1327,7 @@ class WeeklyRoutineTestCase(TestCase):
 
         self.client.force_login(self.user1.instance)
 
-        response = self.client.get(reverse("weekly-routine-list"))
+        response = self.client.get(reverse("weekly-routine"))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -1316,8 +1337,8 @@ class WeeklyRoutineTestCase(TestCase):
             fake_weekly_routines, data
         ):
             self.assertEqual(
-                fake_weekly_routine.instance.routine.id,
-                response_weekly_routine.get("routine"),
+                fake_weekly_routine.instance.users_routine.id,
+                response_weekly_routine.get("users_routine"),
             )
             self.assertEqual(
                 fake_weekly_routine.instance.day_index,
