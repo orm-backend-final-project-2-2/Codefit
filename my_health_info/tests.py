@@ -1406,3 +1406,65 @@ class WeeklyRoutineTestCase(TestCase):
                 fake_weekly_routine.base_attr.get("day_index"),
                 response_weekly_routine.get("day_index"),
             )
+
+    def test_fail_create_weekly_routine_if_weekly_routines_existed(self):
+        """
+        이미 루틴을 보유한 유저가 새로운 정보로 주간 루틴을 생성하는것을 실패하는지 테스트
+
+        reverse_url: weekly-routine
+        HTTP method: POST
+
+        테스트 시나리오:
+        1. 유저 1이 현재 생성된 루틴으로 WeeklyRoutine 인스턴스를 생성합니다.
+        2. 새로운 FakeWeeklyRoutine 배열을 생성합니다.
+        3. 유저 1이 로그인합니다.
+        4. /weekly-routine/에 POST 요청을 보냅니다.
+        5. 상태 코드가 403인지 확인합니다.
+        """
+
+        user1_users_routine_instances = [
+            self.routine3.instance.subscribers.get(user=self.user1.instance),
+            self.routine2.instance.subscribers.get(user=self.user1.instance),
+            self.routine4.instance.subscribers.get(user=self.user1.instance),
+            self.routine1.instance.subscribers.get(user=self.user1.instance),
+        ]
+
+        random_day_indices1 = [1, 3, 5, 2]
+
+        fake_weekly_routines1 = [
+            FakeWeeklyRoutine(
+                day_index=random_day_index, users_routine=users_routine_instance
+            )
+            for random_day_index, users_routine_instance in zip(
+                random_day_indices1, user1_users_routine_instances
+            )
+        ]
+
+        for fake_weekly_routine in fake_weekly_routines1:
+            fake_weekly_routine.create_instance(user_instance=self.user1.instance)
+
+        random_day_indices2 = [6, 1, 4, 2]
+
+        fake_weekly_routines2 = [
+            FakeWeeklyRoutine(
+                day_index=random_day_index, users_routine=users_routine_instance
+            )
+            for random_day_index, users_routine_instance in zip(
+                random_day_indices2, user1_users_routine_instances
+            )
+        ]
+
+        create_request = [
+            fake_weekly_routine.create_request()
+            for fake_weekly_routine in fake_weekly_routines2
+        ]
+
+        self.client.force_login(self.user1.instance)
+
+        response = self.client.post(
+            reverse("weekly-routine"),
+            data=create_request,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
