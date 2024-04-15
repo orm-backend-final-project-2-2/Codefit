@@ -1610,3 +1610,49 @@ class WeeklyRoutineTestCase(TestCase):
                 response_weekly_routine.get("users_routine"),
                 fake_weekly_routine.users_routine.id,
             )
+
+    def test_delete_weekly_routine(self):
+        """
+        WeeklyRoutine에 대한 delete 테스트
+
+        reverse_url: weekly-routine
+        HTTP method: DELETE
+
+        테스트 시나리오:
+        1. 유저 1이 현재 생성된 루틴으로 WeeklyRoutine 인스턴스를 생성합니다.
+        2. 유저 1이 로그인합니다.
+        3. /weekly-routine/에 DELETE 요청을 보냅니다.
+        4. 상태 코드가 204인지 확인합니다.
+        5. 유저 1이 보유한 WeeklyRoutine이 모두 삭제되었는지 확인합니다.
+        """
+
+        user1_users_routine_instances = [
+            self.routine3.instance.subscribers.get(user=self.user1.instance),
+            self.routine2.instance.subscribers.get(user=self.user1.instance),
+            self.routine4.instance.subscribers.get(user=self.user1.instance),
+            self.routine1.instance.subscribers.get(user=self.user1.instance),
+        ]
+
+        random_day_indices = [1, 3, 5, 2]
+
+        fake_weekly_routines = [
+            FakeWeeklyRoutine(
+                day_index=random_day_index, users_routine=users_routine_instance
+            )
+            for random_day_index, users_routine_instance in zip(
+                random_day_indices, user1_users_routine_instances
+            )
+        ]
+
+        for fake_weekly_routine in fake_weekly_routines:
+            fake_weekly_routine.create_instance(user_instance=self.user1.instance)
+
+        self.client.force_login(self.user1.instance)
+
+        response = self.client.delete(reverse("weekly-routine"))
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertFalse(
+            WeeklyRoutine.objects.filter(user=self.user1.instance).exists()
+        )
