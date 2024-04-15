@@ -170,7 +170,7 @@ class WeeklyRoutine(models.Model):
 
     user: 유저
     users_routine: 유저가 소유한 루틴
-    day_index: 요일 인덱스
+    day_index: 요일 인덱스(0: 월요일, 1: 화요일, ..., 6: 일요일)
     """
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -182,3 +182,25 @@ class WeeklyRoutine(models.Model):
 
     def __str__(self):
         return f"{self.user.username}의 {self.day_index}번째 요일 루틴: {self.users_routine.mirrored_routine.title}"
+
+
+class RoutineStreak(models.Model):
+    """
+    해당 날짜의 루틴 수행 여부를 나타내는 모델
+
+    user: 유저
+    date: 날짜
+    mirrored_routine: 해당 날짜에 수행된 복제된 루틴
+    """
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    date = models.DateField(auto_now_add=True)
+    mirrored_routine = models.ForeignKey(
+        MirroredRoutine, on_delete=models.SET_NULL, null=True
+    )
+
+    class Meta:
+        unique_together = ["user", "date"]
+
+    def __str__(self):
+        return f"{self.user.username}가 {self.date}날짜에 {self.mirrored_routine.title} 루틴 수행"
