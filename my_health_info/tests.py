@@ -22,7 +22,9 @@ from utils.fake_data import (
     FakeExercisesInfo,
     FakeExerciseInRoutine,
     FakeWeeklyRoutine,
+    FakeRoutineStreak,
 )
+import random
 
 
 class MyHealthInfoTestCase(TestCase):
@@ -1670,3 +1672,72 @@ class RoutineStreakTestCase(TestCase):
     5. 최근 수행 루틴을 조회하는지 테스트
     6. 허용되지 않은 요청으로 접근 시 405 에러를 반환하는지 테스트
     """
+
+    def setUp(self):
+        """
+        초기 설정:
+
+        1. 관리자 유저 생성
+        2. 운동 4개 생성
+        3. 유저 1 생성
+        4. 유저 1이 루틴 5개 생성
+        5. 유저 1은 해당 루틴들로 WeeklyRoutine 생성
+        6. freezegun을 사용해서 과거에서부터 루틴 수행 기록을 생성
+        """
+
+        self.admin = FakeUser()
+        self.admin.create_instance(is_staff=True)
+
+        self.exercises = [FakeExercisesInfo() for _ in range(4)]
+        for exercise in self.exercises:
+            exercise.create_instance(self.admin.instance)
+
+        self.user1 = FakeUser()
+        self.user1.create_instance()
+
+        self.routines = [
+            FakeRoutine([self.exercises[0], self.exercises[1]]),
+            FakeRoutine([self.exercises[1], self.exercises[2]]),
+            FakeRoutine([self.exercises[2], self.exercises[3], self.exercises[0]]),
+            FakeRoutine([self.exercises[3]]),
+            FakeRoutine([self.exercises[0], self.exercises[1], self.exercises[2]]),
+        ]
+
+        for routine in self.routines:
+            routine.create_instance(user_instance=self.user1.instance)
+
+        user1_users_routine_instances = [
+            routine.instance.subscribers.get(user=self.user1.instance)
+            for routine in self.routines
+        ]
+
+        random_day_indices = [6, 2, 0, 4]
+
+        fake_weekly_routines = [
+            FakeWeeklyRoutine(
+                day_index=random_day_index, users_routine=users_routine_instance
+            )
+            for random_day_index, users_routine_instance in zip(
+                random_day_indices, user1_users_routine_instances
+            )
+        ]
+
+        for fake_weekly_routine in fake_weekly_routines:
+            fake_weekly_routine.create_instance(user_instance=self.user1.instance)
+
+        days = 50
+        start_time = datetime.now() - timedelta(days=days)
+        for i in range(days - 1):
+            with freeze_time(start_time + timedelta(days=i)):
+                day_index = datetime.now().weekday()
+
+                if day_index in random_day_indices:
+                    if random.random() < 0.8:
+                        routine_streak = FakeRoutineStreak(
+                            mirrored_routine=fake_weekly_routines[
+                                random_day_indices.index(day_index)
+                            ].users_routine.mirrored_routine,
+                        )
+                        routine_streak.create_instance(
+                            user_instance=self.user1.instance
+                        )
