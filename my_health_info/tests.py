@@ -1278,3 +1278,48 @@ class WeeklyRoutineTestCase(TestCase):
 
         self.routine4 = FakeRoutine([self.exercise2, self.exercise3])
         self.routine4.create_instance(user_instance=self.user1.instance)
+
+    def test_get_weekly_routine(self):
+        """
+        유저가 현재 설정된 주간 루틴을 조회하는지 테스트
+
+        reverse_url: weekly-routine-list
+        HTTP method: GET
+
+        테스트 시나리오:
+        1. 유저 1이 현재 생성된 루틴으로 주간 루틴 인스턴스를 생성합니다.
+        2. 유저 1이 로그인합니다.
+        3. /weekly-routine/에 GET 요청을 보냅니다.
+        4. 상태 코드가 200인지 확인합니다.
+        5. Response의 루틴들이 유저 1의 주간 루틴 인스턴스들을 day_index 순으로 정렬한 것과 같은지 확인합니다.
+        """
+
+        fake_weekly_routines = [
+            FakeWeeklyRoutine(day_index=0, routine=self.routine1),
+            FakeWeeklyRoutine(day_index=1, routine=self.routine4),
+            FakeWeeklyRoutine(day_index=2, routine=self.routine2),
+            FakeWeeklyRoutine(day_index=3, routine=self.routine3),
+        ]
+
+        for fake_weekly_routine in fake_weekly_routines:
+            fake_weekly_routine.create_instance(user_instance=self.user1.instance)
+
+        self.client.force_login(self.user1.instance)
+
+        response = self.client.get(reverse("weekly-routine-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        for fake_weekly_routine, response_weekly_routine in zip(
+            fake_weekly_routines, data
+        ):
+            self.assertEqual(
+                fake_weekly_routine.instance.routine.id,
+                response_weekly_routine.get("routine"),
+            )
+            self.assertEqual(
+                fake_weekly_routine.instance.day_index,
+                response_weekly_routine.get("day_index"),
+            )
