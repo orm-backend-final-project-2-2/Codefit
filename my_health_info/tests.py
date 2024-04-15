@@ -1599,7 +1599,8 @@ class WeeklyRoutineTestCase(TestCase):
         self.assertEqual(WeeklyRoutine.objects.count(), len(fake_weekly_routines2))
 
         for response_weekly_routine, fake_weekly_routine in zip(
-            data, fake_weekly_routines2
+            data,
+            sorted(fake_weekly_routines2, key=lambda x: x.base_attr.get("day_index")),
         ):
             self.assertEqual(
                 response_weekly_routine.get("day_index"),
