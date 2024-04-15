@@ -1839,7 +1839,7 @@ class RoutineStreakTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = response.json()
-        print(data)
+
         self.assertEqual(datetime.now().strftime("%Y-%m-%d"), data.get("date"))
 
     def test_create_routine_streak_fail_if_already_done(self):
