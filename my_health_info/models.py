@@ -82,7 +82,9 @@ class ExerciseInRoutine(models.Model):
 
     def __str__(self):
         if self.routine:
-            return f"{self.routine.title}의 {self.order}번째 운동: {self.exercise.title}"
+            return (
+                f"{self.routine.title}의 {self.order}번째 운동: {self.exercise.title}"
+            )
         else:
             return f"{self.mirrored_routine.title}의 {self.order}번째 운동: {self.exercise.title}"
 
@@ -111,3 +113,15 @@ class UsersRoutine(models.Model):
             return f"{self.user.username}의 구독 루틴: {self.routine.title}, 상태: {self.need_update}"
         else:
             return f"{self.user.username}의 구독 루틴: {self.mirrored_routine.title}, 상태: {self.need_update}"
+
+
+class WeeklyRoutine(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    users_routine = models.ForeignKey(UsersRoutine, on_delete=models.CASCADE)
+    day_index = models.PositiveIntegerField()
+
+    class Meta:
+        unique_together = ["user", "day_index"]
+
+    def __str__(self):
+        return f"{self.user.username}의 {self.day_index}번째 요일 루틴: {self.users_routine.mirrored_routine.title}"
