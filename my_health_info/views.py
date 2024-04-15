@@ -1,3 +1,4 @@
+import datetime
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -565,4 +566,10 @@ class RoutineStreakViewSet(viewsets.ModelViewSet):
         """
         validated_data = serializer.validated_data
         validated_data["user"] = self.request.user
+
+        if RoutineStreak.objects.filter(
+            user=self.request.user, date=datetime.datetime.now().date()
+        ).exists():
+            raise ValidationError("Routine streak already exists for today")
+
         serializer.save()
