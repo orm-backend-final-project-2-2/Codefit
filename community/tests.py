@@ -329,6 +329,25 @@ class CommentTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["content"], self.user1_comment1.instance.content)
 
+    def test_create_comment(self):
+        """POST 요청 시 새로운 Comment 객체를 생성하는지 테스트"""
+        new_comment = FakeComment()
+
+        self.client.force_login(self.user1.instance)
+
+        response = self.client.post(
+            reverse("comment-list"),
+            {
+                "post": self.user1_post1.instance.id,
+                "author": self.user1.instance.id,  # author 필드에도 값을 전달
+                "content": new_comment.request_create()["content"],
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = response.json()
+        self.assertEqual(data["content"], new_comment.request_create()["content"])
+
 
 # 페이지네이션 테스트용 더미 데이터
 response_data = {
