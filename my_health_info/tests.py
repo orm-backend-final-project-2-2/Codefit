@@ -1894,3 +1894,32 @@ class RoutineStreakTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_last_routine_streak(self):
+        """
+        최근 수행 루틴을 조회하는지 테스트
+
+        reverse_url: routine-streak-last
+        HTTP method: GET
+
+        테스트 시나리오:
+        1. 유저 1이 로그인합니다.
+        2. /routine-streak-last/에 GET 요청을 보냅니다.
+        3. 상태 코드가 200인지 확인합니다.
+        4. 응답의 date가 RoutineStreak.objects.last().date와 같은지 확인합니다.
+        """
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+
+        response = self.client.get(reverse("routine-streak-last"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        self.assertEqual(
+            RoutineStreak.objects.filter(user=self.user1.instance)
+            .last()
+            .date.strftime("%Y-%m-%d"),
+            data.get("date"),
+        )
