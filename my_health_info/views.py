@@ -437,3 +437,20 @@ class WeeklyRoutineView(APIView):
         serializer = WeeklyRoutineSerializer(queryset, many=True)
 
         return Response(serializer.data)
+
+    def post(self, request):
+        """
+        유저의 주간 루틴 정보 생성
+
+        1. WeeklyRoutineSerializer를 사용하여 데이터 유효성 검사
+        2. WeeklyRoutine들을 생성
+        3. 생성된 WeeklyRoutine을 요일 순으로 정렬
+        4. 정렬된 WeeklyRoutine을 WeeklyRoutineSerializer를 사용하여 데이터 반환
+        """
+        serializer = WeeklyRoutineSerializer(data=request.data, many=True)
+        if serializer.is_valid():
+            instances = serializer.save(user=request.user)
+            sorted_instances = sorted(instances, key=lambda x: x.day_index)
+            sorted_serializer = WeeklyRoutineSerializer(sorted_instances, many=True)
+            return Response(sorted_serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
