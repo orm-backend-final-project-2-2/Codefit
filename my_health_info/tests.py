@@ -7,6 +7,7 @@ from my_health_info.models import (
     ExerciseInRoutine,
     UsersRoutine,
     MirroredRoutine,
+    WeeklyRoutine,
 )
 from exercises_info.models import ExercisesInfo
 from my_health_info.services import UsersRoutineManagementService
@@ -1288,38 +1289,31 @@ class WeeklyRoutineTestCase(TestCase):
         HTTP method: GET
 
         테스트 시나리오:
-        1. 유저 1이 현재 생성된 루틴으로 주간 루틴 인스턴스를 생성합니다.
+        1. 유저 1이 현재 생성된 루틴으로 WeeklyRoutine 인스턴스를 생성합니다.
         2. 유저 1이 로그인합니다.
         3. /weekly-routine/에 GET 요청을 보냅니다.
         4. 상태 코드가 200인지 확인합니다.
-        5. Response의 루틴들이 유저 1의 주간 루틴 인스턴스들을 day_index 순으로 정렬한 것과 같은지 확인합니다.
+        5. 응답의 길이를 확인합니다.
+        6. 응답의 WeeklyRoutine의 id가 유저 1이 생성한 루틴의 id와 같은지 확인합니다.
+        7. 응답의 WeeklyRoutine들의 day_index가 유저 1이 생성한 WeeklyRoutine들의 day_index 순서와 같은지 확인합니다.
         """
+
+        user1_users_routine_instances = [
+            self.routine3.instance.subscribers.get(user=self.user1.instance),
+            self.routine2.instance.subscribers.get(user=self.user1.instance),
+            self.routine4.instance.subscribers.get(user=self.user1.instance),
+            self.routine1.instance.subscribers.get(user=self.user1.instance),
+        ]
+
+        random_day_indices = [0, 5, 3, 2]
 
         fake_weekly_routines = [
             FakeWeeklyRoutine(
-                day_index=0,
-                users_routine=self.routine1.instance.subscribers.get(
-                    user=self.user1.instance
-                ),
-            ),
-            FakeWeeklyRoutine(
-                day_index=1,
-                users_routine=self.routine2.instance.subscribers.get(
-                    user=self.user1.instance
-                ),
-            ),
-            FakeWeeklyRoutine(
-                day_index=2,
-                users_routine=self.routine2.instance.subscribers.get(
-                    user=self.user1.instance
-                ),
-            ),
-            FakeWeeklyRoutine(
-                day_index=3,
-                users_routine=self.routine3.instance.subscribers.get(
-                    user=self.user1.instance
-                ),
-            ),
+                day_index=random_day_index, users_routine=users_routine_instance
+            )
+            for random_day_index, users_routine_instance in zip(
+                random_day_indices, user1_users_routine_instances
+            )
         ]
 
         for fake_weekly_routine in fake_weekly_routines:
@@ -1333,8 +1327,10 @@ class WeeklyRoutineTestCase(TestCase):
 
         data = response.json()
 
+        self.assertEqual(len(data), len(fake_weekly_routines))
+
         for fake_weekly_routine, response_weekly_routine in zip(
-            fake_weekly_routines, data
+            sorted(fake_weekly_routines, key=lambda x: x.instance.day_index), data
         ):
             self.assertEqual(
                 fake_weekly_routine.instance.users_routine.id,
