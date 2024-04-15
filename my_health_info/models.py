@@ -3,8 +3,18 @@ from account.models import CustomUser as User
 from exercises_info.models import ExercisesInfo
 
 
-# Create your models here.
 class HealthInfo(models.Model):
+    """
+    유저의 건강 정보를 저장하는 모델
+
+    user: 유저 정보
+    age: 나이
+    height: 키
+    weight: 몸무게
+    bmi: 체질량지수
+    created_at: 생성일
+    """
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     age = models.PositiveIntegerField()
     height = models.FloatField()
@@ -21,6 +31,16 @@ class HealthInfo(models.Model):
 
 
 class Routine(models.Model):
+    """
+    루틴을 저장하는 모델
+
+    author: 루틴의 작성자
+    title: 루틴 제목
+    created_at: 루틴 생성일
+    is_deleted: 루틴 삭제 여부
+    like_count: 루틴 좋아요 수
+    """
+
     author = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, related_name="created_routines"
     )
@@ -46,6 +66,14 @@ class Routine_Like(models.Model):
 
 
 class MirroredRoutine(models.Model):
+    """
+    루틴의 정보를 복제하여 저장하고 original_routine 필드로 원본 루틴을 참조하는 모델
+
+    title: 루틴 제목
+    author_name: 루틴 작성자 이름
+    original_routine: 원본 루틴
+    """
+
     title = models.CharField(max_length=50)
     author_name = models.CharField(max_length=50)
     original_routine = models.ForeignKey(
@@ -57,6 +85,15 @@ class MirroredRoutine(models.Model):
 
 
 class ExerciseInRoutine(models.Model):
+    """
+    루틴에 포함된 운동을 저장하는 모델
+
+    routine: 루틴
+    mirrored_routine: 복제된 루틴
+    exercise: 운동 정보
+    order: 운동 순서
+    """
+
     routine = models.ForeignKey(
         Routine,
         related_name="exercises_in_routine",
@@ -90,6 +127,15 @@ class ExerciseInRoutine(models.Model):
 
 
 class UsersRoutine(models.Model):
+    """
+    유저가 작성하거나 구독한 루틴을 저장하는 모델
+
+    user: 유저
+    routine: 루틴
+    mirrored_routine: 복제된 루틴
+    need_update: 루틴 업데이트 필요 여부
+    """
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     routine = models.ForeignKey(
         Routine,
@@ -116,6 +162,14 @@ class UsersRoutine(models.Model):
 
 
 class WeeklyRoutine(models.Model):
+    """
+    유저의 요일별 루틴을 저장하는 모델
+
+    user: 유저
+    users_routine: 유저가 소유한 루틴
+    day_index: 요일 인덱스
+    """
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     users_routine = models.ForeignKey(UsersRoutine, on_delete=models.CASCADE)
     day_index = models.PositiveIntegerField()
