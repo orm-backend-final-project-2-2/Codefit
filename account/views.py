@@ -63,3 +63,15 @@ class LoginView(TokenObtainPairView):
 
 class LogoutView(APIView):
     pass
+
+
+class ProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        user = request.user  # 현재 로그인한 사용자 가져오기
+        return Response(
+            {"message": "프로필 정보입니다.", "user_id": user.id, "email": user.email},
+            status=status.HTTP_200_OK,
+        )
