@@ -1236,7 +1236,10 @@ class WeeklyRoutineTestCase(TestCase):
     Test cases:
     1. 유저가 현재 설정된 주간 루틴을 조회하는지 테스트
     2. 유저가 새로운 정보로 주간 루틴을 생성하는지 테스트
-    3. 유저가 새로운 정보로 주간 루틴을 갱신하는지 테스트
+    3. 이미 루틴을 생성한 유저가 새로운 정보로 주간 루틴을 생성에 실패하는지 테스트
+    4. 잘못된 day_index가 포함된 request로 주간 루틴을 생성에 실패하는지 테스트
+    5. 유저가 주간 루틴을 변경하는것에 성공하는지 테스트
+    6. 유저가 주간 루틴을 삭제하는것에 성공하는지 테스트
     """
 
     def setUp(self):
@@ -1468,3 +1471,51 @@ class WeeklyRoutineTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_fail_create_weekly_routine_if_invalid_day_index(self):
+        """
+        잘못된 day_index가 포함된 request로 주간 루틴을 생성에 실패하는지 테스트
+
+        reverse_url: weekly-routine
+        HTTP method: POST
+
+        테스트 시나리오:
+        1. WeeklyRoutine의 개수를 저장합니다.
+        2. 잘못된 day_index가 포함된 새로운 FakeWeeklyRoutine 배열을 생성합니다.
+        3. 유저 1이 로그인합니다.
+        4. /weekly-routine/에 POST 요청을 보냅니다.
+        5. 상태 코드가 400인지 확인합니다.
+        6. WeeklyRoutine의 개수가 변하지 않았는지 확인합니다.
+        """
+
+        weekly_routine_count = WeeklyRoutine.objects.count()
+
+        user1_users_routine_instances = [
+            self.routine3.instance.subscribers.get(user=self.user1.instance),
+            self.routine2.instance.subscribers.get(user=self.user1.instance),
+            self.routine4.instance.subscribers.get(user=self.user1.instance),
+            self.routine1.instance.subscribers.get(user=self.user1.instance),
+        ]
+
+        wrong_day_indices = [0, 8, 3, 2]
+
+        self.client.force_login(self.user1.instance)
+
+        create_request = [
+            FakeWeeklyRoutine(
+                day_index=wrong_day_index, users_routine=users_routine_instance
+            ).create_request()
+            for wrong_day_index, users_routine_instance in zip(
+                wrong_day_indices, user1_users_routine_instances
+            )
+        ]
+
+        response = self.client.post(
+            reverse("weekly-routine"),
+            data=create_request,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.assertEqual(WeeklyRoutine.objects.count(), weekly_routine_count)
