@@ -3,6 +3,7 @@ from my_health_info.views import (
     MyHealthInfoViewSet,
     RoutineViewSet,
     UsersRoutineViewSet,
+    WeeklyRoutineView,
 )
 from rest_framework.routers import DefaultRouter
 
@@ -13,4 +14,5 @@ router.register(r"users-routine", UsersRoutineViewSet, basename="users-routine")
 
 urlpatterns = [
     path("", include(router.urls)),
+    path("weekly-routine/", WeeklyRoutineView.as_view(), name="weekly-routine"),
 ]
