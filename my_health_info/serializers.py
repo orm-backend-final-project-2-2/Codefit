@@ -5,6 +5,7 @@ from my_health_info.models import (
     ExerciseInRoutine,
     UsersRoutine,
     MirroredRoutine,
+    WeeklyRoutine,
 )
 from exercises_info.models import ExercisesInfo
 from drf_writable_nested import WritableNestedModelSerializer
@@ -78,3 +79,10 @@ class UsersRoutineSerializer(serializers.ModelSerializer):
         model = UsersRoutine
         fields = ["user", "routine", "mirrored_routine", "need_update"]
         read_only_fields = ["user", "routine", "need_update"]
+
+
+class WeeklyRoutineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WeeklyRoutine
+        fields = ["user", "users_routine", "day_index"]
+        read_only_fields = ["user"]
