@@ -213,11 +213,10 @@ class RoutineStreakSerializer(serializers.ModelSerializer):
 
         필드:
         - id: 루틴 수행 여부의 PK, read_only
-        - user: 사용자, read_only
         - mirrored_routine: 수행된 복제된 루틴, read_only
         - date: 날짜, read_only
         """
 
         model = RoutineStreak
-        fields = ["id", "user", "mirrored_routine", "date"]
-        read_only_fields = ["id", "user", "mirrored_routine", "date"]
+        fields = ["id", "mirrored_routine", "date"]
+        read_only_fields = ["id", "mirrored_routine", "date"]
