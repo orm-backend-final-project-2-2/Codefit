@@ -1285,7 +1285,7 @@ class WeeklyRoutineTestCase(TestCase):
         """
         유저가 현재 설정된 주간 루틴을 조회하는지 테스트
 
-        reverse_url: weekly-routine-list
+        reverse_url: weekly-routine
         HTTP method: GET
 
         테스트 시나리오:
@@ -1329,6 +1329,69 @@ class WeeklyRoutineTestCase(TestCase):
 
         self.assertEqual(len(data), len(fake_weekly_routines))
 
+        for fake_weekly_routine, response_weekly_routine in zip(
+            sorted(fake_weekly_routines, key=lambda x: x.instance.day_index), data
+        ):
+            self.assertEqual(
+                fake_weekly_routine.instance.users_routine.id,
+                response_weekly_routine.get("users_routine"),
+            )
+            self.assertEqual(
+                fake_weekly_routine.instance.day_index,
+                response_weekly_routine.get("day_index"),
+            )
+
+    def test_create_weekly_routine_if_weekly_routines_empty(self):
+        """
+        주간 루틴을 보유하지 않은 유저가 새로운 정보로 주간 루틴을 생성하는지 테스트
+
+        reverse_url: weekly-routine
+        HTTP method: POST
+
+        테스트 시나리오:
+        1. 새로운 FakeWeeklyRoutine 배열을 생성합니다.
+        2. 유저 1이 로그인합니다.
+        3. /weekly-routine/에 POST 요청을 보냅니다.
+        4. 상태 코드가 201인지 확인합니다.
+        5. 응답의 길이를 확인합니다.
+        6. 응답의 각 WeeklyRoutine의 day_index가 생성한 FakeWeeklyRoutine의 day_index와 같은지 확인합니다.
+        7. 응답의 각 WeeklyRoutine의 users_routine이 생성한 FakeWeeklyRoutine의 users_routine과 같은지 확인합니다.
+        """
+        user1_users_routine_instances = [
+            self.routine3.instance.subscribers.get(user=self.user1.instance),
+            self.routine2.instance.subscribers.get(user=self.user1.instance),
+            self.routine4.instance.subscribers.get(user=self.user1.instance),
+            self.routine1.instance.subscribers.get(user=self.user1.instance),
+        ]
+
+        random_day_indices = [0, 5, 3, 2]
+
+        fake_weekly_routines = [
+            FakeWeeklyRoutine(
+                day_index=random_day_index, users_routine=users_routine_instance
+            )
+            for random_day_index, users_routine_instance in zip(
+                random_day_indices, user1_users_routine_instances
+            )
+        ]
+
+        self.client.force_login(self.user1.instance)
+
+        response = self.client.post(
+            reverse("weekly-routine"),
+            data=[
+                fake_weekly_routine.request_create()
+                for fake_weekly_routine in fake_weekly_routines
+            ],
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+        
+        self.assertEqual(len(data), len(fake_weekly_routines))
+        
         for fake_weekly_routine, response_weekly_routine in zip(
             sorted(fake_weekly_routines, key=lambda x: x.instance.day_index), data
         ):
