@@ -2,7 +2,7 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import authenticate, login
 from account.serializers import CustomUserSerializer
 from rest_framework import viewsets
@@ -14,6 +14,9 @@ from rest_framework.exceptions import (
     PermissionDenied,
     AuthenticationFailed,
 )
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 
 class CustomUserViewSet(viewsets.ModelViewSet):
@@ -32,7 +35,7 @@ class SignUpView(CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LoginView(APIView):
+class LoginView(TokenObtainPairView):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -41,9 +44,17 @@ class LoginView(APIView):
         email = request.data.get("email")
         password = request.data.get("password")
         user = authenticate(request, email=email, password=password)
-        if user is not None:
-            login(request, user)
-            return Response({"message": "로그인 성공"}, status=status.HTTP_200_OK)
+
+        if user:
+            refresh = RefreshToken.for_user(user)
+            return Response(
+                {
+                    "message": "로그인 성공",
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                },
+                status=status.HTTP_200_OK,
+            )
         else:
             return Response(
                 {"message": "로그인 실패"}, status=status.HTTP_401_UNAUTHORIZED
@@ -51,8 +62,4 @@ class LoginView(APIView):
 
 
 class LogoutView(APIView):
-    pass
-
-
-class ProfileView(APIView):
     pass
