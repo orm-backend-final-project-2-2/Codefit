@@ -1720,7 +1720,7 @@ class RoutineStreakTestCase(TestCase):
             for routine in self.routines
         ]
 
-        random_day_indices = [6, 2, 0, 4]
+        random_day_indices = [6, 2, 1, 4]
 
         fake_weekly_routines = [
             FakeWeeklyRoutine(
@@ -1832,15 +1832,12 @@ class RoutineStreakTestCase(TestCase):
 
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
 
-        routine_streak = RoutineStreak.objects.filter(user=self.user1.instance).last()
-
         response = self.client.post(
             reverse("routine-streak-list"),
-            data={"mirrored_routine": routine_streak.mirrored_routine.id},
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = response.json()
-
+        print(data)
         self.assertEqual(datetime.now().strftime("%Y-%m-%d"), data.get("date"))

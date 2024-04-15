@@ -205,6 +205,8 @@ class RoutineStreakSerializer(serializers.ModelSerializer):
     루틴 수행 여부를 다루는 Serializer
     """
 
+    mirrored_routine = serializers.SerializerMethodField()
+
     class Meta:
         """
         RoutineStreakSerializer의 Meta 클래스
@@ -220,3 +222,10 @@ class RoutineStreakSerializer(serializers.ModelSerializer):
         model = RoutineStreak
         fields = ["id", "mirrored_routine", "date"]
         read_only_fields = ["id", "mirrored_routine", "date"]
+
+    def get_mirrored_routine(self, obj):
+
+        weekly_routine = WeeklyRoutine.objects.get(
+            day_index=obj.date.weekday(), user=obj.user
+        )
+        return weekly_routine.users_routine.mirrored_routine.id
