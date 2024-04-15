@@ -22,7 +22,7 @@ class HealthInfo(models.Model):
 
 class Routine(models.Model):
     author = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, related_name="written_routines"
+        User, on_delete=models.SET_NULL, null=True, related_name="created_routines"
     )
     title = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -30,7 +30,7 @@ class Routine(models.Model):
     like_count = models.PositiveIntegerField(default=0)
 
     def __str__(self):
-        return f"{self.author.username}의 루틴 정보"
+        return f"{self.author.username}이 작성한 루틴: {self.title}, 좋아요 수: {self.like_count}"
 
 
 class Routine_Like(models.Model):
@@ -43,11 +43,6 @@ class Routine_Like(models.Model):
 
     def __str__(self):
         return f"{self.user.username}이 {self.routine.title}을 좋아합니다."
-
-    def save(self, *args, **kwargs):
-        self.routine.like_count += 1
-        self.routine.save()
-        super().save(*args, **kwargs)
 
 
 class MirroredRoutine(models.Model):
@@ -86,7 +81,10 @@ class ExerciseInRoutine(models.Model):
         unique_together = (("routine", "order"), ("mirrored_routine", "order"))
 
     def __str__(self):
-        return f"{self.routine.title}의 {self.order}번째 운동: {self.exercise.title}"
+        if self.routine:
+            return f"{self.routine.title}의 {self.order}번째 운동: {self.exercise.title}"
+        else:
+            return f"{self.mirrored_routine.title}의 {self.order}번째 운동: {self.exercise.title}"
 
 
 class UsersRoutine(models.Model):
@@ -110,5 +108,6 @@ class UsersRoutine(models.Model):
 
     def __str__(self):
         if self.routine:
-            return f"{self.user.username}이 {self.routine.author.username}의 루틴을 구독중: {self.routine.title}"
-        return f"{self.user.username}이 {self.mirrored_routine.author_name}의 루틴을 구독중: {self.mirrored_routine.title}"
+            return f"{self.user.username}의 구독 루틴: {self.routine.title}, 상태: {self.need_update}"
+        else:
+            return f"{self.user.username}의 구독 루틴: {self.mirrored_routine.title}, 상태: {self.need_update}"

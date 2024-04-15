@@ -252,6 +252,9 @@ class RoutineViewSet(viewsets.ModelViewSet):
             raise MethodNotAllowed("Already liked")
 
         Routine_Like.objects.create(routine=routine, user=user)
+
+        routine.like_count += 1
+
         return Response(
             data={"like_count": f"{routine.like_count}"}, status=status.HTTP_201_CREATED
         )
