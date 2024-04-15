@@ -69,6 +69,9 @@ class MirroredRoutine(models.Model):
     """
     루틴의 정보를 복제하여 저장하고 original_routine 필드로 원본 루틴을 참조하는 모델
 
+    설계 목적: 루틴을 복제하여 저장함으로써 사용자가 사용하는 루틴 데이터가
+    원본 루틴의 변경사항에 영향을 받지 않게 하지 않고, 루틴의 변경사항을 추적할 수 있도록 함
+
     title: 루틴 제목
     author_name: 루틴 작성자 이름
     original_routine: 원본 루틴
