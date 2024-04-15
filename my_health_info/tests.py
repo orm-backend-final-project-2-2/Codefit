@@ -1,4 +1,6 @@
 from django.test import TestCase
+from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
 from account.models import CustomUser as User
 from django.urls import reverse
 from my_health_info.models import (
@@ -8,6 +10,7 @@ from my_health_info.models import (
     UsersRoutine,
     MirroredRoutine,
     WeeklyRoutine,
+    RoutineStreak,
 )
 from exercises_info.models import ExercisesInfo
 from my_health_info.services import UsersRoutineManagementService
@@ -22,7 +25,9 @@ from utils.fake_data import (
     FakeExercisesInfo,
     FakeExerciseInRoutine,
     FakeWeeklyRoutine,
+    FakeRoutineStreak,
 )
+import random
 
 
 class MyHealthInfoTestCase(TestCase):
@@ -1656,3 +1661,300 @@ class WeeklyRoutineTestCase(TestCase):
         self.assertFalse(
             WeeklyRoutine.objects.filter(user=self.user1.instance).exists()
         )
+
+
+class RoutineStreakTestCase(TestCase):
+    """
+    목적: 유저의 루틴 수행 기록을 관리하는 RoutineStreak 모델에 대한 테스트를 진행합니다.
+
+    Test cases:
+    1. 유저가 루틴을 수행한 기록을 조회하는지 테스트
+    2. 유저가 특정 날짜에 수행한 기록의 세부 정보를 조회하는지 테스트
+    3. 유저가 루틴을 수행한 기록을 생성하는지 테스트
+    4. 유저가 이미 루틴을 수행한 상태에서 루틴을 수행한 기록을 생성하려 할 때 실패하는지 테스트
+    5. 유저가 루틴이 등록되지 않은 요일에 루틴을 수행한 기록을 생성하려 할 때 실패하는지 테스트
+    6. 최근 수행 루틴을 조회하는지 테스트
+    7. 허용되지 않은 요청으로 접근 시 405 에러를 반환하는지 테스트
+    """
+
+    def setUp(self):
+        """
+        초기 설정:
+
+        1. 관리자 유저 생성
+        2. 운동 4개 생성
+        3. 유저 1 생성
+        4. 유저 1이 루틴 5개 생성
+        5. 유저 1은 해당 루틴들로 WeeklyRoutine 생성
+        6. freezegun을 사용해서 과거에서부터 루틴 수행 기록을 생성
+        """
+
+        self.client = APIClient()
+
+        self.admin = FakeUser()
+        self.admin.create_instance(is_staff=True)
+
+        self.exercises = [FakeExercisesInfo() for _ in range(4)]
+        for exercise in self.exercises:
+            exercise.create_instance(self.admin.instance)
+
+        self.user1 = FakeUser()
+        self.user1.create_instance()
+
+        refresh = RefreshToken.for_user(self.user1.instance)
+        self.access_token = str(refresh.access_token)
+
+        self.routines = [
+            FakeRoutine([self.exercises[0], self.exercises[1]]),
+            FakeRoutine([self.exercises[1], self.exercises[2]]),
+            FakeRoutine([self.exercises[2], self.exercises[3], self.exercises[0]]),
+            FakeRoutine([self.exercises[3]]),
+            FakeRoutine([self.exercises[0], self.exercises[1], self.exercises[2]]),
+        ]
+
+        for routine in self.routines:
+            routine.create_instance(user_instance=self.user1.instance)
+
+        user1_users_routine_instances = [
+            routine.instance.subscribers.get(user=self.user1.instance)
+            for routine in self.routines
+        ]
+
+        self.random_day_indices = [6, 2, 1, 4]
+
+        self.fake_weekly_routines = [
+            FakeWeeklyRoutine(
+                day_index=random_day_index, users_routine=users_routine_instance
+            )
+            for random_day_index, users_routine_instance in zip(
+                self.random_day_indices, user1_users_routine_instances
+            )
+        ]
+
+        for fake_weekly_routine in self.fake_weekly_routines:
+            fake_weekly_routine.create_instance(user_instance=self.user1.instance)
+
+        days = 30
+        start_time = datetime.now() - timedelta(days=days)
+        for i in range(days - 1):
+            with freeze_time(start_time + timedelta(days=i)):
+                day_index = datetime.now().weekday()
+
+                if day_index in self.random_day_indices:
+                    if random.random() < 0.6:
+                        routine_streak = FakeRoutineStreak(
+                            mirrored_routine=self.fake_weekly_routines[
+                                self.random_day_indices.index(day_index)
+                            ].users_routine.mirrored_routine,
+                        )
+                        routine_streak.create_instance(
+                            user_instance=self.user1.instance
+                        )
+
+    def test_get_routine_streak_list(self):
+        """
+        유저가 루틴을 수행한 기록을 조회하는지 테스트
+
+        reverse_url: routine-streak-list
+        HTTP method: GET
+
+        테스트 시나리오:
+        1. 유저 1이 로그인합니다.
+        2. /routine-streak/에 GET 요청을 보냅니다.
+        3. 상태 코드가 200인지 확인합니다.
+        4. 응답의 길이가 생성된 RoutineStreak의 수와 같은지 확인합니다.
+        5. 응답의 RoutineStreak의 mirrored_routine이 생성된 RoutineStreak의 mirrored_routine과 같은지 확인합니다.
+        """
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+
+        response = self.client.get(reverse("routine-streak-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        self.assertEqual(
+            RoutineStreak.objects.filter(user=self.user1.instance).count(), len(data)
+        )
+
+        for routine_streak in RoutineStreak.objects.filter(user=self.user1.instance):
+            self.assertEqual(
+                routine_streak.mirrored_routine.id, data.pop().get("mirrored_routine")
+            )
+
+    def test_get_routine_streak_detail(self):
+        """
+        유저가 특정 날짜에 수행한 기록의 세부 정보를 조회하는지 테스트
+
+        reverse_url: routine-streak-detail
+        HTTP method: GET
+
+        테스트 시나리오:
+        1. 유저 1이 로그인합니다.
+        2. /routine-streak/에 GET 요청을 보냅니다.
+        3. 상태 코드가 200인지 확인합니다.
+        4. 응답의 날짜가 요청한 날짜와 같은지 확인합니다.
+        5. 응답의 mirrored_routine이 요청한 mirrored_routine과 같은지 확인합니다.
+        """
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+
+        routine_streak = RoutineStreak.objects.filter(user=self.user1.instance).last()
+
+        response = self.client.get(
+            reverse("routine-streak-detail", kwargs={"pk": routine_streak.id})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        self.assertEqual(routine_streak.date.strftime("%Y-%m-%d"), data.get("date"))
+
+        self.assertEqual(
+            routine_streak.mirrored_routine.id, data.get("mirrored_routine")
+        )
+
+    def test_create_routine_streak(self):
+        """
+        유저가 루틴을 수행한 기록을 생성하는지 테스트
+
+        reverse_url: routine-streak-list
+        HTTP method: POST
+
+        테스트 시나리오:
+        1. 유저 1이 로그인합니다.
+        2. /routine-streak/에 POST 요청을 보냅니다.
+        3. 상태 코드가 201인지 확인합니다.
+        4. 응답에 포함된 date가 현재 날짜와 같은지 확인합니다.
+        """
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+
+        response = self.client.post(
+            reverse("routine-streak-list"),
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+
+        self.assertEqual(datetime.now().strftime("%Y-%m-%d"), data.get("date"))
+
+    def test_create_routine_streak_fail_if_already_done(self):
+        """
+        유저가 이미 루틴을 수행한 상태에서 루틴을 수행한 기록을 생성하려 할 때 실패하는지 테스트
+
+        reverse_url: routine-streak-list
+        HTTP method: POST
+
+        테스트 시나리오:
+        1. 루틴을 수행한 기록을 생성합니다.
+        2. 유저 1이 로그인합니다.
+        3. /routine-streak/에 POST 요청을 보냅니다.
+        4. 상태 코드가 400인지 확인합니다.
+        """
+
+        now_day_index = datetime.now().weekday()
+
+        RoutineStreak.objects.create(
+            user=self.user1.instance,
+            mirrored_routine=self.fake_weekly_routines[
+                self.random_day_indices.index(now_day_index)
+            ].users_routine.mirrored_routine,
+        )
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+
+        response = self.client.post(
+            reverse("routine-streak-list"),
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @freeze_time(datetime.now() + timedelta(days=2))
+    def test_create_routine_streak_fail_if_invalid_day_index(self):
+        """
+        유저가 루틴이 등록되지 않은 요일에 루틴을 수행한 기록을 생성하려 할 때 실패하는지 테스트
+
+        reverse_url: routine-streak-list
+        HTTP method: POST
+
+        테스트 시나리오:
+        1. 유저 1이 로그인합니다.
+        2. /routine-streak/에 POST 요청을 보냅니다.
+        3. 상태 코드가 400인지 확인합니다.
+        """
+        new_access_token = str(RefreshToken.for_user(self.user1.instance).access_token)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {new_access_token}")
+
+        response = self.client.post(
+            reverse("routine-streak-list"),
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_last_routine_streak(self):
+        """
+        최근 수행 루틴을 조회하는지 테스트
+
+        reverse_url: routine-streak-last
+        HTTP method: GET
+
+        테스트 시나리오:
+        1. 유저 1이 로그인합니다.
+        2. /routine-streak-last/에 GET 요청을 보냅니다.
+        3. 상태 코드가 200인지 확인합니다.
+        4. 응답의 date가 RoutineStreak.objects.last().date와 같은지 확인합니다.
+        """
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+
+        response = self.client.get(reverse("routine-streak-last"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        self.assertEqual(
+            RoutineStreak.objects.filter(user=self.user1.instance)
+            .last()
+            .date.strftime("%Y-%m-%d"),
+            data.get("date"),
+        )
+
+    def test_get_errors_when_not_allowed_methods(self):
+        """
+        허용되지 않은 요청으로 접근 시 405 에러를 반환하는지 테스트
+
+        reverse_url: routine-streak-list, routine-streak-detail, routine-streak-last
+        HTTP method: POST, PUT, PATCH, DELETE
+
+        테스트 시나리오:
+        1. 유저 1이 로그인합니다.
+        2. /routine-streak-list, /routine-streak-detail, /routine-streak-last에 POST, PUT, PATCH, DELETE 요청을 보냅니다.
+        3. 상태 코드가 405인지 확인합니다.
+        """
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+
+        routine_streak = RoutineStreak.objects.filter(user=self.user1.instance).last()
+
+        response = self.client.put(
+            reverse("routine-streak-detail", kwargs={"pk": routine_streak.id})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        response = self.client.patch(
+            reverse("routine-streak-detail", kwargs={"pk": routine_streak.id})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        response = self.client.delete(
+            reverse("routine-streak-detail", kwargs={"pk": routine_streak.id})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)

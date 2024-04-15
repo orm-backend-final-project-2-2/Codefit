@@ -6,6 +6,7 @@ from my_health_info.models import (
     UsersRoutine,
     MirroredRoutine,
     WeeklyRoutine,
+    RoutineStreak,
 )
 from exercises_info.models import ExercisesInfo
 from drf_writable_nested import WritableNestedModelSerializer
@@ -197,3 +198,37 @@ class WeeklyRoutineSerializer(serializers.ModelSerializer):
         if not 0 <= data["day_index"] <= 6:
             raise serializers.ValidationError("day_index는 0~6 사이의 값이어야 합니다.")
         return data
+
+
+class RoutineStreakSerializer(serializers.ModelSerializer):
+    """
+    루틴 수행 여부를 다루는 Serializer
+    """
+
+    mirrored_routine = serializers.SerializerMethodField()
+
+    class Meta:
+        """
+        RoutineStreakSerializer의 Meta 클래스
+
+        모델: RoutineStreak
+
+        필드:
+        - id: 루틴 수행 여부의 PK, read_only
+        - mirrored_routine: 수행된 복제된 루틴, read_only
+        - date: 날짜, read_only
+        """
+
+        model = RoutineStreak
+        fields = ["id", "mirrored_routine", "date"]
+        read_only_fields = ["id", "mirrored_routine", "date"]
+
+    def get_mirrored_routine(self, obj):
+
+        try:
+            weekly_routine = WeeklyRoutine.objects.get(
+                day_index=obj.date.weekday(), user=obj.user
+            )
+        except WeeklyRoutine.DoesNotExist:
+            raise serializers.ValidationError("해당 요일의 루틴이 존재하지 않습니다.")
+        return weekly_routine.users_routine.mirrored_routine.id

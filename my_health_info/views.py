@@ -1,3 +1,4 @@
+import datetime
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -9,12 +10,14 @@ from my_health_info.models import (
     MirroredRoutine,
     ExerciseInRoutine,
     WeeklyRoutine,
+    RoutineStreak,
 )
 from my_health_info.serializers import (
     HealthInfoSerializer,
     RoutineSerializer,
     UsersRoutineSerializer,
     WeeklyRoutineSerializer,
+    RoutineStreakSerializer,
 )
 from rest_framework.exceptions import (
     MethodNotAllowed,
@@ -518,3 +521,75 @@ class WeeklyRoutineView(APIView):
 
         WeeklyRoutine.objects.filter(user=request.user).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class RoutineStreakViewSet(viewsets.ModelViewSet):
+    """
+    루틴 수행 여부를 나타내는 ViewSet
+
+    url_prefix: /my_health_info/routine_streak/
+
+    functions:
+    - list: GET /my_health_info/routine_streak/
+    - create: POST /my_health_info/routine_streak/
+    - retrieve: GET /my_health_info/routine_streak/<pk>/
+    """
+
+    http_method_names = ["get", "post"]
+    serializer_class = RoutineStreakSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        유저의 루틴 수행 여부를 반환
+        """
+        return RoutineStreak.objects.filter(user=self.request.user)
+
+    def list(self, request):
+        """
+        루틴 수행 여부를 리스트로 반환
+
+        1. 쿼리셋에서 유저의 루틴 수행 여부를 조회 후 날짜 역순으로 정렬
+        2. serializer를 사용하여 데이터 반환
+        """
+        queryset = RoutineStreak.objects.filter(user=request.user).order_by("-date")
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def perform_create(self, serializer):
+        """
+        루틴 수행 여부를 생성
+
+        1. serializer에서 validated_data를 가져옴
+        2. validated_data에서 user를 현재 유저로 설정
+        3. RoutineStreak을 생성
+        """
+        validated_data = serializer.validated_data
+        validated_data["user"] = self.request.user
+
+        if RoutineStreak.objects.filter(
+            user=self.request.user, date=datetime.datetime.now().date()
+        ).exists():
+            raise ValidationError("Routine streak already exists for today")
+
+        serializer.save()
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="last",
+        url_name="last",
+        permission_classes=[IsAuthenticated],
+    )
+    def last(self, request):
+        """
+        가장 최근의 루틴 수행 여부 조회
+
+        1. 쿼리셋에서 유저의 루틴 수행 여부를 조회 후 날짜 역순으로 정렬
+        2. serializer를 사용하여 데이터 반환
+        """
+        queryset = RoutineStreak.objects.filter(user=request.user).order_by("-date")
+        if queryset.exists():
+            serializer = self.get_serializer(queryset.first())
+            return Response(serializer.data)
+        raise NotFound("No routine streak found")

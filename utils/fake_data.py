@@ -6,6 +6,7 @@ from my_health_info.models import (
     ExerciseInRoutine,
     MirroredRoutine,
     WeeklyRoutine,
+    RoutineStreak,
 )
 from my_health_info.services import UsersRoutineManagementService
 from exercises_info.models import ExercisesInfo, FocusArea, ExercisesAttribute
@@ -249,6 +250,28 @@ class FakeWeeklyRoutine(FakeModel):
         }
 
         return {**base_attr, **related_attr}
+
+
+class FakeRoutineStreak(FakeModel):
+    def __init__(self, mirrored_routine):
+        super().__init__(RoutineStreak)
+        self.base_attr = self.set_base_attr()
+        self.mirrored_routine_instance = mirrored_routine
+
+    def set_base_attr(self):
+        return {}
+
+    def create_instance(self, user_instance):
+        self.instance = self.model.objects.create(
+            user=user_instance,
+            mirrored_routine=self.mirrored_routine_instance,
+            **self.base_attr,
+        )
+
+        return self.instance
+
+    def request_create(self):
+        return {}
 
 
 class FakeHealthInfo(FakeModel):
