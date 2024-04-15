@@ -3,6 +3,10 @@ from rest_framework import status
 from django.urls import reverse
 from account.models import CustomUser
 from utils.fake_data import FakeUser
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class LoginTestCase(TestCase):
@@ -196,3 +200,25 @@ class SignUpTestCase(TestCase):
             response.data["password"][0],
             "비밀번호는 숫자, 문자, 특수문자를 모두 포함해야 합니다.",
         )
+
+
+class LogoutTestCase(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="testuser", email="test@example.com", password="testpassword1!"
+        )
+
+    def test_user_can_logout(self):
+        # 로그인을 시도하여 토큰을 발급받습니다.
+        login_url = reverse("token_obtain_pair")
+        login_data = {"email": "test@example.com", "password": "testpassword"}
+        response = self.client.post(login_url, login_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # 발급받은 토큰을 헤더에 포함하여 로그아웃을 요청합니다.
+        access_token = response.data["access"]
+        self.client.credentials(HTTP_AUTHORIZATION="Bearer " + access_token)
+        logout_url = reverse("logout")
+        response = self.client.post(logout_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["message"], "로그아웃 성공")
