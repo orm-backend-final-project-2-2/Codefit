@@ -1810,4 +1810,8 @@ class RoutineStreakTestCase(TestCase):
 
         data = response.json()
 
-        self.assertEqual(routine_streak.mirrored_routine.id, data.get("mirrored_routine"))
+        self.assertEqual(routine_streak.date.strftime("%Y-%m-%d"), data.get("date"))
+
+        self.assertEqual(
+            routine_streak.mirrored_routine.id, data.get("mirrored_routine")
+        )
