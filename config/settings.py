@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     # third_party_apps
     "rest_framework",
     "rest_framework_simplejwt",
+    "corsheaders",
     # custom_apps
     "my_health_info",  # 본인 앱
     "exercises_info",  # 본인 앱
@@ -58,6 +59,9 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.security.SecurityMiddleware",
     # "rest_framework.middleware.AuthenticationMiddleware",
     # "rest_framework.middleware.TokenAuthenticationMiddleware",
 ]
@@ -142,7 +146,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # 기본 유저모델 변경
 AUTH_USER_MODEL = "account.CustomUser"
 
-
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -171,3 +174,5 @@ SIMPLE_JWT = {
     "TOKEN_TYPE_CLAIM": "token_type",  # 토큰 타입 클레임
     "JTI_CLAIM": "jti",  # JWT ID 클레임
 }
+
+CORS_ALLOW_ALL_ORIGINS = True
