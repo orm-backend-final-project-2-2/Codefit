@@ -225,7 +225,10 @@ class RoutineStreakSerializer(serializers.ModelSerializer):
 
     def get_mirrored_routine(self, obj):
 
-        weekly_routine = WeeklyRoutine.objects.get(
-            day_index=obj.date.weekday(), user=obj.user
-        )
+        try:
+            weekly_routine = WeeklyRoutine.objects.get(
+                day_index=obj.date.weekday(), user=obj.user
+            )
+        except WeeklyRoutine.DoesNotExist:
+            raise serializers.ValidationError("해당 요일의 루틴이 존재하지 않습니다.")
         return weekly_routine.users_routine.mirrored_routine.id
