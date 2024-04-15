@@ -1377,29 +1377,32 @@ class WeeklyRoutineTestCase(TestCase):
 
         self.client.force_login(self.user1.instance)
 
+        create_request = [
+            fake_weekly_routine.create_request()
+            for fake_weekly_routine in fake_weekly_routines
+        ]
+
         response = self.client.post(
             reverse("weekly-routine"),
-            data=[
-                fake_weekly_routine.request_create()
-                for fake_weekly_routine in fake_weekly_routines
-            ],
+            data=create_request,
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = response.json()
-        
+
         self.assertEqual(len(data), len(fake_weekly_routines))
-        
+
         for fake_weekly_routine, response_weekly_routine in zip(
-            sorted(fake_weekly_routines, key=lambda x: x.instance.day_index), data
+            sorted(fake_weekly_routines, key=lambda x: x.base_attr.get("day_index")),
+            data,
         ):
             self.assertEqual(
-                fake_weekly_routine.instance.users_routine.id,
+                fake_weekly_routine.users_routine.id,
                 response_weekly_routine.get("users_routine"),
             )
             self.assertEqual(
-                fake_weekly_routine.instance.day_index,
+                fake_weekly_routine.base_attr.get("day_index"),
                 response_weekly_routine.get("day_index"),
             )
