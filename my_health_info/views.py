@@ -463,9 +463,13 @@ class WeeklyRoutineView(APIView):
         유저의 주간 루틴 정보 업데이트
 
         1. WeeklyRoutineSerializer를 사용하여 데이터 유효성 검사
-        2. WeeklyRoutine들을 업데이트
-        3. 업데이트된 WeeklyRoutine을 요일 순으로 정렬
-        4. 정렬된 WeeklyRoutine을 WeeklyRoutineSerializer를 사용하여 데이터 반환
+        2. instances에 유저의 주간 루틴 정보를 조회
+        3. 현재 주간 루틴 정보의 요일 인덱스와 새로운 주간 루틴 정보의 요일 인덱스를 비교하여 삭제, 생성, 업데이트할 요일 인덱스 저장
+        4. 업데이트 할 인덱스가 있다면 해당 인덱스의 users_routine 정보를 업데이트
+        5. 삭제할 인덱스가 있다면 인덱스에 해당하는 주간 루틴 정보 삭제
+        6. 생성할 인덱스가 있다면 인덱스에 해당하는 주간 루틴 정보 생성
+        7. 업데이트된 주간 루틴 정보를 요일 순으로 정렬
+        8. 정렬된 주간 루틴 정보를 WeeklyRoutineSerializer를 사용하여 데이터 반환
         """
         serializer = WeeklyRoutineSerializer(data=request.data, many=True)
         if serializer.is_valid():
@@ -503,3 +507,14 @@ class WeeklyRoutineView(APIView):
             sorted_serializer = WeeklyRoutineSerializer(sorted_instances, many=True)
             return Response(sorted_serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        """
+        유저의 모든 주간 루틴 정보 삭제
+
+        1. 유저의 주간 루틴 정보를 필터링하여 삭제
+        2. 204 응답 반환
+        """
+
+        WeeklyRoutine.objects.filter(user=request.user).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
