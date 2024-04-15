@@ -1841,6 +1841,6 @@ class RoutineStreakTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        self.assertEqual(
-            datetime.now().strftime("%Y-%m-%d"), response.json().get("date")
-        )
+        data = response.json()
+
+        self.assertEqual(datetime.now().strftime("%Y-%m-%d"), data.get("date"))

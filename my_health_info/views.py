@@ -532,7 +532,6 @@ class RoutineStreakViewSet(viewsets.ModelViewSet):
     - list: GET /my_health_info/routine_streak/
     - create: POST /my_health_info/routine_streak/
     - retrieve: GET /my_health_info/routine_streak/<pk>/
-    - complete: POST /my_health_info/routine_streak/complete/
     """
 
     http_method_names = ["get", "post"]
@@ -555,3 +554,15 @@ class RoutineStreakViewSet(viewsets.ModelViewSet):
         queryset = RoutineStreak.objects.filter(user=request.user).order_by("-date")
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    def perform_create(self, serializer):
+        """
+        루틴 수행 여부를 생성
+
+        1. serializer에서 validated_data를 가져옴
+        2. validated_data에서 user를 현재 유저로 설정
+        3. RoutineStreak을 생성
+        """
+        validated_data = serializer.validated_data
+        validated_data["user"] = self.request.user
+        serializer.save()
