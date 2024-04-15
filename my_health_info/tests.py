@@ -1815,3 +1815,32 @@ class RoutineStreakTestCase(TestCase):
         self.assertEqual(
             routine_streak.mirrored_routine.id, data.get("mirrored_routine")
         )
+
+    def test_create_routine_streak(self):
+        """
+        유저가 루틴을 수행한 기록을 생성하는지 테스트
+
+        reverse_url: routine-streak-list
+        HTTP method: POST
+
+        테스트 시나리오:
+        1. 유저 1이 로그인합니다.
+        2. /routine-streak/에 POST 요청을 보냅니다.
+        3. 상태 코드가 201인지 확인합니다.
+        4. 응답에 포함된 date가 현재 날짜와 같은지 확인합니다.
+        """
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+
+        routine_streak = RoutineStreak.objects.filter(user=self.user1.instance).last()
+
+        response = self.client.post(
+            reverse("routine-streak-list"),
+            data={"mirrored_routine": routine_streak.mirrored_routine.id},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.assertEqual(
+            datetime.now().strftime("%Y-%m-%d"), response.json().get("date")
+        )
