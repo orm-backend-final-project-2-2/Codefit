@@ -1,4 +1,6 @@
 from django.test import TestCase
+from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
 from account.models import CustomUser as User
 from django.urls import reverse
 from my_health_info.models import (
@@ -8,6 +10,7 @@ from my_health_info.models import (
     UsersRoutine,
     MirroredRoutine,
     WeeklyRoutine,
+    RoutineStreak,
 )
 from exercises_info.models import ExercisesInfo
 from my_health_info.services import UsersRoutineManagementService
@@ -1666,11 +1669,12 @@ class RoutineStreakTestCase(TestCase):
 
     Test cases:
     1. 유저가 루틴을 수행한 기록을 조회하는지 테스트
-    2. 유저가 루틴을 수행한 기록을 생성하는지 테스트
-    3. 유저가 이미 루틴을 수행한 상태에서 루틴을 수행한 기록을 생성하려 할 때 실패하는지 테스트
-    4. 유저가 루틴이 등록되지 않은 요일에 루틴을 수행한 기록을 생성하려 할 때 실패하는지 테스트
-    5. 최근 수행 루틴을 조회하는지 테스트
-    6. 허용되지 않은 요청으로 접근 시 405 에러를 반환하는지 테스트
+    2. 유저가 특정 날짜에 수행한 기록의 세부 정보를 조회하는지 테스트
+    3. 유저가 루틴을 수행한 기록을 생성하는지 테스트
+    4. 유저가 이미 루틴을 수행한 상태에서 루틴을 수행한 기록을 생성하려 할 때 실패하는지 테스트
+    5. 유저가 루틴이 등록되지 않은 요일에 루틴을 수행한 기록을 생성하려 할 때 실패하는지 테스트
+    6. 최근 수행 루틴을 조회하는지 테스트
+    7. 허용되지 않은 요청으로 접근 시 405 에러를 반환하는지 테스트
     """
 
     def setUp(self):
@@ -1685,6 +1689,8 @@ class RoutineStreakTestCase(TestCase):
         6. freezegun을 사용해서 과거에서부터 루틴 수행 기록을 생성
         """
 
+        self.client = APIClient()
+
         self.admin = FakeUser()
         self.admin.create_instance(is_staff=True)
 
@@ -1694,6 +1700,9 @@ class RoutineStreakTestCase(TestCase):
 
         self.user1 = FakeUser()
         self.user1.create_instance()
+
+        refresh = RefreshToken.for_user(self.user1.instance)
+        self.access_token = str(refresh.access_token)
 
         self.routines = [
             FakeRoutine([self.exercises[0], self.exercises[1]]),
@@ -1741,3 +1750,35 @@ class RoutineStreakTestCase(TestCase):
                         routine_streak.create_instance(
                             user_instance=self.user1.instance
                         )
+
+    def test_get_routine_streak_list(self):
+        """
+        유저가 루틴을 수행한 기록을 조회하는지 테스트
+
+        reverse_url: routine-streak-list
+        HTTP method: GET
+
+        테스트 시나리오:
+        1. 유저 1이 로그인합니다.
+        2. /routine-streak/에 GET 요청을 보냅니다.
+        3. 상태 코드가 200인지 확인합니다.
+        4. 응답의 길이가 생성된 RoutineStreak의 수와 같은지 확인합니다.
+        5. 응답의 RoutineStreak의 mirrored_routine이 생성된 RoutineStreak의 mirrored_routine과 같은지 확인합니다.
+        """
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+
+        response = self.client.get(reverse("routine-streak-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        self.assertEqual(
+            RoutineStreak.objects.filter(user=self.user1.instance).count(), len(data)
+        )
+
+        for routine_streak in RoutineStreak.objects.filter(user=self.user1.instance):
+            self.assertEqual(
+                routine_streak.mirrored_routine.id, data.pop().get("mirrored_routine")
+            )
