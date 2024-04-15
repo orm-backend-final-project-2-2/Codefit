@@ -449,6 +449,8 @@ class WeeklyRoutineView(APIView):
         """
         serializer = WeeklyRoutineSerializer(data=request.data, many=True)
         if serializer.is_valid():
+            if WeeklyRoutine.objects.filter(user=request.user).exists():
+                raise PermissionDenied("Weekly routine already exists")
             instances = serializer.save(user=request.user)
             sorted_instances = sorted(instances, key=lambda x: x.day_index)
             sorted_serializer = WeeklyRoutineSerializer(sorted_instances, many=True)
