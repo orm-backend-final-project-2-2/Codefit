@@ -420,6 +420,7 @@ class WeeklyRoutineView(APIView):
     functions:
     - get: GET /my_health_info/weekly_routine/
     - post: POST /my_health_info/weekly_routine/
+    - update: PUT /my_health_info/weekly_routine/
     - delete: DELETE /my_health_info/weekly_routine/
     """
 
@@ -455,4 +456,50 @@ class WeeklyRoutineView(APIView):
             sorted_instances = sorted(instances, key=lambda x: x.day_index)
             sorted_serializer = WeeklyRoutineSerializer(sorted_instances, many=True)
             return Response(sorted_serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request):
+        """
+        유저의 주간 루틴 정보 업데이트
+
+        1. WeeklyRoutineSerializer를 사용하여 데이터 유효성 검사
+        2. WeeklyRoutine들을 업데이트
+        3. 업데이트된 WeeklyRoutine을 요일 순으로 정렬
+        4. 정렬된 WeeklyRoutine을 WeeklyRoutineSerializer를 사용하여 데이터 반환
+        """
+        serializer = WeeklyRoutineSerializer(data=request.data, many=True)
+        if serializer.is_valid():
+            instances = WeeklyRoutine.objects.filter(user=request.user)
+
+            current_indices = set(instance.day_index for instance in instances)
+            new_indices = set(data["day_index"] for data in serializer.validated_data)
+
+            to_delete = current_indices - new_indices
+            to_create = new_indices - current_indices
+            to_update = current_indices & new_indices
+
+            if to_update:
+                for data in serializer.validated_data:
+                    if data["day_index"] in to_update:
+                        WeeklyRoutine.objects.filter(
+                            user=request.user, day_index=data["day_index"]
+                        ).update(users_routine=data["users_routine"])
+            if to_delete:
+                WeeklyRoutine.objects.filter(
+                    user=request.user, day_index__in=to_delete
+                ).delete()
+            if to_create:
+                for data in serializer.validated_data:
+                    if data["day_index"] in to_create:
+                        WeeklyRoutine.objects.create(
+                            user=request.user,
+                            users_routine=data["users_routine"],
+                            day_index=data["day_index"],
+                        )
+
+            instances = WeeklyRoutine.objects.filter(user=request.user)
+
+            sorted_instances = sorted(instances, key=lambda x: x.day_index)
+            sorted_serializer = WeeklyRoutineSerializer(sorted_instances, many=True)
+            return Response(sorted_serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
