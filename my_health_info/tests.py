@@ -1872,3 +1872,25 @@ class RoutineStreakTestCase(TestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @freeze_time(datetime.now() + timedelta(days=2))
+    def test_create_routine_streak_fail_if_invalid_day_index(self):
+        """
+        유저가 루틴이 등록되지 않은 요일에 루틴을 수행한 기록을 생성하려 할 때 실패하는지 테스트
+
+        reverse_url: routine-streak-list
+        HTTP method: POST
+
+        테스트 시나리오:
+        1. 유저 1이 로그인합니다.
+        2. /routine-streak/에 POST 요청을 보냅니다.
+        3. 상태 코드가 400인지 확인합니다.
+        """
+        new_access_token = str(RefreshToken.for_user(self.user1.instance).access_token)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {new_access_token}")
+
+        response = self.client.post(
+            reverse("routine-streak-list"),
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
