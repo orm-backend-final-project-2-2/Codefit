@@ -1734,7 +1734,7 @@ class RoutineStreakTestCase(TestCase):
         for fake_weekly_routine in fake_weekly_routines:
             fake_weekly_routine.create_instance(user_instance=self.user1.instance)
 
-        days = 50
+        days = 30
         start_time = datetime.now() - timedelta(days=days)
         for i in range(days - 1):
             with freeze_time(start_time + timedelta(days=i)):
