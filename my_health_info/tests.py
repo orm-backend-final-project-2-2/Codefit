@@ -1923,3 +1923,38 @@ class RoutineStreakTestCase(TestCase):
             .date.strftime("%Y-%m-%d"),
             data.get("date"),
         )
+
+    def test_get_errors_when_not_allowed_methods(self):
+        """
+        허용되지 않은 요청으로 접근 시 405 에러를 반환하는지 테스트
+
+        reverse_url: routine-streak-list, routine-streak-detail, routine-streak-last
+        HTTP method: POST, PUT, PATCH, DELETE
+
+        테스트 시나리오:
+        1. 유저 1이 로그인합니다.
+        2. /routine-streak-list, /routine-streak-detail, /routine-streak-last에 POST, PUT, PATCH, DELETE 요청을 보냅니다.
+        3. 상태 코드가 405인지 확인합니다.
+        """
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+
+        routine_streak = RoutineStreak.objects.filter(user=self.user1.instance).last()
+
+        response = self.client.put(
+            reverse("routine-streak-detail", kwargs={"pk": routine_streak.id})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        response = self.client.patch(
+            reverse("routine-streak-detail", kwargs={"pk": routine_streak.id})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+        response = self.client.delete(
+            reverse("routine-streak-detail", kwargs={"pk": routine_streak.id})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
