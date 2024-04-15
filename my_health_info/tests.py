@@ -1782,3 +1782,32 @@ class RoutineStreakTestCase(TestCase):
             self.assertEqual(
                 routine_streak.mirrored_routine.id, data.pop().get("mirrored_routine")
             )
+
+    def test_get_routine_streak_detail(self):
+        """
+        유저가 특정 날짜에 수행한 기록의 세부 정보를 조회하는지 테스트
+
+        reverse_url: routine-streak-detail
+        HTTP method: GET
+
+        테스트 시나리오:
+        1. 유저 1이 로그인합니다.
+        2. /routine-streak/에 GET 요청을 보냅니다.
+        3. 상태 코드가 200인지 확인합니다.
+        4. 응답의 날짜가 요청한 날짜와 같은지 확인합니다.
+        5. 응답의 mirrored_routine이 요청한 mirrored_routine과 같은지 확인합니다.
+        """
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+
+        routine_streak = RoutineStreak.objects.filter(user=self.user1.instance).last()
+
+        response = self.client.get(
+            reverse("routine-streak-detail", kwargs={"pk": routine_streak.id})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        self.assertEqual(routine_streak.mirrored_routine.id, data.get("mirrored_routine"))
