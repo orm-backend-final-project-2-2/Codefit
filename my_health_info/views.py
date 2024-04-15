@@ -9,12 +9,14 @@ from my_health_info.models import (
     MirroredRoutine,
     ExerciseInRoutine,
     WeeklyRoutine,
+    RoutineStreak,
 )
 from my_health_info.serializers import (
     HealthInfoSerializer,
     RoutineSerializer,
     UsersRoutineSerializer,
     WeeklyRoutineSerializer,
+    RoutineStreakSerializer,
 )
 from rest_framework.exceptions import (
     MethodNotAllowed,
@@ -518,3 +520,32 @@ class WeeklyRoutineView(APIView):
 
         WeeklyRoutine.objects.filter(user=request.user).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class RoutineStreakViewSet(viewsets.ModelViewSet):
+    """
+    루틴 수행 여부를 나타내는 ViewSet
+
+    url_prefix: /my_health_info/routine_streak/
+
+    functions:
+    - list: GET /my_health_info/routine_streak/
+    - create: POST /my_health_info/routine_streak/
+    - retrieve: GET /my_health_info/routine_streak/<pk>/
+    - complete: POST /my_health_info/routine_streak/complete/
+    """
+
+    http_method_names = ["get", "post"]
+    serializer_class = RoutineStreakSerializer
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request):
+        """
+        루틴 수행 여부를 리스트로 반환
+
+        1. 쿼리셋에서 유저의 루틴 수행 여부를 조회 후 날짜 역순으로 정렬
+        2. serializer를 사용하여 데이터 반환
+        """
+        queryset = RoutineStreak.objects.filter(user=request.user).order_by("-date")
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
