@@ -315,7 +315,6 @@ class WeeklyRoutineView(APIView):
     functions:
     - get: GET /my_health_info/weekly_routine/
     - post: POST /my_health_info/weekly_routine/
-    - patch: PATCH /my_health_info/weekly_routine/
     - delete: DELETE /my_health_info/weekly_routine/
     """
 
@@ -324,7 +323,7 @@ class WeeklyRoutineView(APIView):
     def get(self, request):
         """유저의 주간 루틴 정보 조회"""
         user = request.user
-        weekly_routines = WeeklyRoutine.objects.filter(user=user)
-        serializer = WeeklyRoutineSerializer(weekly_routines, many=True)
+        queryset = WeeklyRoutine.objects.filter(user=user).order_by("day_index")
+        serializer = WeeklyRoutineSerializer(queryset, many=True)
 
         return Response(serializer.data)
