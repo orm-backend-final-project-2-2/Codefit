@@ -186,3 +186,14 @@ class WeeklyRoutineSerializer(serializers.ModelSerializer):
         model = WeeklyRoutine
         fields = ["user", "users_routine", "day_index"]
         read_only_fields = ["user"]
+
+    def validate(self, data):
+        """
+        유효성 검사를 수행하는 메서드
+
+        - day_index가 0~6 사이의 값인지 확인
+        """
+
+        if 0 <= data["day_index"] <= 6:
+            raise serializers.ValidationError("day_index는 0~6 사이의 값이어야 합니다.")
+        return data
