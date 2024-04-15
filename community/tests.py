@@ -321,7 +321,7 @@ class CommentTestCase(TestCase):
         self.assertEqual(len(response.data), comment_count)
 
     def test_get_comment_detail(self):
-        """26. comment/<pk>/ GET 요청시 해당 Comment 객체를 반환하는지 테스트"""
+        """26. comment/<pk>/ GET 요청시 해당 Comment 객체의 세부 정보를 반환하는지 테스트"""
         response = self.client.get(
             reverse("comment-detail", kwargs={"pk": self.user1_comment1.instance.id})
         )
@@ -350,6 +350,14 @@ class CommentTestCase(TestCase):
 
         comment_count_after = Comment.objects.all().count()
         self.assertEqual(comment_count_after, comment_count_before + 1)
+
+    def test_post_comment_detail(self):
+        """28. comment/<pk>/ POST 요청시 해당 Comment 객체의 세부 정보를 반환하는지 테스트"""
+        response = self.client.post(
+            reverse("comment-detail", kwargs={"pk": self.user1_comment1.instance.id})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 # 페이지네이션 테스트용 더미 데이터
