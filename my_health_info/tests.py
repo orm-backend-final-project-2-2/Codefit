@@ -1720,18 +1720,18 @@ class RoutineStreakTestCase(TestCase):
             for routine in self.routines
         ]
 
-        random_day_indices = [6, 2, 1, 4]
+        self.random_day_indices = [6, 2, 1, 4]
 
-        fake_weekly_routines = [
+        self.fake_weekly_routines = [
             FakeWeeklyRoutine(
                 day_index=random_day_index, users_routine=users_routine_instance
             )
             for random_day_index, users_routine_instance in zip(
-                random_day_indices, user1_users_routine_instances
+                self.random_day_indices, user1_users_routine_instances
             )
         ]
 
-        for fake_weekly_routine in fake_weekly_routines:
+        for fake_weekly_routine in self.fake_weekly_routines:
             fake_weekly_routine.create_instance(user_instance=self.user1.instance)
 
         days = 30
@@ -1740,11 +1740,11 @@ class RoutineStreakTestCase(TestCase):
             with freeze_time(start_time + timedelta(days=i)):
                 day_index = datetime.now().weekday()
 
-                if day_index in random_day_indices:
-                    if random.random() < 0.8:
+                if day_index in self.random_day_indices:
+                    if random.random() < 0.6:
                         routine_streak = FakeRoutineStreak(
-                            mirrored_routine=fake_weekly_routines[
-                                random_day_indices.index(day_index)
+                            mirrored_routine=self.fake_weekly_routines[
+                                self.random_day_indices.index(day_index)
                             ].users_routine.mirrored_routine,
                         )
                         routine_streak.create_instance(
@@ -1841,3 +1841,34 @@ class RoutineStreakTestCase(TestCase):
         data = response.json()
         print(data)
         self.assertEqual(datetime.now().strftime("%Y-%m-%d"), data.get("date"))
+
+    def test_create_routine_streak_fail_if_already_done(self):
+        """
+        유저가 이미 루틴을 수행한 상태에서 루틴을 수행한 기록을 생성하려 할 때 실패하는지 테스트
+
+        reverse_url: routine-streak-list
+        HTTP method: POST
+
+        테스트 시나리오:
+        1. 루틴을 수행한 기록을 생성합니다.
+        2. 유저 1이 로그인합니다.
+        3. /routine-streak/에 POST 요청을 보냅니다.
+        4. 상태 코드가 400인지 확인합니다.
+        """
+
+        now_day_index = datetime.now().weekday()
+
+        RoutineStreak.objects.create(
+            user=self.user1.instance,
+            mirrored_routine=self.fake_weekly_routines[
+                self.random_day_indices.index(now_day_index)
+            ].users_routine.mirrored_routine,
+        )
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+
+        response = self.client.post(
+            reverse("routine-streak-list"),
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
