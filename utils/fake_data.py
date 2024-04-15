@@ -244,7 +244,9 @@ class FakeWeeklyRoutine(FakeModel):
 
     def create_request(self):
         base_attr = self.base_attr
-        related_attr = self.related_attr
+        related_attr = {
+            "users_routine": self.users_routine.id,
+        }
 
         return {**base_attr, **related_attr}
 
