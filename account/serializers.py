@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.contrib.auth.hashers import make_password
 from account.models import CustomUser
 import re
 
@@ -13,6 +14,11 @@ class CustomUserSerializer(serializers.ModelSerializer):
                 "비밀번호는 숫자, 문자, 특수문자를 모두 포함해야 합니다."
             )
         return value
+
+    def create(self, validated_data):
+        # 비밀번호를 해시화하여 저장
+        validated_data["password"] = make_password(validated_data["password"])
+        return super().create(validated_data)
 
     class Meta:
         model = CustomUser
