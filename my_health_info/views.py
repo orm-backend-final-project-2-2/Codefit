@@ -8,12 +8,13 @@ from my_health_info.models import (
     UsersRoutine,
     MirroredRoutine,
     ExerciseInRoutine,
+    WeeklyRoutine,
 )
 from my_health_info.serializers import (
     HealthInfoSerializer,
     RoutineSerializer,
     UsersRoutineSerializer,
-    ExerciseInRoutineSerializer,
+    WeeklyRoutineSerializer,
 )
 from rest_framework.exceptions import (
     MethodNotAllowed,
@@ -22,6 +23,7 @@ from rest_framework.exceptions import (
     PermissionDenied,
 )
 from rest_framework import viewsets, status
+from rest_framework.views import APIView
 from rest_framework.decorators import action
 from django.utils import timezone
 from my_health_info.permissions import IsOwnerOrReadOnly
@@ -300,5 +302,29 @@ class UsersRoutineViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
+
+        return Response(serializer.data)
+
+
+class WeeklyRoutineView(APIView):
+    """
+    유저의 주간 루틴 정보에 대한 View
+
+    url_prefix: /my_health_info/weekly_routine/
+
+    functions:
+    - get: GET /my_health_info/weekly_routine/
+    - post: POST /my_health_info/weekly_routine/
+    - patch: PATCH /my_health_info/weekly_routine/
+    - delete: DELETE /my_health_info/weekly_routine/
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """유저의 주간 루틴 정보 조회"""
+        user = request.user
+        weekly_routines = WeeklyRoutine.objects.filter(user=user)
+        serializer = WeeklyRoutineSerializer(weekly_routines, many=True)
 
         return Response(serializer.data)
