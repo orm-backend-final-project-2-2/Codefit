@@ -194,6 +194,6 @@ class WeeklyRoutineSerializer(serializers.ModelSerializer):
         - day_index가 0~6 사이의 값인지 확인
         """
 
-        if 0 <= data["day_index"] <= 6:
+        if not 0 <= data["day_index"] <= 6:
             raise serializers.ValidationError("day_index는 0~6 사이의 값이어야 합니다.")
         return data
