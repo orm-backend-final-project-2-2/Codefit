@@ -539,6 +539,12 @@ class RoutineStreakViewSet(viewsets.ModelViewSet):
     serializer_class = RoutineStreakSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        """
+        유저의 루틴 수행 여부를 반환
+        """
+        return RoutineStreak.objects.filter(user=self.request.user)
+
     def list(self, request):
         """
         루틴 수행 여부를 리스트로 반환
