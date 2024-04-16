@@ -817,10 +817,10 @@ class UsersRoutineTestCase(APITestCase):
     def test_create_routine_when_create_users_routine(self):
         """
         유저가 새 UsersRoutine을 생성할 때 Routine이 함께 생성되는지 테스트
-        
+
         reverse_url: users-routine-list
         HTTP method: POST
-        
+
         테스트 시나리오:
         1. Routine의 개수를 저장합니다.
         2. 유저 2가 로그인합니다.
@@ -831,7 +831,7 @@ class UsersRoutineTestCase(APITestCase):
         """
 
         routine_count = Routine.objects.count()
-        
+
         new_routine = FakeRoutine([self.exercise1, self.exercise2])
 
         self.user2.login(self.client)
@@ -845,8 +845,6 @@ class UsersRoutineTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         self.assertEqual(Routine.objects.count(), routine_count + 1)
-
-
 
 
 class WeeklyRoutineTestCase(TestCase):
