@@ -100,8 +100,7 @@ class FakeUser(FakeModel):
             return
         jwt_token = RefreshToken.for_user(self.instance)
 
-        self.access_token = jwt_token.get("access")
-        self.refresh_token = jwt_token.get("refresh")
+        self.access_token = jwt_token.access_token
 
     def login(self, client):
         """JWT Token을 포함한 인증 정보를 반환합니다."""
