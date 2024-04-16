@@ -1,10 +1,12 @@
 from django.test import TestCase
-from rest_framework import status
 from django.urls import reverse
+from rest_framework import status
+
+from account.models import CustomUser as User
+from utils.fake_data import FakePost, FakeUser
+
 from .models import Post
 from .serializers import PostSerializer
-from account.models import CustomUser as User
-from utils.fake_data import FakeUser, FakePost
 
 
 class PostTestCase(TestCase):

@@ -1,6 +1,7 @@
 from django.test import TestCase
-from rest_framework import status
 from django.urls import reverse
+from rest_framework import status
+
 from account.models import CustomUser
 from utils.fake_data import FakeUser
 

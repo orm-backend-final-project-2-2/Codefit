@@ -1,17 +1,12 @@
-from rest_framework import serializers
-from my_health_info.models import (
-    HealthInfo,
-    Routine,
-    ExerciseInRoutine,
-    UsersRoutine,
-    MirroredRoutine,
-    WeeklyRoutine,
-    RoutineStreak,
-)
-from exercises_info.models import ExercisesInfo
-from drf_writable_nested import WritableNestedModelSerializer
-from exercises_info.serializers import ExercisesInfoSerializer
 from django.utils import timezone
+from drf_writable_nested import WritableNestedModelSerializer
+from rest_framework import serializers
+
+from exercises_info.models import ExercisesInfo
+from exercises_info.serializers import ExercisesInfoSerializer
+from my_health_info.models import (ExerciseInRoutine, HealthInfo,
+                                   MirroredRoutine, Routine, RoutineStreak,
+                                   UsersRoutine, WeeklyRoutine)
 
 
 class HealthInfoSerializer(serializers.ModelSerializer):

@@ -1,37 +1,25 @@
 import datetime
-from django.shortcuts import render
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from my_health_info.models import (
-    HealthInfo,
-    Routine,
-    Routine_Like,
-    UsersRoutine,
-    MirroredRoutine,
-    ExerciseInRoutine,
-    WeeklyRoutine,
-    RoutineStreak,
-)
-from my_health_info.serializers import (
-    HealthInfoSerializer,
-    RoutineSerializer,
-    UsersRoutineSerializer,
-    WeeklyRoutineSerializer,
-    RoutineStreakSerializer,
-)
-from rest_framework.exceptions import (
-    MethodNotAllowed,
-    NotFound,
-    ValidationError,
-    PermissionDenied,
-)
-from rest_framework import viewsets, status
-from rest_framework.views import APIView
-from rest_framework.decorators import action
-from django.utils import timezone
-from my_health_info.permissions import IsOwnerOrReadOnly
-from rest_framework.decorators import action
+
 from django.db.models import Q
+from django.shortcuts import render
+from django.utils import timezone
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import (MethodNotAllowed, NotFound,
+                                       PermissionDenied, ValidationError)
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from my_health_info.models import (ExerciseInRoutine, HealthInfo,
+                                   MirroredRoutine, Routine, Routine_Like,
+                                   RoutineStreak, UsersRoutine, WeeklyRoutine)
+from my_health_info.permissions import IsOwnerOrReadOnly
+from my_health_info.serializers import (HealthInfoSerializer,
+                                        RoutineSerializer,
+                                        RoutineStreakSerializer,
+                                        UsersRoutineSerializer,
+                                        WeeklyRoutineSerializer)
 from my_health_info.services import UsersRoutineManagementService
 
 

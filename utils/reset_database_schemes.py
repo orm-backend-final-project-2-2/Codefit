@@ -1,10 +1,11 @@
-import pathlib
 import json
 import os
-import django
-from django.core.management import call_command
+import pathlib
 import shutil
 import sys
+
+import django
+from django.core.management import call_command
 
 db_path = pathlib.Path('db.sqlite3')
 

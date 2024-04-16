@@ -1,9 +1,10 @@
-from account.models import CustomUser as User
-from exercises_info.models import ExercisesInfo, FocusArea, ExercisesAttribute
+from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+
+from account.models import CustomUser as User
+from exercises_info.models import ExercisesAttribute, ExercisesInfo, FocusArea
 from utils.enums import FocusAreaEnum
-from drf_writable_nested import WritableNestedModelSerializer
 
 
 class ExercisesAttributeSerializer(serializers.ModelSerializer):

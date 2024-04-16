@@ -1,22 +1,18 @@
-from rest_framework.generics import CreateAPIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import authenticate, login
-from account.serializers import CustomUserSerializer
-from rest_framework import viewsets
-from account.models import CustomUser
-from rest_framework.exceptions import (
-    MethodNotAllowed,
-    NotFound,
-    ValidationError,
-    PermissionDenied,
-    AuthenticationFailed,
-)
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework import status, viewsets
+from rest_framework.exceptions import (AuthenticationFailed, MethodNotAllowed,
+                                       NotFound, PermissionDenied,
+                                       ValidationError)
+from rest_framework.generics import CreateAPIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
+
+from account.models import CustomUser
+from account.serializers import CustomUserSerializer
 
 
 class CustomUserViewSet(viewsets.ModelViewSet):

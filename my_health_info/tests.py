@@ -1,34 +1,24 @@
+import json
+import random
+from datetime import datetime, timedelta
+
 from django.test import TestCase
+from django.urls import reverse
+from django.utils import timezone
+from freezegun import freeze_time
+from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
+
 from account.models import CustomUser as User
-from django.urls import reverse
-from my_health_info.models import (
-    HealthInfo,
-    Routine,
-    ExerciseInRoutine,
-    UsersRoutine,
-    MirroredRoutine,
-    WeeklyRoutine,
-    RoutineStreak,
-)
 from exercises_info.models import ExercisesInfo
+from my_health_info.models import (ExerciseInRoutine, HealthInfo,
+                                   MirroredRoutine, Routine, RoutineStreak,
+                                   UsersRoutine, WeeklyRoutine)
 from my_health_info.services import UsersRoutineManagementService
-from freezegun import freeze_time
-from datetime import datetime, timedelta
-from django.utils import timezone
-from rest_framework import status
-from utils.fake_data import (
-    FakeUser,
-    FakeHealthInfo,
-    FakeRoutine,
-    FakeExercisesInfo,
-    FakeExerciseInRoutine,
-    FakeWeeklyRoutine,
-    FakeRoutineStreak,
-)
-import random
-import json
+from utils.fake_data import (FakeExerciseInRoutine, FakeExercisesInfo,
+                             FakeHealthInfo, FakeRoutine, FakeRoutineStreak,
+                             FakeUser, FakeWeeklyRoutine)
 
 
 class MyHealthInfoTestCase(APITestCase):

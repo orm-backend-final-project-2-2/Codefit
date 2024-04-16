@@ -1,20 +1,17 @@
-from faker import Faker
-from account.models import CustomUser
-from rest_framework_simplejwt.tokens import RefreshToken
-from my_health_info.models import (
-    HealthInfo,
-    Routine,
-    ExerciseInRoutine,
-    MirroredRoutine,
-    WeeklyRoutine,
-    RoutineStreak,
-)
-from my_health_info.services import UsersRoutineManagementService
-from exercises_info.models import ExercisesInfo, FocusArea, ExercisesAttribute
-from community.models import Post
-from utils.enums import FocusAreaEnum
 import abc
 import random
+
+from faker import Faker
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from account.models import CustomUser
+from community.models import Post
+from exercises_info.models import ExercisesAttribute, ExercisesInfo, FocusArea
+from my_health_info.models import (ExerciseInRoutine, HealthInfo,
+                                   MirroredRoutine, Routine, RoutineStreak,
+                                   WeeklyRoutine)
+from my_health_info.services import UsersRoutineManagementService
+from utils.enums import FocusAreaEnum
 
 
 class FakeModel(abc.ABC):
