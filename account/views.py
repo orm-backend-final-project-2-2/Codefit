@@ -70,8 +70,48 @@ class ProfileView(APIView):
     authentication_classes = [JWTAuthentication]
 
     def get(self, request):
-        user = request.user  # 현재 로그인한 사용자 가져오기
-        return Response(
-            {"message": "프로필 정보입니다.", "user_id": user.id, "email": user.email},
-            status=status.HTTP_200_OK,
-        )
+        user = request.user
+        serializer = CustomUserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        user = request.user
+        data = request.data
+        serializer = CustomUserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            # 사용자가 제출한 데이터 유효성 검사
+            if not user._meta.get_field("username").clean(data["username"], user):
+                return Response(
+                    {"error": "유효하지 않은 형식입니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if "age" in data and not user._meta.get_field("age").clean(
+                data["age"], user
+            ):
+                return Response(
+                    {"error": "유효하지 않은 나이입니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            # 다른 필드에 대한 유효성 검사
+            # 예를 들어 프로필 사진이 올바른 형식인지 검사할 수 있습니다.
+            # 여기서는 예시로 profile_picture 필드의 최대 크기를 확인하는 유효성 검사를 추가합니다.
+            if "profile_picture" in data:
+                profile_picture = data["profile_picture"]
+                max_size = 10 * 1024 * 1024  # 10MB
+                if profile_picture.size > max_size:
+                    return Response(
+                        {"error": "프로필 사진의 크기가 너무 큽니다."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+            # 변경된 프로필 정보 저장
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        user = request.user
+        user.delete()
+        return Response({"message": "탈퇴 성공"}, status=status.HTTP_204_NO_CONTENT)
+
+    def patch(self, request):
+        raise MethodNotAllowed("PATCH")
