@@ -1,5 +1,5 @@
 from django.test import TestCase
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 from account.models import CustomUser as User
 from django.urls import reverse
@@ -28,9 +28,10 @@ from utils.fake_data import (
     FakeRoutineStreak,
 )
 import random
+import json
 
 
-class MyHealthInfoTestCase(TestCase):
+class MyHealthInfoTestCase(APITestCase):
     @freeze_time("2020-01-01")
     def setUp(self):
         """초기설정"""
@@ -42,7 +43,9 @@ class MyHealthInfoTestCase(TestCase):
 
     def calculate_users_bmi(self, health_info):
         """BMI 계산"""
-        return health_info.get("weight") / ((health_info.get("height") / 100) ** 2)
+        return round(
+            health_info.get("weight") / ((health_info.get("height") / 100) ** 2), 2
+        )
 
     def assert_equal_health_info(self, health_info, expected_health_info):
         """건강 정보 비교"""
@@ -58,7 +61,7 @@ class MyHealthInfoTestCase(TestCase):
         )
 
     def test_get_my_health_info_not_authenticated(self):
-        """비로그인 유저가 my-helath-info/에 접근할 때 403 에러를 리턴하는지 테스트"""
+        """비로그인 유저가 my-helath-info/에 접근할 때 401 에러를 리턴하는지 테스트"""
         new_health_info = FakeHealthInfo()
         new_health_info_request = new_health_info.request_create()
 
@@ -92,8 +95,8 @@ class MyHealthInfoTestCase(TestCase):
             with self.subTest(action=action):
                 self.assertEqual(
                     response.status_code,
-                    status.HTTP_403_FORBIDDEN,
-                    f"{action} did not return 403",
+                    status.HTTP_401_UNAUTHORIZED,
+                    f"{action} did not return 401",
                 )
 
     def test_get_my_health_info_last_30_days(self):
@@ -108,24 +111,29 @@ class MyHealthInfoTestCase(TestCase):
                 new_health_info = FakeHealthInfo()
                 new_health_info.create_instance(user_instance=new_user.instance)
 
-        self.client.force_login(new_user.instance)
+        new_user.login(self.client)
 
         response = self.client.get(reverse("my-health-info-list"))
         data = response.json()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(len(data), 35)
+        self.assertEqual(
+            len(data),
+            HealthInfo.objects.filter(
+                user=new_user.instance, date__gte=now - timedelta(days=35)
+            ).count(),
+        )
 
     def test_post_my_health_info(self):
         """POST 요청으로 건강 정보를 생성하는지 테스트"""
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         new_health_info = FakeHealthInfo()
 
         response = self.client.post(
             reverse("my-health-info-list"),
-            data=new_health_info.request_create(),
+            data=json.dumps(new_health_info.request_create()),
             content_type="application/json",
         )
 
@@ -140,16 +148,17 @@ class MyHealthInfoTestCase(TestCase):
         """POST 요청으로 같은 날짜에 건강 정보를 생성할 때 400 에러를 리턴하는지 테스트"""
         new_health_info = FakeHealthInfo()
 
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         response_1 = self.client.post(
             reverse("my-health-info-list"),
-            data=new_health_info.request_create(),
+            data=json.dumps(new_health_info.request_create()),
             content_type="application/json",
         )
+
         response_2 = self.client.post(
             reverse("my-health-info-list"),
-            data=new_health_info.request_create(),
+            data=json.dumps(new_health_info.request_create()),
             content_type="application/json",
         )
 
@@ -161,7 +170,7 @@ class MyHealthInfoTestCase(TestCase):
         new_health_info = FakeHealthInfo()
         new_health_info.create_instance(user_instance=self.user1.instance)
 
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         response = self.client.get(reverse("my-health-info-last"))
 
@@ -171,7 +180,7 @@ class MyHealthInfoTestCase(TestCase):
 
     def test_retrieve_my_health_info(self):
         """GET 요청으로 특정 건강 정보를 조회하는지 테스트"""
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         new_health_info = FakeHealthInfo()
         new_health_info.create_instance(user_instance=self.user1.instance)
@@ -186,7 +195,7 @@ class MyHealthInfoTestCase(TestCase):
 
     def test_post_my_health_info_with_invalid_age(self):
         """POST 요청으로 나이가 음수인 건강 정보를 생성할 때 400 에러를 리턴하는지 테스트"""
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
         new_health_info = FakeHealthInfo()
 
         data = new_health_info.request_create()
@@ -195,7 +204,7 @@ class MyHealthInfoTestCase(TestCase):
 
         response = self.client.post(
             reverse("my-health-info-list"),
-            data=data,
+            data=json.dumps(data),
             content_type="application/json",
         )
 
@@ -203,7 +212,7 @@ class MyHealthInfoTestCase(TestCase):
 
     def test_request_my_health_info_with_not_allowed_method(self):
         """허용되지 않은 메소드로 my-health-info/에 접근할 때 405 에러를 리턴하는지 테스트"""
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         health_info_first = HealthInfo.objects.first()
         pk = health_info_first.pk
