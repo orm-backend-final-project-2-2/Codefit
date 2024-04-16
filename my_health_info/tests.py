@@ -846,6 +846,35 @@ class UsersRoutineTestCase(APITestCase):
 
         self.assertEqual(Routine.objects.count(), routine_count + 1)
 
+    def test_create_users_routine_when_subscribe_routine(self):
+        """
+        유저가 루틴을 구독했을 시 UsersRoutine이 생성되는지 테스트
+
+        reverse_url: routine-subscribe
+        HTTP method: POST
+
+        테스트 시나리오:
+        1. 유저 2로 로그인합니다.
+        2. 유저 1이 생성한 루틴을 구독합니다.
+        3. 응답 코드가 201인지 확인합니다.
+        4. 구독한 루틴이 응답 데이터에 포함된 루틴과 같은지 확인합니다.
+        """
+        user1_routine = Routine.objects.filter(author=self.user1.instance).first()
+
+        pk = user1_routine.pk
+
+        self.user2.login(self.client)
+
+        response = self.client.post(reverse("routine-subscribe", kwargs={"pk": pk}))
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.json()
+        import json
+
+        print(json.dumps(data, indent=2))
+        self.assertEqual(user1_routine.id, data.get("routine"))
+
 
 class WeeklyRoutineTestCase(TestCase):
     """
