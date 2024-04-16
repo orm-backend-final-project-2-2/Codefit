@@ -784,6 +784,11 @@ class UsersRoutineTestCase(APITestCase):
 
         service.user_subscribe_routine()
 
+        service = UsersRoutineManagementService(
+            routine=self.routine1.instance, user=self.user2.instance
+        )
+        service.user_subscribe_routine()
+
     def test_get_users_routine(self):
         """
         유저가 보유한 루틴을 조회하는지 테스트
@@ -887,11 +892,16 @@ class UsersRoutineTestCase(APITestCase):
         4. Routine의 정보가 업데이트되었는지 확인합니다.
         5. 업데이트된 Routine의 mirrored_routine이 UsersRoutine의 mirrored_routine과 같은지 확인합니다.
         6. UsersRoutine의 need_update가 False인지 확인합니다.
+        7. 유저 2의 users_routine을 비교해서 mirrored_routine이 응답 데이터와 다른지 확인합니다.
+        8. 유저 2의 users_routine의 need_update가 True인지 확인합니다.
         """
 
         self.user1.login(self.client)
 
         user1_routine = UsersRoutine.objects.filter(user=self.user1.instance).first()
+        user2_routine = UsersRoutine.objects.filter(
+            user=self.user2.instance, routine=user1_routine.routine
+        ).first()
 
         pk = user1_routine.pk
 
@@ -904,15 +914,22 @@ class UsersRoutineTestCase(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user1_routine.refresh_from_db()
+        user2_routine.refresh_from_db()
 
         data = response.json()
 
         self.assertEqual(
-            user1_routine.routine.mirrored_routine.id, data.get("mirrored_routine")
+            user1_routine.mirrored_routine.id, data.get("mirrored_routine")
         )
         self.assertEqual(user1_routine.routine.id, data.get("routine"))
         self.assertEqual(new_routine.base_attr.get("title"), data.get("title"))
         self.assertFalse(data.get("need_update"))
+
+        self.assertNotEqual(
+            user2_routine.mirrored_routine.id, data.get("mirrored_routine")
+        )
+        self.assertTrue(user2_routine.need_update)
 
 
 class WeeklyRoutineTestCase(TestCase):
