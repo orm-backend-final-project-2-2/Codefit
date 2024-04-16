@@ -732,10 +732,9 @@ class UsersRoutineTestCase(APITestCase):
     1. 유저가 보유한 루틴을 조회하는지 테스트
     2. 유저가 UsersRoutine을 생성할 때 Routine이 함께 생성되는지 테스트
     3. 유저가 루틴을 구독했을 시 UsersRoutine이 생성되는지 테스트
-    4. 유저가 생성한 루틴이 업데이트되었을 시 SideEffect가 제대로 작동하는지 테스트
-    5. 유저가 구독한 루틴이 업데이트되었을 시 SideEffect가 제대로 작동하는지 테스트
-    6. 유저가 자신이 작성자인 UsersRoutine을 삭제했을 시, Routine은 삭제되지 않는지 테스트
-    7. 유저가 구독중인 UsersRoutine을 삭제했을 시, Routine은 삭제되지 않는지 테스트
+    4. 유저가 생성한 루틴이 업데이트되었을 시 작성자와 구독자의 SideEffect가 제대로 작동하는지 테스트
+    5. 유저가 자신이 작성한 UsersRoutine을 삭제했을때 SideEffect가 잘 작동하는지 테스트
+    6. 유저가 구독중인 UsersRoutine을 삭제했을 시 SideEffect가 잘 작동했는지 테스트
     """
 
     def setUp(self):
@@ -931,6 +930,35 @@ class UsersRoutineTestCase(APITestCase):
         )
         self.assertTrue(user2_routine.need_update)
 
+    def test_delete_users_routine_if_author(self):
+        """
+        유저가 자신이 작성한 UsersRoutine을 삭제했을때 SideEffect가 잘 작동하는지 테스트
+        
+        reverse_url: users-routine-detail
+        HTTP method: DELETE
+        
+        테스트 시나리오:
+        1. 유저 1이 로그인합니다.
+        2. 유저 1이 생성한 UsersRoutine을 삭제합니다.
+        3. 응답 코드가 204인지 확인합니다.
+        4. UsersRoutine이 삭제되었는지 확인합니다.
+        5. 기존에 UsersRoutine과 연결된 Routine이 삭제되었는지 확인합니다.
+        6. UsersRoutine에 연결됬던 MirroredRoutine이 삭제되지 않았는지 확인합니다.
+        """
+        
+        self.user1.login(self.client)
+
+        user1_routine = UsersRoutine.objects.filter(user=self.user1.instance).first()
+
+        pk = user1_routine.pk
+
+        response = self.client.delete(reverse("users-routine-detail", kwargs={"pk": pk}))
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertFalse(UsersRoutine.objects.filter(pk=pk).exists())
+        self.assertFalse(Routine.objects.filter(pk=user1_routine.routine.pk).exists())
+        self.assertTrue(Routine.objects.filter(pk=user1_routine.mirrored_routine.pk).exists())
 
 class WeeklyRoutineTestCase(TestCase):
     """
