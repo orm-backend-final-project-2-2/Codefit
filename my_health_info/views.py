@@ -5,21 +5,34 @@ from django.shortcuts import render
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import (MethodNotAllowed, NotFound,
-                                       PermissionDenied, ValidationError)
+from rest_framework.exceptions import (
+    MethodNotAllowed,
+    NotFound,
+    PermissionDenied,
+    ValidationError,
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from my_health_info.models import (ExerciseInRoutine, HealthInfo,
-                                   MirroredRoutine, Routine, Routine_Like,
-                                   RoutineStreak, UsersRoutine, WeeklyRoutine)
+from my_health_info.models import (
+    ExerciseInRoutine,
+    HealthInfo,
+    MirroredRoutine,
+    Routine,
+    Routine_Like,
+    RoutineStreak,
+    UsersRoutine,
+    WeeklyRoutine,
+)
 from my_health_info.permissions import IsOwnerOrReadOnly
-from my_health_info.serializers import (HealthInfoSerializer,
-                                        RoutineSerializer,
-                                        RoutineStreakSerializer,
-                                        UsersRoutineSerializer,
-                                        WeeklyRoutineSerializer)
+from my_health_info.serializers import (
+    HealthInfoSerializer,
+    RoutineSerializer,
+    RoutineStreakSerializer,
+    UsersRoutineSerializer,
+    WeeklyRoutineSerializer,
+)
 from my_health_info.services import UsersRoutineManagementService
 
 
@@ -250,7 +263,6 @@ class RoutineViewSet(viewsets.ModelViewSet):
             raise ValidationError(serializer.errors)
 
         if request.data.get("exercises_in_routine"):
-
             ExerciseInRoutine.objects.filter(routine=instance).update(routine=None)
 
             last_mirrored_routine = instance.mirrored_routine.last()

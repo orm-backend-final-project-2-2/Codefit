@@ -120,9 +120,7 @@ class ExerciseInRoutine(models.Model):
 
     def __str__(self):
         if self.routine:
-            return (
-                f"{self.routine.title}의 {self.order}번째 운동: {self.exercise.title}"
-            )
+            return f"{self.routine.title}의 {self.order}번째 운동: {self.exercise.title}"
         else:
             return f"{self.mirrored_routine.title}의 {self.order}번째 운동: {self.exercise.title}"
 
@@ -201,4 +199,6 @@ class RoutineStreak(models.Model):
         unique_together = ["user", "date"]
 
     def __str__(self):
-        return f"{self.user.username}가 {self.date}날짜에 {self.mirrored_routine.title} 루틴 수행"
+        return (
+            f"{self.user.username}가 {self.date}날짜에 {self.mirrored_routine.title} 루틴 수행"
+        )

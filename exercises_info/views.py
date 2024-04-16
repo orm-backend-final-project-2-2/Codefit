@@ -3,8 +3,7 @@ from rest_framework import permissions, viewsets
 from rest_framework.response import Response
 
 from exercises_info.models import ExercisesInfo, FocusArea
-from exercises_info.serializers import (ExercisesInfoSerializer,
-                                        FocusAreaSerializer)
+from exercises_info.serializers import ExercisesInfoSerializer, FocusAreaSerializer
 
 
 class ExercisesInfoViewSet(viewsets.ModelViewSet):

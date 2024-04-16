@@ -4,9 +4,15 @@ from rest_framework import serializers
 
 from exercises_info.models import ExercisesInfo
 from exercises_info.serializers import ExercisesInfoSerializer
-from my_health_info.models import (ExerciseInRoutine, HealthInfo,
-                                   MirroredRoutine, Routine, RoutineStreak,
-                                   UsersRoutine, WeeklyRoutine)
+from my_health_info.models import (
+    ExerciseInRoutine,
+    HealthInfo,
+    MirroredRoutine,
+    Routine,
+    RoutineStreak,
+    UsersRoutine,
+    WeeklyRoutine,
+)
 
 
 class HealthInfoSerializer(serializers.ModelSerializer):
@@ -240,7 +246,6 @@ class RoutineStreakSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "mirrored_routine", "date"]
 
     def get_mirrored_routine(self, obj):
-
         try:
             weekly_routine = WeeklyRoutine.objects.get(
                 day_index=obj.date.weekday(), user=obj.user

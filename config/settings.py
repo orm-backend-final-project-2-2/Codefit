@@ -168,9 +168,7 @@ SIMPLE_JWT = {
     "USER_ID_FIELD": "id",  # 사용자 ID 필드
     "USER_ID_CLAIM": "user_id",  # 사용자 ID 클레임
     "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",  # 사용자 인증 규칙
-    "AUTH_TOKEN_CLASSES": (
-        "rest_framework_simplejwt.tokens.AccessToken",
-    ),  # 인증 토큰 클래스
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),  # 인증 토큰 클래스
     "TOKEN_TYPE_CLAIM": "token_type",  # 토큰 타입 클레임
     "JTI_CLAIM": "jti",  # JWT ID 클레임
 }

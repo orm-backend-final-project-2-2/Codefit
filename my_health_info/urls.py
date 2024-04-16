@@ -1,9 +1,13 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from my_health_info.views import (MyHealthInfoViewSet, RoutineStreakViewSet,
-                                  RoutineViewSet, UsersRoutineViewSet,
-                                  WeeklyRoutineView)
+from my_health_info.views import (
+    MyHealthInfoViewSet,
+    RoutineStreakViewSet,
+    RoutineViewSet,
+    UsersRoutineViewSet,
+    WeeklyRoutineView,
+)
 
 router = DefaultRouter()
 router.register(r"my-health-info", MyHealthInfoViewSet, basename="my-health-info")

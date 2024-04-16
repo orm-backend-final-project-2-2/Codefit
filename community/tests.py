@@ -137,9 +137,7 @@ class PostTestCase(TestCase):
         response = self.client.get(reverse("post-list"))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            len(response.data), 2
-        )  # 숫자 대신 원하는 값을 직접 쿼리로 가져와서 비교하는게 좋습니다.
+        self.assertEqual(len(response.data), 2)  # 숫자 대신 원하는 값을 직접 쿼리로 가져와서 비교하는게 좋습니다.
 
     # TODO: 다른사람도 포스트를 볼 수 있어야 합니다
     def test_get_only_logged_in_user_post_detail(self):

@@ -7,9 +7,14 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from account.models import CustomUser
 from community.models import Post
 from exercises_info.models import ExercisesAttribute, ExercisesInfo, FocusArea
-from my_health_info.models import (ExerciseInRoutine, HealthInfo,
-                                   MirroredRoutine, Routine, RoutineStreak,
-                                   WeeklyRoutine)
+from my_health_info.models import (
+    ExerciseInRoutine,
+    HealthInfo,
+    MirroredRoutine,
+    Routine,
+    RoutineStreak,
+    WeeklyRoutine,
+)
 from my_health_info.services import UsersRoutineManagementService
 from utils.enums import FocusAreaEnum
 

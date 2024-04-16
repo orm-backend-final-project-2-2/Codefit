@@ -12,13 +12,25 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from account.models import CustomUser as User
 from exercises_info.models import ExercisesInfo
-from my_health_info.models import (ExerciseInRoutine, HealthInfo,
-                                   MirroredRoutine, Routine, RoutineStreak,
-                                   UsersRoutine, WeeklyRoutine)
+from my_health_info.models import (
+    ExerciseInRoutine,
+    HealthInfo,
+    MirroredRoutine,
+    Routine,
+    RoutineStreak,
+    UsersRoutine,
+    WeeklyRoutine,
+)
 from my_health_info.services import UsersRoutineManagementService
-from utils.fake_data import (FakeExerciseInRoutine, FakeExercisesInfo,
-                             FakeHealthInfo, FakeRoutine, FakeRoutineStreak,
-                             FakeUser, FakeWeeklyRoutine)
+from utils.fake_data import (
+    FakeExerciseInRoutine,
+    FakeExercisesInfo,
+    FakeHealthInfo,
+    FakeRoutine,
+    FakeRoutineStreak,
+    FakeUser,
+    FakeWeeklyRoutine,
+)
 
 
 class MyHealthInfoTestCase(APITestCase):
