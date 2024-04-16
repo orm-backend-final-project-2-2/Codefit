@@ -128,10 +128,7 @@ class PostTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-<<<<<<< HEAD
-=======
     # TODO: 다른사람도 포스트를 볼 수 있어야 합니다
->>>>>>> 2d3927932fc1f3231e549bac51c362eddde2d686
     def test_get_only_logged_in_user_posts(self):
         """post/ GET 요청시 로그인한 사용자의 Post 객체만 반환하는지 테스트"""
         self.client.force_login(self.user1.instance)

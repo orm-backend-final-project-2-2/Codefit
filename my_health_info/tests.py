@@ -904,6 +904,7 @@ class UsersRoutineTestCase(TestCase):
     4. 유저가 생성한 루틴이 업데이트되었을 시 UsersRoutine의 need_update가 그대로 False인지, MirroredRoutine이 변경되는지 테스트
     5. 유저가 구독한 루틴이 업데이트되었을 시 UsersRoutine의 need_update가 True로 변경되는지, MirroredRoutine이 변경되지 않았는지 테스트
     6. 작성자가 루틴을 삭제했을 시, 해당되는 작성자의 UsersRoutine이 삭제되는지 테스트, 작성자가 아닌 유저의 UsersRoutine은 삭제되지 않는지 테스트
+    7. 유저가 루틴을 구독해제했을 시, 해당되는 유저의 UsersRoutine이 삭제되는지 테스트
     """
 
     def setUp(self):
@@ -917,6 +918,8 @@ class UsersRoutineTestCase(TestCase):
         5. 유저 2가 루틴 1개 생성
         6. 유저 1이 유저 2의 루틴을 구독
         """
+        self.client = APIClient()
+
         self.admin = FakeUser()
         self.admin.create_instance(is_staff=True)
 
@@ -1231,6 +1234,39 @@ class UsersRoutineTestCase(TestCase):
             UsersRoutine.objects.filter(
                 user=self.user1.instance, mirrored_routine=mirrored_routine
             ).exists()
+        )
+
+    def test_unsubscribe_routine(self):
+        """
+        사용자가 루틴을 구독해제했을 시, 해당되는 사용자의 UsersRoutine이 삭제되는지 테스트
+
+        reverse_url: users-routine-unsubscribe
+        HTTP method: Delete:
+
+        테스트 시나리오:
+        1. 유저 1이 로그인합니다.
+        2. 유저 1이 루틴 2을 구독해제합니다.
+        3. 상태 코드가 204인지 확인합니다.
+        4. 유저 1의 루틴 2에 대한 UsersRoutine이 존재하지 않는지 확인합니다.
+        """
+
+        self.user1.login(self.client)
+
+        users_routine_routine2 = UsersRoutine.objects.get(
+            user=self.user1.instance,
+            mirrored_routine=self.routine2.instance.mirrored_routine.last(),
+        )
+
+        response = self.client.delete(
+            reverse(
+                "users-routine-unsubscribe", kwargs={"pk": users_routine_routine2.pk}
+            )
+        )
+
+        self.assertequal(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertFalse(
+            UsersRoutine.objects.filter(pk=users_routine_routine2.pk).exists()
         )
 
 
