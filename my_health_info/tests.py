@@ -747,6 +747,7 @@ class UsersRoutineTestCase(APITestCase):
         4. 유저 1이 루틴 1개 생성
         5. 유저 2가 루틴 1개 생성
         6. 유저 1이 유저 2의 루틴을 구독
+        7. 유저 2가 유저 1의 루틴을 구독
         """
         self.client = APIClient()
 
@@ -781,12 +782,12 @@ class UsersRoutineTestCase(APITestCase):
             routine=self.routine2.instance, user=self.user1.instance
         )
 
-        service.user_subscribe_routine()
+        self.user1_routine_written_by_user2 = service.user_subscribe_routine()
 
         service = UsersRoutineManagementService(
             routine=self.routine1.instance, user=self.user2.instance
         )
-        service.user_subscribe_routine()
+        self.user2_routine_written_by_user1 = service.user_subscribe_routine()
 
     def test_get_users_routine(self):
         """
@@ -965,6 +966,39 @@ class UsersRoutineTestCase(APITestCase):
         self.assertTrue(
             MirroredRoutine.objects.filter(
                 pk=user1_routine_mirrored_routine_pk
+            ).exists()
+        )
+
+    def test_delete_users_routine_if_not_author(self):
+        """
+        구독중인 UsersRoutine을 삭제했을 시 SideEffect가 잘 작동하는지 테스트
+
+        reverse_url: users-routine-detail
+        HTTP method: DELETE
+
+        테스트 시나리오:
+        1. 유저 1이 구독중인 user1_routine_written_by_user2를 삭제합니다.
+        2. 응답 코드가 204인지 확인합니다.
+        3. UsersRoutine이 삭제되었는지 확인합니다.
+        4. Routine이 삭제되지 않았는지 확인합니다.
+        5. MirroredRoutine이 삭제되지 않았는지 확인합니다.
+        """
+
+        self.user1.login(self.client)
+
+        pk = self.user1_routine_written_by_user2.pk
+
+        response = self.client.delete(
+            reverse("users-routine-detail", kwargs={"pk": pk})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertFalse(UsersRoutine.objects.filter(pk=pk).exists())
+        self.assertTrue(Routine.objects.filter(pk=self.routine2.instance.pk).exists())
+        self.assertTrue(
+            MirroredRoutine.objects.filter(
+                pk=self.routine2.instance.mirrored_routine.pk
             ).exists()
         )
 

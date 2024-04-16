@@ -262,6 +262,7 @@ class UsersRoutineViewSet(viewsets.ModelViewSet):
     - retrieve: GET /my_health_info/users_routine/<pk>/
     - partial_update: PATCH /my_health_info/users_routine/<pk>/
     - destroy: DELETE /my_health_info/users_routine/<pk>/
+    - update_routine: PATCH /my_health_info/users_routine/<pk>/update_routine/
     """
 
     http_method_names = ["get", "post", "patch", "delete"]
