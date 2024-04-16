@@ -145,6 +145,7 @@ class UsersRoutine(models.Model):
     """
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    is_author = models.BooleanField(default=False)
     routine = models.ForeignKey(
         Routine,
         related_name="subscribers",
