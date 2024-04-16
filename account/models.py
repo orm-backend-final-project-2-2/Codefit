@@ -1,6 +1,6 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.core.validators import RegexValidator
 from django.db import models
-from django.contrib.auth.models import BaseUserManager
 
 
 class CustomUserManager(BaseUserManager):
@@ -22,9 +22,18 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractUser):
     username = models.CharField(
-        max_length=150, blank=False, unique=True, verbose_name="닉네임"
+        max_length=20,
+        blank=False,
+        unique=True,
+        verbose_name="닉네임",
+        validators=[
+            RegexValidator(
+                regex="^[a-zA-Z0-9_]*$",
+                message="이 필드에는 영문자, 숫자, 밑줄만 포함할 수 있습니다.",
+            )
+        ],
     )
-    email = models.EmailField(unique=True, verbose_name="이메일")
+    email = models.EmailField(max_length=50, unique=True, verbose_name="이메일")
 
     # 추가 요구사항: 프로필 사진을 위한 필드
     profile_picture = models.ImageField(

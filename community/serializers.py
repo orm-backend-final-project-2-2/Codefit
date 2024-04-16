@@ -1,6 +1,8 @@
 from rest_framework import serializers
-from .models import Post, Comment
+
 from account.models import CustomUser as User
+
+from .models import Comment, Post
 
 
 class PostSerializer(serializers.ModelSerializer):

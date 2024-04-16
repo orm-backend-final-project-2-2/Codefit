@@ -1,17 +1,22 @@
-from faker import Faker
-from account.models import CustomUser
-from my_health_info.models import (
-    HealthInfo,
-    Routine,
-    ExerciseInRoutine,
-    MirroredRoutine,
-)
-from my_health_info.services import UsersRoutineManagementService
-from exercises_info.models import ExercisesInfo, FocusArea, ExercisesAttribute
-from community.models import Post
-from utils.enums import FocusAreaEnum
 import abc
 import random
+
+from faker import Faker
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from account.models import CustomUser
+from community.models import Post
+from exercises_info.models import ExercisesAttribute, ExercisesInfo, FocusArea
+from my_health_info.models import (
+    ExerciseInRoutine,
+    HealthInfo,
+    MirroredRoutine,
+    Routine,
+    RoutineStreak,
+    WeeklyRoutine,
+)
+from my_health_info.services import UsersRoutineManagementService
+from utils.enums import FocusAreaEnum
 
 
 class FakeModel(abc.ABC):
@@ -91,6 +96,23 @@ class FakeUser(FakeModel):
         """Login 요청에 필요한 정보를 반환합니다."""
         return self.needed_info(["email", "password"])
 
+    def get_jwt_token(self):
+        """JWT Token을 반환합니다."""
+        if not self.instance:
+            return
+        jwt_token = RefreshToken.for_user(self.instance)
+
+        self.access_token = jwt_token.access_token
+
+    def login(self, client):
+        """JWT Token을 포함한 인증 정보를 반환합니다."""
+        if not self.instance:
+            return
+        if not hasattr(self, "access_token"):
+            self.get_jwt_token()
+
+        client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
+
 
 class FakeExerciseInRoutine(FakeModel):
     def __init__(self, order, fake_exercises_info):
@@ -126,7 +148,7 @@ class FakeExerciseInRoutine(FakeModel):
             routine=routine_instance,
             mirrored_routine=mirrored_routine_instance,
             exercise=fake_exercise_info.instance,
-            **self.base_attr
+            **self.base_attr,
         )
 
         return self.instance
@@ -216,6 +238,60 @@ class FakeRoutine(FakeModel):
         related_attr = self.related_attr
 
         return {**base_attr, **related_attr}
+
+
+class FakeWeeklyRoutine(FakeModel):
+    def __init__(self, day_index, users_routine):
+        super().__init__(WeeklyRoutine)
+        self.base_attr = self.set_base_attr(day_index)
+        self.users_routine = users_routine
+
+    def set_base_attr(self, day_index):
+        return {
+            "day_index": day_index,
+        }
+
+    def create_instance(self, user_instance):
+        if not self.users_routine:
+            return
+
+        self.instance = self.model.objects.create(
+            user=user_instance,
+            users_routine=self.users_routine,
+            **self.base_attr,
+        )
+
+        return self.instance
+
+    def create_request(self):
+        base_attr = self.base_attr
+        related_attr = {
+            "users_routine": self.users_routine.id,
+        }
+
+        return {**base_attr, **related_attr}
+
+
+class FakeRoutineStreak(FakeModel):
+    def __init__(self, mirrored_routine):
+        super().__init__(RoutineStreak)
+        self.base_attr = self.set_base_attr()
+        self.mirrored_routine_instance = mirrored_routine
+
+    def set_base_attr(self):
+        return {}
+
+    def create_instance(self, user_instance):
+        self.instance = self.model.objects.create(
+            user=user_instance,
+            mirrored_routine=self.mirrored_routine_instance,
+            **self.base_attr,
+        )
+
+        return self.instance
+
+    def request_create(self):
+        return {}
 
 
 class FakeHealthInfo(FakeModel):
@@ -344,7 +420,7 @@ class FakeExercisesInfo(FakeModel):
         self.instance = self.model.objects.create(
             author=user_instance,
             **self.base_attr,
-            exercises_attribute=exercises_attribute_instance
+            exercises_attribute=exercises_attribute_instance,
         )
 
         fake_focus_areas = self.related_fake_models.get("focus_areas")
