@@ -1,8 +1,12 @@
 from django.contrib.auth import authenticate, login
 from rest_framework import status, viewsets
-from rest_framework.exceptions import (AuthenticationFailed, MethodNotAllowed,
-                                       NotFound, PermissionDenied,
-                                       ValidationError)
+from rest_framework.exceptions import (
+    AuthenticationFailed,
+    MethodNotAllowed,
+    NotFound,
+    PermissionDenied,
+    ValidationError,
+)
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -52,9 +56,7 @@ class LoginView(TokenObtainPairView):
                 status=status.HTTP_200_OK,
             )
         else:
-            return Response(
-                {"message": "로그인 실패"}, status=status.HTTP_401_UNAUTHORIZED
-            )
+            return Response({"message": "로그인 실패"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class LogoutView(APIView):
