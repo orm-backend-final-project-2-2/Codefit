@@ -1004,7 +1004,7 @@ class UsersRoutineTestCase(APITestCase):
         )
 
 
-class WeeklyRoutineTestCase(TestCase):
+class WeeklyRoutineTestCase(APITestCase):
     """
     목적: 유저의 한 주에 대한 루틴을 관리하는 WeeklyRoutine 모델에 대한 테스트를 진행합니다.
 
@@ -1097,7 +1097,7 @@ class WeeklyRoutineTestCase(TestCase):
         for fake_weekly_routine in fake_weekly_routines:
             fake_weekly_routine.create_instance(user_instance=self.user1.instance)
 
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         response = self.client.get(reverse("weekly-routine"))
 
@@ -1153,7 +1153,7 @@ class WeeklyRoutineTestCase(TestCase):
             )
         ]
 
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         create_request = [
             fake_weekly_routine.create_request()
@@ -1162,7 +1162,7 @@ class WeeklyRoutineTestCase(TestCase):
 
         response = self.client.post(
             reverse("weekly-routine"),
-            data=create_request,
+            data=json.dumps(create_request),
             content_type="application/json",
         )
 
@@ -1237,11 +1237,11 @@ class WeeklyRoutineTestCase(TestCase):
             for fake_weekly_routine in fake_weekly_routines2
         ]
 
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         response = self.client.post(
             reverse("weekly-routine"),
-            data=create_request,
+            data=json.dumps(create_request),
             content_type="application/json",
         )
 
@@ -1274,7 +1274,7 @@ class WeeklyRoutineTestCase(TestCase):
 
         wrong_day_indices = [0, 8, 3, 2]
 
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         create_request = [
             FakeWeeklyRoutine(
@@ -1351,7 +1351,7 @@ class WeeklyRoutineTestCase(TestCase):
             )
         ]
 
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         put_request = [
             fake_weekly_routine.create_request()
@@ -1360,7 +1360,7 @@ class WeeklyRoutineTestCase(TestCase):
 
         response = self.client.put(
             reverse("weekly-routine"),
-            data=put_request,
+            data=json.dumps(put_request),
             content_type="application/json",
         )
 
@@ -1422,7 +1422,7 @@ class WeeklyRoutineTestCase(TestCase):
         for fake_weekly_routine in fake_weekly_routines:
             fake_weekly_routine.create_instance(user_instance=self.user1.instance)
 
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         response = self.client.delete(reverse("weekly-routine"))
 
