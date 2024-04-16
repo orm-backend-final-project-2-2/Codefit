@@ -213,7 +213,7 @@ class RoutineViewSet(viewsets.ModelViewSet):
         user = request.user
 
         if routine.liked_users.filter(id=user.id).exists():
-            raise PermissionDenied("User already liked this routine")
+            raise MethodNotAllowed("이미 좋아요를 누른 루틴입니다.")
 
         routine.liked_users.add(user)
         routine.like_count += 1
