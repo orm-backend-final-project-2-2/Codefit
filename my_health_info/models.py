@@ -11,23 +11,20 @@ class HealthInfo(models.Model):
     age: 나이
     height: 키
     weight: 몸무게
-    bmi: 체질량지수
-    created_at: 생성일
+    date: 건강 정보 생성일
     """
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     age = models.PositiveIntegerField()
     height = models.FloatField()
     weight = models.FloatField()
-    bmi = models.FloatField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    date = models.DateField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ["user", "date"]
 
     def __str__(self):
         return f"{self.user.username}의 건강 정보"
-
-    def save(self, *args, **kwargs):
-        self.bmi = float(self.weight) / ((float(self.height) / 100) ** 2)
-        super().save(*args, **kwargs)
 
 
 class Routine(models.Model):
