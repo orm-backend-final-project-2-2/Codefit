@@ -5,6 +5,8 @@ from my_health_info.models import (
     Routine,
     ExerciseInRoutine,
     MirroredRoutine,
+    WeeklyRoutine,
+    RoutineStreak,
 )
 from my_health_info.services import UsersRoutineManagementService
 from exercises_info.models import ExercisesInfo, FocusArea, ExercisesAttribute
@@ -126,7 +128,7 @@ class FakeExerciseInRoutine(FakeModel):
             routine=routine_instance,
             mirrored_routine=mirrored_routine_instance,
             exercise=fake_exercise_info.instance,
-            **self.base_attr
+            **self.base_attr,
         )
 
         return self.instance
@@ -216,6 +218,60 @@ class FakeRoutine(FakeModel):
         related_attr = self.related_attr
 
         return {**base_attr, **related_attr}
+
+
+class FakeWeeklyRoutine(FakeModel):
+    def __init__(self, day_index, users_routine):
+        super().__init__(WeeklyRoutine)
+        self.base_attr = self.set_base_attr(day_index)
+        self.users_routine = users_routine
+
+    def set_base_attr(self, day_index):
+        return {
+            "day_index": day_index,
+        }
+
+    def create_instance(self, user_instance):
+        if not self.users_routine:
+            return
+
+        self.instance = self.model.objects.create(
+            user=user_instance,
+            users_routine=self.users_routine,
+            **self.base_attr,
+        )
+
+        return self.instance
+
+    def create_request(self):
+        base_attr = self.base_attr
+        related_attr = {
+            "users_routine": self.users_routine.id,
+        }
+
+        return {**base_attr, **related_attr}
+
+
+class FakeRoutineStreak(FakeModel):
+    def __init__(self, mirrored_routine):
+        super().__init__(RoutineStreak)
+        self.base_attr = self.set_base_attr()
+        self.mirrored_routine_instance = mirrored_routine
+
+    def set_base_attr(self):
+        return {}
+
+    def create_instance(self, user_instance):
+        self.instance = self.model.objects.create(
+            user=user_instance,
+            mirrored_routine=self.mirrored_routine_instance,
+            **self.base_attr,
+        )
+
+        return self.instance
+
+    def request_create(self):
+        return {}
 
 
 class FakeHealthInfo(FakeModel):
@@ -344,7 +400,7 @@ class FakeExercisesInfo(FakeModel):
         self.instance = self.model.objects.create(
             author=user_instance,
             **self.base_attr,
-            exercises_attribute=exercises_attribute_instance
+            exercises_attribute=exercises_attribute_instance,
         )
 
         fake_focus_areas = self.related_fake_models.get("focus_areas")
