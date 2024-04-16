@@ -1,20 +1,22 @@
-from faker import Faker
-from account.models import CustomUser
-from rest_framework_simplejwt.tokens import RefreshToken
-from my_health_info.models import (
-    HealthInfo,
-    Routine,
-    ExerciseInRoutine,
-    MirroredRoutine,
-    WeeklyRoutine,
-    RoutineStreak,
-)
-from my_health_info.services import UsersRoutineManagementService
-from exercises_info.models import ExercisesInfo, FocusArea, ExercisesAttribute
-from community.models import Post
-from utils.enums import FocusAreaEnum
 import abc
 import random
+
+from faker import Faker
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from account.models import CustomUser
+from community.models import Post
+from exercises_info.models import ExercisesAttribute, ExercisesInfo, FocusArea
+from my_health_info.models import (
+    ExerciseInRoutine,
+    HealthInfo,
+    MirroredRoutine,
+    Routine,
+    RoutineStreak,
+    WeeklyRoutine,
+)
+from my_health_info.services import UsersRoutineManagementService
+from utils.enums import FocusAreaEnum
 
 
 class FakeModel(abc.ABC):
@@ -100,8 +102,7 @@ class FakeUser(FakeModel):
             return
         jwt_token = RefreshToken.for_user(self.instance)
 
-        self.access_token = jwt_token.get("access")
-        self.refresh_token = jwt_token.get("refresh")
+        self.access_token = jwt_token.access_token
 
     def login(self, client):
         """JWT Token을 포함한 인증 정보를 반환합니다."""

@@ -1,12 +1,13 @@
-from django.urls import path, include
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
+
 from my_health_info.views import (
     MyHealthInfoViewSet,
+    RoutineStreakViewSet,
     RoutineViewSet,
     UsersRoutineViewSet,
     WeeklyRoutineView,
-    RoutineStreakViewSet,
 )
-from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register(r"my-health-info", MyHealthInfoViewSet, basename="my-health-info")

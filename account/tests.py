@@ -1,6 +1,7 @@
 from django.test import TestCase
-from rest_framework import status
 from django.urls import reverse
+from rest_framework import status
+
 from account.models import CustomUser
 from utils.fake_data import FakeUser
 
@@ -72,9 +73,7 @@ class SignUpTestCase(TestCase):
 
         response = self.client.post(reverse("signup"), data=self.user1.request_create())
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.data["username"][0], "사용자의 닉네임은/는 이미 존재합니다."
-        )
+        self.assertEqual(response.data["username"][0], "사용자의 닉네임은/는 이미 존재합니다.")
 
     def test_sign_up_by_existing_email(self):
         """
@@ -84,9 +83,7 @@ class SignUpTestCase(TestCase):
 
         response = self.client.post(reverse("signup"), data=self.user1.request_create())
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.data["email"][0], "사용자의 이메일은/는 이미 존재합니다."
-        )
+        self.assertEqual(response.data["email"][0], "사용자의 이메일은/는 이미 존재합니다.")
 
     def test_sign_up_by_invalid_email(self):
         """
@@ -96,9 +93,7 @@ class SignUpTestCase(TestCase):
 
         response = self.client.post(reverse("signup"), data=self.user1.request_create())
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.data["email"][0], "유효한 이메일 주소를 입력하십시오."
-        )
+        self.assertEqual(response.data["email"][0], "유효한 이메일 주소를 입력하십시오.")
 
     def test_sign_up_by_invalid_password(self):
         """
@@ -167,9 +162,7 @@ class SignUpTestCase(TestCase):
 
         response = self.client.post(reverse("signup"), data=self.user1.request_create())
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.data["email"][0], "이 필드의 글자 수가 50 이하인지 확인하십시오."
-        )
+        self.assertEqual(response.data["email"][0], "이 필드의 글자 수가 50 이하인지 확인하십시오.")
 
     def test_sign_up_by_invalid_username(self):
         """

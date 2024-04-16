@@ -1,37 +1,37 @@
 import datetime
+
+from django.db.models import Q
 from django.shortcuts import render
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from my_health_info.models import (
-    HealthInfo,
-    Routine,
-    Routine_Like,
-    UsersRoutine,
-    MirroredRoutine,
-    ExerciseInRoutine,
-    WeeklyRoutine,
-    RoutineStreak,
-)
-from my_health_info.serializers import (
-    HealthInfoSerializer,
-    RoutineSerializer,
-    UsersRoutineSerializer,
-    WeeklyRoutineSerializer,
-    RoutineStreakSerializer,
-)
+from django.utils import timezone
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import (
     MethodNotAllowed,
     NotFound,
-    ValidationError,
     PermissionDenied,
+    ValidationError,
 )
-from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.decorators import action
-from django.utils import timezone
+
+from my_health_info.models import (
+    ExerciseInRoutine,
+    HealthInfo,
+    MirroredRoutine,
+    Routine,
+    RoutineStreak,
+    UsersRoutine,
+    WeeklyRoutine,
+)
 from my_health_info.permissions import IsOwnerOrReadOnly
-from rest_framework.decorators import action
-from django.db.models import Q
+from my_health_info.serializers import (
+    HealthInfoSerializer,
+    RoutineSerializer,
+    RoutineStreakSerializer,
+    UsersRoutineSerializer,
+    WeeklyRoutineSerializer,
+)
 from my_health_info.services import UsersRoutineManagementService
 
 
@@ -55,7 +55,7 @@ class MyHealthInfoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """현재 유저의 건강 정보를 최신순으로 조회"""
-        return HealthInfo.objects.filter(user=self.request.user).order_by("-created_at")
+        return HealthInfo.objects.filter(user=self.request.user).order_by("-date")
 
     def list(self, request, *args, **kwargs):
         """
@@ -67,8 +67,7 @@ class MyHealthInfoViewSet(viewsets.ModelViewSet):
             self.get_queryset()
             .all()
             .filter(
-                created_at__gte=timezone.now()
-                - timezone.timedelta(days=self.days_to_show)
+                date__gte=timezone.now() - datetime.timedelta(days=self.days_to_show)
             )
         )
 
@@ -78,17 +77,14 @@ class MyHealthInfoViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """
         새로운 건강 정보 생성
-
-        이미 오늘의 건강 정보가 존재한다면 400 에러 반환
         """
+        if HealthInfo.objects.filter(
+            user=self.request.user, date=datetime.datetime.now().date()
+        ).exists():
+            raise ValidationError("이미 오늘의 건강 정보가 등록되었습니다.")
 
-        last_health_info = self.get_queryset()
-        if last_health_info.exists():
-            last_health_info = last_health_info.first()
-            if last_health_info.created_at.date() == timezone.now().date():
-                raise ValidationError("Health info already exists for today")
-
-        serializer.save(user=self.request.user)
+        if serializer.is_valid():
+            serializer.save(user=self.request.user)
 
     @action(detail=False, methods=["get"], url_path="last", url_name="last")
     def last(self, request, *args, **kwargs):
@@ -113,12 +109,13 @@ class RoutineViewSet(viewsets.ModelViewSet):
     functions:
     - list: GET /my_health_info/routine/
     - create: POST /my_health_info/routine/
-    - retrieve: GET /my_health_info/routine/<pk>/
-    - partial_update: PATCH /my_health_info/routine/<pk>/
     - subscribe: POST /my_health_info/routine/<pk>/subscribe/
     """
 
-    http_method_names = ["get", "post", "patch", "delete"]
+    http_method_names = [
+        "get",
+        "post",
+    ]
     serializer_class = RoutineSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
     ordering_fields = ["like_count"]
@@ -204,136 +201,6 @@ class RoutineViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
-    def perform_create(self, serializer):
-        """
-        루틴을 생성하는 로직
-
-        1. validated_data에서 외부 테이블의 데이터를 pop
-        2. 루틴을 생성
-        3. 루틴을 복제하여 MirroredRoutine 생성
-        4. 루틴에 연결된 운동들을 ExerciseInRoutine으로 생성한 후 Routine과 MirroredRoutine에 연결
-        5. UsersRoutineManagementService를 통해 UsersRoutine 생성
-        """
-        exercises_in_routine_data = serializer.validated_data.pop(
-            "exercises_in_routine", []
-        )
-
-        routine = serializer.save(author=self.request.user)
-
-        mirrored_routine = MirroredRoutine.objects.create(
-            title=routine.title,
-            author_name=routine.author.username,
-            original_routine=routine,
-        )
-
-        for exercise_data in exercises_in_routine_data:
-            ExerciseInRoutine.objects.create(
-                routine=routine, mirrored_routine=mirrored_routine, **exercise_data
-            )
-
-        service = UsersRoutineManagementService(
-            user=self.request.user, routine=serializer.instance
-        )
-
-        service.user_create_routine(mirrored_routine=mirrored_routine)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def partial_update(self, request, *args, **kwargs):
-        """
-        루틴의 일부를 수정하는 로직
-
-        1. 루틴 인스턴스를 가져옴
-        2. 뷰셋과 연결된 serializer를 가져옴
-        3. serializer.is_valid()를 통해 데이터 유효성 검사
-        4. request.data에 exercises_in_routine이 있다면
-        5. ExerciseInRoutine의 Routine을 None으로 수정하여 연결 해제
-        6. Routine에 연결된 MirroredRoutine의 original_routine을 None으로 수정하여 연결 해제
-        7. 새로운 MirroredRoutine 생성
-        8. 새로운 ExerciseInRoutine를 생성하여 Routine과 MirroredRoutine에 연결
-        9. Routine의 subscribers를 가져와서 순회
-        10. subscriber == author의 경우 mirrored_routine을 새로운 MirroredRoutine으로 수정
-        11. subscriber != author의 경우 mirrored_routine을 업데이트하는 대신 need_update를 True로 수정
-        12. 나머지 Routine의 정보를 업데이트
-        13. 업데이트된 정보를 반환
-        """
-        kwargs["partial"] = True
-
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
-
-        if not serializer.is_valid():
-            raise ValidationError(serializer.errors)
-
-        if request.data.get("exercises_in_routine"):
-
-            ExerciseInRoutine.objects.filter(routine=instance).update(routine=None)
-
-            last_mirrored_routine = instance.mirrored_routine.last()
-            last_mirrored_routine.original_routine = None
-            last_mirrored_routine.save()
-
-            new_mirrored_routine = MirroredRoutine.objects.create(
-                title=instance.title,
-                author_name=instance.author.username,
-                original_routine=instance,
-            )
-
-            exercises_in_routine_data = serializer.validated_data.pop(
-                "exercises_in_routine", []
-            )
-
-            new_exercise_in_routines = [
-                ExerciseInRoutine(
-                    routine=instance,
-                    mirrored_routine=new_mirrored_routine,
-                    **exercise_data,
-                )
-                for exercise_data in exercises_in_routine_data
-            ]
-            ExerciseInRoutine.objects.bulk_create(new_exercise_in_routines)
-
-            subscribers = list(instance.subscribers.all())
-            for users_routine in subscribers:
-                if users_routine.user.id == instance.author.id:
-                    users_routine.mirrored_routine = new_mirrored_routine
-                else:
-                    users_routine.need_update = True
-
-            UsersRoutine.objects.bulk_update(
-                subscribers, ["mirrored_routine", "need_update"]
-            )
-
-        serializer.save()
-
-        data = self.get_serializer(instance).data
-
-        return Response(data, status=status.HTTP_200_OK)
-
-    def destroy(self, request, *args, **kwargs):
-        """
-        루틴을 삭제하는 로직
-
-        1. 루틴 인스턴스를 가져옴
-        2. 루틴의 author의 UsersRoutine을 가져옴
-        3. author의 UsersRoutine의 routine을 None으로 수정
-        4. 루틴의 is_deleted를 True로 수정
-        5. 204 응답 반환
-        """
-        instance = self.get_object()
-
-        try:
-            authors_users_routine = instance.subscribers.get(user=instance.author)
-            authors_users_routine.routine = None
-            authors_users_routine.save()
-        except:
-            raise NotFound("Author's routine not found")
-
-        instance.is_deleted = True
-        instance.save()
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
     @action(
         detail=True,
         methods=["post"],
@@ -345,15 +212,14 @@ class RoutineViewSet(viewsets.ModelViewSet):
         routine = self.get_object()
         user = request.user
 
-        if Routine_Like.objects.filter(routine=routine, user=user).exists():
-            raise MethodNotAllowed("Already liked")
+        if routine.liked_users.filter(id=user.id).exists():
+            raise MethodNotAllowed("이미 좋아요를 누른 루틴입니다.")
 
-        Routine_Like.objects.create(routine=routine, user=user)
-
+        routine.liked_users.add(user)
         routine.like_count += 1
 
         return Response(
-            data={"like_count": f"{routine.like_count}"}, status=status.HTTP_201_CREATED
+            data={"like_count": f"{routine.like_count}"}, status=status.HTTP_200_OK
         )
 
     @action(

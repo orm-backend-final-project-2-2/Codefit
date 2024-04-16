@@ -1,22 +1,26 @@
-from rest_framework import serializers
-from my_health_info.models import (
-    HealthInfo,
-    Routine,
-    ExerciseInRoutine,
-    UsersRoutine,
-    MirroredRoutine,
-    WeeklyRoutine,
-    RoutineStreak,
-)
-from exercises_info.models import ExercisesInfo
+from django.utils import timezone
 from drf_writable_nested import WritableNestedModelSerializer
+from rest_framework import serializers
+
+from exercises_info.models import ExercisesInfo
 from exercises_info.serializers import ExercisesInfoSerializer
+from my_health_info.models import (
+    ExerciseInRoutine,
+    HealthInfo,
+    MirroredRoutine,
+    Routine,
+    RoutineStreak,
+    UsersRoutine,
+    WeeklyRoutine,
+)
 
 
 class HealthInfoSerializer(serializers.ModelSerializer):
     """
     사용자의 건강 정보를 다루는 Serializer
     """
+
+    bmi = serializers.SerializerMethodField()
 
     class Meta:
         """
@@ -30,12 +34,30 @@ class HealthInfoSerializer(serializers.ModelSerializer):
         - height: 키
         - weight: 몸무게
         - bmi: BMI, read_only
-        - created_at: 생성일, read_only
         """
 
         model = HealthInfo
-        fields = ["user", "age", "height", "weight", "bmi", "created_at"]
-        read_only_fields = ["user", "bmi", "created_at"]
+        fields = ["user", "age", "height", "weight", "bmi", "date"]
+        read_only_fields = ["user", "bmi", "created_at", "date"]
+
+    def get_bmi(self, obj):
+        """
+        bmi를 계산하는 메서드
+        """
+        return round(obj.weight / ((obj.height / 100) ** 2), 2)
+
+    def validate(self, data):
+        """
+        유효성 검사를 수행하는 메서드
+
+        - 키와 몸무게가 양수인지 확인
+        """
+
+        if data["height"] <= 0:
+            raise serializers.ValidationError("키는 양수여야 합니다.")
+        if data["weight"] <= 0:
+            raise serializers.ValidationError("몸무게는 양수여야 합니다.")
+        return data
 
 
 class ExerciseInRoutineSerializer(WritableNestedModelSerializer):
@@ -224,7 +246,6 @@ class RoutineStreakSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "mirrored_routine", "date"]
 
     def get_mirrored_routine(self, obj):
-
         try:
             weekly_routine = WeeklyRoutine.objects.get(
                 day_index=obj.date.weekday(), user=obj.user
