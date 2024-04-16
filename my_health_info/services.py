@@ -1,5 +1,11 @@
 from account.models import CustomUser as User
 from my_health_info.models import Routine, UsersRoutine
+from my_health_info.serializers import (
+    RoutineSerializer,
+    MirroredRoutineSerializer,
+    UsersRoutineSerializer,
+)
+from my_health_info.models import MirroredRoutine
 
 
 class UsersRoutineManagementService:
@@ -24,12 +30,10 @@ class UsersRoutineManagementService:
         if UsersRoutine.objects.filter(user=self.user, routine=self.routine).exists():
             raise ValueError("이미 구독 중인 루틴입니다.")
 
-        last_mirrored_routine = self.routine.mirrored_routine.last()
-
         users_routine = UsersRoutine.objects.create(
             user=self.user,
             routine=self.routine,
-            mirrored_routine=last_mirrored_routine,
+            mirrored_routine=self.routine.mirrored_routine,
         )
 
         return users_routine
