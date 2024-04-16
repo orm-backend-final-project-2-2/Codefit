@@ -1162,7 +1162,7 @@ class WeeklyRoutineTestCase(APITestCase):
 
         response = self.client.post(
             reverse("weekly-routine"),
-            data=create_request,
+            data=json.dumps(create_request),
             content_type="application/json",
         )
 
@@ -1241,7 +1241,7 @@ class WeeklyRoutineTestCase(APITestCase):
 
         response = self.client.post(
             reverse("weekly-routine"),
-            data=create_request,
+            data=json.dumps(create_request),
             content_type="application/json",
         )
 
@@ -1360,7 +1360,7 @@ class WeeklyRoutineTestCase(APITestCase):
 
         response = self.client.put(
             reverse("weekly-routine"),
-            data=put_request,
+            data=json.dumps(put_request),
             content_type="application/json",
         )
 
