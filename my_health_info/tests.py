@@ -778,6 +778,9 @@ class UsersRoutineTestCase(APITestCase):
         self.routine2 = FakeRoutine([self.exercise3, self.exercise4])
         self.routine2.create_instance(user_instance=self.user2.instance)
 
+        self.routine3 = FakeRoutine([self.exercise1, self.exercise2])
+        self.routine3.create_instance(user_instance=self.user2.instance)
+
         service = UsersRoutineManagementService(
             routine=self.routine2.instance, user=self.user1.instance
         )
@@ -864,11 +867,9 @@ class UsersRoutineTestCase(APITestCase):
         3. 응답 코드가 201인지 확인합니다.
         4. 구독한 루틴이 응답 데이터에 포함된 루틴과 같은지 확인합니다.
         """
-        user1_routine = Routine.objects.filter(author=self.user1.instance).first()
+        pk = self.routine3.instance.pk
 
-        pk = user1_routine.pk
-
-        self.user2.login(self.client)
+        self.user1.login(self.client)
 
         response = self.client.post(reverse("routine-subscribe", kwargs={"pk": pk}))
 
@@ -876,7 +877,7 @@ class UsersRoutineTestCase(APITestCase):
 
         data = response.json()
 
-        self.assertEqual(user1_routine.id, data.get("routine"))
+        self.assertEqual(self.routine3.instance.pk, data.get("routine"))
 
     def test_update_users_routine_if_author(self):
         """
