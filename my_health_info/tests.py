@@ -246,27 +246,19 @@ class MyHealthInfoTestCase(APITestCase):
                 )
 
 
-class RoutineTestCase(TestCase):
+class RoutineTestCase(APITestCase):
     """
     목적: Routine 모델과 /routine/ API에 대한 테스트를 진행합니다.
 
     Test cases:
-    1. 비로그인 유저가 /routine/에 접근할 때 403 에러를 리턴하는지 테스트
+    1. 비로그인 유저가 /routine/에 접근할 때 401 에러를 리턴하는지 테스트
     2. 로그인한 유저가 /routine/에 접근할 때 유저의 루틴 정보를 조회하는지 테스트
-    3. 루틴 생성 요청이 올바르게 처리되는지 테스트
-    4. 비로그인 유저가 루틴 생성 요청을 보낼 때 403 에러를 리턴하는지 테스트
-    5. 루틴 업데이트 요청이 올바르게 처리되는지 테스트
-    6. 본인이 생성한 루틴이 아닌 경우 루틴 업데이트 요청이 403 에러를 리턴하는지 테스트
-    7. 비로그인 유저가 루틴 업데이트 요청을 보낼 때 403 에러를 리턴하는지 테스트
-    8. 루틴 삭제 요청이 올바르게 처리되는지 테스트
-    9. 본인이 생성한 루틴이 아닌 경우 루틴 삭제 요청이 403 에러를 리턴하는지 테스트
-    10. 비로그인 유저가 루틴 삭제 요청을 보낼 때 403 에러를 리턴하는지 테스트
-    11. 허용되지 않은 메소드로 /routine/에 접근할 때 405 에러를 리턴하는지 테스트
-    12. 루틴에 좋아요를 누르는 요청이 올바르게 처리되는지 테스트
-    13. 루틴을 좋아요 순으로 정렬하여 조회할 수 있는지 테스트
-    14. 이미 좋아요를 누른 루틴에 좋아요를 누르는 요청 시 405 에러를 리턴하는지 테스트
-    15. 루틴 목록에서 제작자로 검색하여 조회할 수 있는지 테스트
-    16. 비로그인 유저가 루틴에 좋아요를 누르는 요청이 403 에러를 리턴하는지 테스트
+    3. 허용되지 않은 메소드로 /routine/에 접근할 때 405 에러를 리턴하는지 테스트
+    4. 루틴에 좋아요를 누르는 요청이 올바르게 처리되는지 테스트
+    5. 루틴을 좋아요 순으로 정렬하여 조회할 수 있는지 테스트
+    6. 이미 좋아요를 누른 루틴에 좋아요를 누르는 요청 시 405 에러를 리턴하는지 테스트
+    7. 루틴 목록에서 제작자로 검색하여 조회할 수 있는지 테스트
+    8. 비로그인 유저가 루틴에 좋아요를 누르는 요청이 401 에러를 리턴하는지 테스트
     """
 
     def setUp(self):
@@ -305,7 +297,7 @@ class RoutineTestCase(TestCase):
 
     def test_get_routine_not_authenticated(self):
         """
-        비로그인 유저가 /routine/에 접근할 때 403 에러를 리턴하는지 테스트
+        비로그인 유저가 /routine/에 접근할 때 401 에러를 리턴하는지 테스트
 
         reverse_url: routine-list
         HTTP method: GET
@@ -316,7 +308,7 @@ class RoutineTestCase(TestCase):
         """
         response = self.client.get(reverse("routine-list"))
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_routine_authenticated(self):
         """
@@ -331,7 +323,7 @@ class RoutineTestCase(TestCase):
         """
         routines_count = Routine.objects.count()
 
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         response = self.client.get(reverse("routine-list"))
 
@@ -339,185 +331,6 @@ class RoutineTestCase(TestCase):
 
         data = response.json()
         self.assertEqual(len(data), routines_count)
-
-    def test_post_routine(self):
-        """
-        루틴 생성 요청이 올바르게 처리되는지 테스트
-
-        reverse_url: routine-list
-        HTTP method: POST
-
-        테스트 시나리오:
-        1. 로그인한 유저가 /routine/에 POST 요청을 보냅니다.
-        2. 루틴이 생성되었는지 확인합니다.
-        """
-        self.client.force_login(self.user1.instance)
-
-        new_routine = FakeRoutine([self.exercise2, self.exercise4])
-
-        response = self.client.post(
-            reverse("routine-list"),
-            data=new_routine.request_create(),
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        data = response.json()
-        self.assertEqual(data.get("username"), self.user1.instance.username)
-
-    def test_post_routine_not_authenticated(self):
-        """
-        비로그인 유저가 루틴 생성 요청을 보낼 때 403 에러를 리턴하는지 테스트
-
-        reverse_url: routine-list
-        HTTP method: POST
-
-        테스트 시나리오:
-        1. 비로그인 유저가 /routine/에 POST 요청을 보냅니다.
-        2. 403 에러를 리턴하는지 확인합니다.
-        """
-        new_routine = FakeRoutine([self.exercise1, self.exercise5])
-
-        response = self.client.post(
-            reverse("routine-list"),
-            data=new_routine.request_create(),
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_update_routine(self):
-        """
-        루틴 업데이트 요청이 올바르게 처리되는지 테스트
-
-        reverse_url: routine-detail
-        HTTP method: PATCH
-
-        테스트 시나리오:
-        1. 로그인한 유저가 /routine/<pk>/에 PATCH 요청을 보냅니다.
-        2. 루틴이 업데이트되었는지 확인합니다.
-        """
-        self.client.force_login(self.user1.instance)
-
-        pk = self.routine1.instance.pk
-
-        new_routine_title = "Updated Title"
-
-        response = self.client.patch(
-            reverse("routine-detail", kwargs={"pk": pk}),
-            data={"title": new_routine_title},
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        data = response.json()
-        self.assertEqual(data.get("title"), new_routine_title)
-
-    def test_update_routine_not_authenticated(self):
-        """
-        비로그인 유저가 루틴 업데이트 요청을 보낼 때 403 에러를 리턴하는지 테스트
-
-        reverse_url: routine-detail
-        HTTP method: PATCH
-
-        테스트 시나리오:
-        1. 비로그인 유저가 /routine/<pk>/에 PATCH 요청을 보냅니다.
-        2. 403 에러를 리턴하는지 확인합니다.
-        """
-        pk = self.routine1.instance.pk
-
-        new_routine_title = "Updated Title"
-
-        response = self.client.patch(
-            reverse("routine-detail", kwargs={"pk": pk}),
-            data={"title": new_routine_title},
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_update_routine_not_author(self):
-        """
-        본인이 생성한 루틴이 아닌 경우 루틴 업데이트 요청이 403 에러를 리턴하는지 테스트
-
-        reverse_url: routine-detail
-        HTTP method: PATCH
-
-        테스트 시나리오:
-        1. 로그인한 유저가 /routine/<pk>/에 PATCH 요청을 보냅니다.
-        2. 403 에러를 리턴하는지 확인합니다.
-        """
-        self.client.force_login(self.user2.instance)
-
-        pk = self.routine1.instance.pk
-
-        new_routine_title = "Updated Title"
-
-        response = self.client.patch(
-            reverse("routine-detail", kwargs={"pk": pk}),
-            data={"title": new_routine_title},
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_delete_routine(self):
-        """
-        루틴 삭제 요청이 올바르게 처리되는지 테스트
-
-        reverse_url: routine-detail
-        HTTP method: DELETE
-
-        테스트 시나리오:
-        1. 로그인한 유저가 /routine/<pk>/에 DELETE 요청을 보냅니다.
-        2. 루틴이 삭제되었는지 확인합니다.
-        """
-        self.client.force_login(self.user1.instance)
-
-        pk = self.routine1.instance.pk
-
-        response = self.client.delete(reverse("routine-detail", kwargs={"pk": pk}))
-
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertFalse(Routine.objects.filter(pk=pk).exists())
-
-    def test_delete_routine_not_authenticated(self):
-        """
-        비로그인 유저가 루틴 삭제 요청을 보낼 때 403 에러를 리턴하는지 테스트
-
-        reverse_url: routine-detail
-        HTTP method: DELETE
-
-        테스트 시나리오:
-        1. 비로그인 유저가 /routine/<pk>/에 DELETE 요청을 보냅니다.
-        2. 403 에러를 리턴하는지 확인합니다.
-        """
-        pk = self.routine1.instance.pk
-
-        response = self.client.delete(reverse("routine-detail", kwargs={"pk": pk}))
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_delete_routine_not_author(self):
-        """
-        본인이 생성한 루틴이 아닌 경우 루틴 삭제 요청이 403 에러를 리턴하는지 테스트
-
-        reverse_url: routine-detail
-        HTTP method: DELETE
-
-        테스트 시나리오:
-        1. 로그인한 유저가 /routine/<pk>/에 DELETE 요청을 보냅니다.
-        2. 403 에러를 리턴하는지 확인합니다.
-        """
-        self.client.force_login(self.user2.instance)
-
-        pk = self.routine1.instance.pk
-
-        response = self.client.delete(reverse("routine-detail", kwargs={"pk": pk}))
-
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_request_routine_not_allowed_method(self):
         """
@@ -527,16 +340,24 @@ class RoutineTestCase(TestCase):
         HTTP method: PUT
 
         테스트 시나리오:
-        1. 로그인한 유저가 /routine/에 PUT 요청을 보냅니다.
+        1. 로그인한 유저가 /routine/에 PUT, PATCH, DELETE 요청을 보냅니다.
         2. 405 에러를 리턴하는지 확인합니다.
         """
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         pk = self.routine1.instance.pk
 
-        response = self.client.put(reverse("routine-detail", kwargs={"pk": pk}))
+        put_response = self.client.put(reverse("routine-detail", kwargs={"pk": pk}))
+        patch_response = self.client.patch(reverse("routine-detail", kwargs={"pk": pk}))
+        delete_response = self.client.delete(
+            reverse("routine-detail", kwargs={"pk": pk})
+        )
 
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(put_response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(patch_response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(
+            delete_response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
     def test_like_routine(self):
         """
@@ -549,7 +370,7 @@ class RoutineTestCase(TestCase):
         1. 로그인한 유저가 /routine/<pk>/like/에 POST 요청을 보냅니다.
         2. 루틴에 좋아요가 추가되었는지 확인합니다.
         """
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         like_count = self.routine2.instance.like_count
 
@@ -557,7 +378,7 @@ class RoutineTestCase(TestCase):
 
         response = self.client.post(reverse("routine-like", kwargs={"pk": pk}))
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()
         self.assertTrue(data.get("like_count"), like_count + 1)
@@ -573,12 +394,11 @@ class RoutineTestCase(TestCase):
         1. 로그인한 유저가 /routine/<pk>/like/에 POST 요청을 두 번 보냅니다.
         2. 405 에러를 리턴하는지 확인합니다.
         """
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         pk = self.routine2.instance.pk
 
         self.client.post(reverse("routine-like", kwargs={"pk": pk}))
-
         response = self.client.post(reverse("routine-like", kwargs={"pk": pk}))
 
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -621,7 +441,7 @@ class RoutineTestCase(TestCase):
 
         sorted_routines = Routine.objects.all().order_by("-like_count")
 
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         response = self.client.get(reverse("routine-list") + "?ordering=-like_count")
 
@@ -646,7 +466,7 @@ class RoutineTestCase(TestCase):
         2. Response의 루틴들이 로그인한 유저가 생성한 루틴들만 조회되는지 확인합니다.
         """
 
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         response = self.client.get(
             reverse("routine-list") + f"?author__id={self.user1.instance.id}"
@@ -661,20 +481,20 @@ class RoutineTestCase(TestCase):
 
     def test_like_routine_not_authenticated(self):
         """
-        비로그인 유저가 루틴에 좋아요를 누르는 요청이 403 에러를 리턴하는지 테스트
+        비로그인 유저가 루틴에 좋아요를 누르는 요청이 401 에러를 리턴하는지 테스트
 
         reverse_url: routine-like
         HTTP method: POST
 
         테스트 시나리오:
         1. 비로그인 유저가 /routine/<pk>/like/에 POST 요청을 보냅니다.
-        2. 403 에러를 리턴하는지 확인합니다.
+        2. 401 에러를 리턴하는지 확인합니다.
         """
         pk = self.routine2.instance.pk
 
         response = self.client.post(reverse("routine-like", kwargs={"pk": pk}))
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class ExerciseInRoutineTestCase(TestCase):
