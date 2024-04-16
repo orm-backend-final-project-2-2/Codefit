@@ -55,7 +55,7 @@ class MyHealthInfoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """현재 유저의 건강 정보를 최신순으로 조회"""
-        return HealthInfo.objects.filter(user=self.request.user).order_by("-created_at")
+        return HealthInfo.objects.filter(user=self.request.user).order_by("-date")
 
     def list(self, request, *args, **kwargs):
         """
@@ -67,8 +67,7 @@ class MyHealthInfoViewSet(viewsets.ModelViewSet):
             self.get_queryset()
             .all()
             .filter(
-                created_at__gte=timezone.now()
-                - timezone.timedelta(days=self.days_to_show)
+                date__gte=timezone.now() - datetime.timedelta(days=self.days_to_show)
             )
         )
 
@@ -78,17 +77,14 @@ class MyHealthInfoViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """
         새로운 건강 정보 생성
-
-        이미 오늘의 건강 정보가 존재한다면 400 에러 반환
         """
+        if HealthInfo.objects.filter(
+            user=self.request.user, date=datetime.datetime.now().date()
+        ).exists():
+            raise ValidationError("이미 오늘의 건강 정보가 등록되었습니다.")
 
-        last_health_info = self.get_queryset()
-        if last_health_info.exists():
-            last_health_info = last_health_info.first()
-            if last_health_info.created_at.date() == timezone.now().date():
-                raise ValidationError("Health info already exists for today")
-
-        serializer.save(user=self.request.user)
+        if serializer.is_valid():
+            serializer.save(user=self.request.user)
 
     @action(detail=False, methods=["get"], url_path="last", url_name="last")
     def last(self, request, *args, **kwargs):
