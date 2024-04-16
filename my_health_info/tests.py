@@ -933,10 +933,10 @@ class UsersRoutineTestCase(APITestCase):
     def test_delete_users_routine_if_author(self):
         """
         유저가 자신이 작성한 UsersRoutine을 삭제했을때 SideEffect가 잘 작동하는지 테스트
-        
+
         reverse_url: users-routine-detail
         HTTP method: DELETE
-        
+
         테스트 시나리오:
         1. 유저 1이 로그인합니다.
         2. 유저 1이 생성한 UsersRoutine을 삭제합니다.
@@ -945,20 +945,29 @@ class UsersRoutineTestCase(APITestCase):
         5. 기존에 UsersRoutine과 연결된 Routine이 삭제되었는지 확인합니다.
         6. UsersRoutine에 연결됬던 MirroredRoutine이 삭제되지 않았는지 확인합니다.
         """
-        
+
         self.user1.login(self.client)
 
         user1_routine = UsersRoutine.objects.filter(user=self.user1.instance).first()
+        user1_routine_routine_pk = user1_routine.routine.pk
+        user1_routine_mirrored_routine_pk = user1_routine.mirrored_routine.pk
 
         pk = user1_routine.pk
 
-        response = self.client.delete(reverse("users-routine-detail", kwargs={"pk": pk}))
+        response = self.client.delete(
+            reverse("users-routine-detail", kwargs={"pk": pk})
+        )
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         self.assertFalse(UsersRoutine.objects.filter(pk=pk).exists())
-        self.assertFalse(Routine.objects.filter(pk=user1_routine.routine.pk).exists())
-        self.assertTrue(Routine.objects.filter(pk=user1_routine.mirrored_routine.pk).exists())
+        self.assertFalse(Routine.objects.filter(pk=user1_routine_routine_pk).exists())
+        self.assertTrue(
+            MirroredRoutine.objects.filter(
+                pk=user1_routine_mirrored_routine_pk
+            ).exists()
+        )
+
 
 class WeeklyRoutineTestCase(TestCase):
     """

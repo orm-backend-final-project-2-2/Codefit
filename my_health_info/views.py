@@ -402,6 +402,30 @@ class UsersRoutineViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data)
 
+    def destroy(self, request, *args, **kwargs):
+        """
+        UsersRoutine 정보 삭제
+
+        1. UsersRoutine 정보를 가져옴
+        2. UsersRoutine 정보 삭제
+        3. 만약 유저가 루틴의 작성자라면 Routine 삭제
+        4. 만약 MirroredRoutine의 구독자가 없다면 MirroredRoutine 삭제
+        """
+        instance = self.get_object()
+
+        routine = instance.routine
+        mirrored_routine = instance.mirrored_routine
+
+        instance.delete()
+
+        if request.user == instance.routine.author:
+            routine.delete()
+
+        if mirrored_routine.mirrored_subscribers.count() == 0:
+            mirrored_routine.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class WeeklyRoutineView(APIView):
     """
