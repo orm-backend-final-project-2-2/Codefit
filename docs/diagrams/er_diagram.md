@@ -39,7 +39,7 @@ erDiagram
         int id PK
         int original_routine FK "Routine_id"
         str title
-        str authored_name
+        str author_name
     }
 
     MirroredRoutine ||--o| Routine : original_routine
