@@ -1,9 +1,9 @@
-from rest_framework import viewsets
-from exercises_info.serializers import ExercisesInfoSerializer, FocusAreaSerializer
-from exercises_info.models import ExercisesInfo, FocusArea
-from rest_framework import permissions
-from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from rest_framework import permissions, viewsets
+from rest_framework.response import Response
+
+from exercises_info.models import ExercisesInfo, FocusArea
+from exercises_info.serializers import ExercisesInfoSerializer, FocusAreaSerializer
 
 
 class ExercisesInfoViewSet(viewsets.ModelViewSet):
