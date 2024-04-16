@@ -44,7 +44,10 @@ class UsersRoutineManagementService:
         """
 
         users_routine = UsersRoutine.objects.create(
-            user=self.user, routine=self.routine, mirrored_routine=mirrored_routine
+            user=self.user,
+            routine=self.routine,
+            mirrored_routine=mirrored_routine,
+            is_author=True,
         )
 
         return users_routine

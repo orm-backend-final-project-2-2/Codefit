@@ -31,6 +31,8 @@ from my_health_info.serializers import (
     RoutineStreakSerializer,
     UsersRoutineSerializer,
     WeeklyRoutineSerializer,
+    MirroredRoutineSerializer,
+    ExerciseInRoutineSerializer,
 )
 from my_health_info.services import UsersRoutineManagementService
 
@@ -325,6 +327,80 @@ class UsersRoutineViewSet(viewsets.ModelViewSet):
         )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+        UsersRoutine 정보 업데이트
+
+        1. UsersRoutine 정보를 가져옴
+        2. 만약 ExercisesInRoutine 정보가 변경되어야 한다면
+        3. Routine에 연결된 MirroredRoutine을 None으로 변경
+        4. 새 MirroredRoutine 생성
+        5. 기존 ExerciseInRoutine에서 routine 정보를 None으로 변경
+        6. 새 ExerciseInRoutine 생성
+        7. UsersRoutine의 mirrored_routine 정보를 새 MirroredRoutine으로 변경
+        8. 만약 기존 MirroredRoutine의 구독자가 없다면 삭제
+        9. UsersRoutine의 구독자에게 업데이트 필요 여부를 True로 변경
+        """
+
+        instance = self.get_object()
+
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+
+        exercise_in_routine_data = data.pop("exercises_in_routine", None)
+
+        routine = instance.routine
+        if request.user != instance.routine.author:
+            raise PermissionDenied("You are not the author of this routine")
+
+        mirrored_routine = instance.mirrored_routine
+
+        if "title" in data.keys():
+            title = data["title"]
+
+        if exercise_in_routine_data:
+
+            routine.mirrored_routine = None
+            routine.save()
+
+            new_mirrored_routine = MirroredRoutine.objects.create(
+                title=title,
+                author_name=request.user.username,
+                original_routine=routine,
+            )
+
+            existing_exercise_in_routines = instance.routine.exercises_in_routine.all()
+            for exercise_in_routine in existing_exercise_in_routines:
+                exercise_in_routine.routine = None
+                exercise_in_routine.save()
+
+            for exercise_in_routine in exercise_in_routine_data:
+
+                ExerciseInRoutine.objects.create(
+                    routine=routine,
+                    mirrored_routine=new_mirrored_routine,
+                    exercise=exercise_in_routine["exercise"],
+                    order=exercise_in_routine["order"],
+                )
+
+            instance.mirrored_routine = new_mirrored_routine
+            instance.save()
+
+            if mirrored_routine.mirrored_subscribers.count() == 0:
+                mirrored_routine.delete()
+
+            for subscriber in instance.routine.subscribers.all():
+                if subscriber != instance:
+                    subscriber.need_update = True
+                    subscriber.save()
+
+        routine.title = title
+        routine.save()
+        serializer.save()
+        return Response(serializer.data)
 
 
 class WeeklyRoutineView(APIView):
