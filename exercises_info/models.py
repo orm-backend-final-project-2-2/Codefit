@@ -1,6 +1,6 @@
 from django.db import models
+
 from account.models import CustomUser as User
-from utils.enums import FocusAreaEnum
 
 
 class FocusArea(models.Model):

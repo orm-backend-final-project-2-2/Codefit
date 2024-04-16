@@ -1,19 +1,22 @@
-from faker import Faker
-from account.models import CustomUser
-from my_health_info.models import (
-    HealthInfo,
-    Routine,
-    ExerciseInRoutine,
-    MirroredRoutine,
-    WeeklyRoutine,
-    RoutineStreak,
-)
-from my_health_info.services import UsersRoutineManagementService
-from exercises_info.models import ExercisesInfo, FocusArea, ExercisesAttribute
-from community.models import Post
-from utils.enums import FocusAreaEnum
 import abc
 import random
+
+from faker import Faker
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from account.models import CustomUser
+from community.models import Post
+from exercises_info.models import ExercisesAttribute, ExercisesInfo, FocusArea
+from my_health_info.models import (
+    ExerciseInRoutine,
+    HealthInfo,
+    MirroredRoutine,
+    Routine,
+    RoutineStreak,
+    WeeklyRoutine,
+)
+from my_health_info.services import UsersRoutineManagementService
+from utils.enums import FocusAreaEnum
 
 
 class FakeModel(abc.ABC):
@@ -92,6 +95,23 @@ class FakeUser(FakeModel):
     def request_login(self):
         """Login 요청에 필요한 정보를 반환합니다."""
         return self.needed_info(["email", "password"])
+
+    def get_jwt_token(self):
+        """JWT Token을 반환합니다."""
+        if not self.instance:
+            return
+        jwt_token = RefreshToken.for_user(self.instance)
+
+        self.access_token = jwt_token.access_token
+
+    def login(self, client):
+        """JWT Token을 포함한 인증 정보를 반환합니다."""
+        if not self.instance:
+            return
+        if not hasattr(self, "access_token"):
+            self.get_jwt_token()
+
+        client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.access_token}")
 
 
 class FakeExerciseInRoutine(FakeModel):

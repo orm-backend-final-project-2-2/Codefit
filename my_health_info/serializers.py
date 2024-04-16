@@ -1,22 +1,26 @@
-from rest_framework import serializers
-from my_health_info.models import (
-    HealthInfo,
-    Routine,
-    ExerciseInRoutine,
-    UsersRoutine,
-    MirroredRoutine,
-    WeeklyRoutine,
-    RoutineStreak,
-)
-from exercises_info.models import ExercisesInfo
+from django.utils import timezone
 from drf_writable_nested import WritableNestedModelSerializer
+from rest_framework import serializers
+
+from exercises_info.models import ExercisesInfo
 from exercises_info.serializers import ExercisesInfoSerializer
+from my_health_info.models import (
+    ExerciseInRoutine,
+    HealthInfo,
+    MirroredRoutine,
+    Routine,
+    RoutineStreak,
+    UsersRoutine,
+    WeeklyRoutine,
+)
 
 
 class HealthInfoSerializer(serializers.ModelSerializer):
     """
     사용자의 건강 정보를 다루는 Serializer
     """
+
+    bmi = serializers.SerializerMethodField()
 
     class Meta:
         """
@@ -30,23 +34,36 @@ class HealthInfoSerializer(serializers.ModelSerializer):
         - height: 키
         - weight: 몸무게
         - bmi: BMI, read_only
-        - created_at: 생성일, read_only
         """
 
         model = HealthInfo
-        fields = ["user", "age", "height", "weight", "bmi", "created_at"]
-        read_only_fields = ["user", "bmi", "created_at"]
+        fields = ["user", "age", "height", "weight", "bmi", "date"]
+        read_only_fields = ["user", "bmi", "created_at", "date"]
+
+    def get_bmi(self, obj):
+        """
+        bmi를 계산하는 메서드
+        """
+        return round(obj.weight / ((obj.height / 100) ** 2), 2)
+
+    def validate(self, data):
+        """
+        유효성 검사를 수행하는 메서드
+
+        - 키와 몸무게가 양수인지 확인
+        """
+
+        if data["height"] <= 0:
+            raise serializers.ValidationError("키는 양수여야 합니다.")
+        if data["weight"] <= 0:
+            raise serializers.ValidationError("몸무게는 양수여야 합니다.")
+        return data
 
 
 class ExerciseInRoutineSerializer(WritableNestedModelSerializer):
     """
     루틴에 포함된 운동 정보를 다루는 Serializer
     """
-
-    exercise_info = ExercisesInfoSerializer(source="exercise", read_only=True)
-    exercise = serializers.PrimaryKeyRelatedField(
-        queryset=ExercisesInfo.objects.all(), write_only=True
-    )
 
     class Meta:
         """
@@ -62,8 +79,28 @@ class ExerciseInRoutineSerializer(WritableNestedModelSerializer):
         """
 
         model = ExerciseInRoutine
-        fields = ["routine", "exercise", "order", "exercise_info"]
-        read_only_fields = ["routine"]
+        fields = ["routine", "mirrored_routine", "order", "exercise"]
+        read_only_fields = ["routine", "mirrored_routine"]
+
+    def validate(self, data):
+        """
+        유효성 검사를 수행하는 메서드
+
+        - 운동 순서가 1 이상인지 확인
+        """
+
+        if data["order"] < 1:
+            raise serializers.ValidationError("운동 순서는 1 이상이어야 합니다.")
+        return data
+
+    def to_representation(self, instance):
+        """인스턴스를 반환하기 전에 호출되는 메서드, 커스텀 출력을 위해 오버라이드"""
+        ret = super().to_representation(instance)
+
+        ret["exercise"] = ExercisesInfoSerializer(instance.exercise).data
+        import json
+
+        return ret
 
 
 class RoutineSerializer(WritableNestedModelSerializer):
@@ -147,7 +184,10 @@ class UsersRoutineSerializer(serializers.ModelSerializer):
     사용자의 루틴 정보를 다루는 Serializer
     """
 
-    mirrored_routine = MirroredRoutineSerializer()
+    title = serializers.CharField(write_only=True)
+    author = serializers.SerializerMethodField()
+    author_name = serializers.SerializerMethodField()
+    exercises_in_routine = ExerciseInRoutineSerializer(many=True, write_only=True)
 
     class Meta:
         """
@@ -163,8 +203,46 @@ class UsersRoutineSerializer(serializers.ModelSerializer):
         """
 
         model = UsersRoutine
-        fields = ["user", "routine", "mirrored_routine", "need_update"]
-        read_only_fields = ["user", "routine", "need_update", "mirrored_routine"]
+        fields = [
+            "author",
+            "author_name",
+            "is_author",
+            "title",
+            "routine",
+            "mirrored_routine",
+            "exercises_in_routine",
+            "need_update",
+        ]
+        read_only_fields = [
+            "author",
+            "is_author",
+            "author_name",
+            "routine",
+            "mirrored_routine",
+            "need_update",
+        ]
+
+    def validate(self, data):
+        return data
+
+    def get_author(self, obj):
+        return obj.routine.author.id
+
+    def get_author_name(self, obj):
+        return obj.mirrored_routine.author_name
+
+    def to_representation(self, instance):
+        """인스턴스를 반환하기 전에 호출되는 메서드, 커스텀 출력을 위해 오버라이드"""
+        ret = super().to_representation(instance)
+
+        ret["title"] = (
+            instance.mirrored_routine.title if instance.mirrored_routine else None
+        )
+        ret["exercises_in_routine"] = ExerciseInRoutineSerializer(
+            instance.mirrored_routine.exercises_in_routine, many=True
+        ).data
+
+        return ret
 
 
 class WeeklyRoutineSerializer(serializers.ModelSerializer):
@@ -224,7 +302,6 @@ class RoutineStreakSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "mirrored_routine", "date"]
 
     def get_mirrored_routine(self, obj):
-
         try:
             weekly_routine = WeeklyRoutine.objects.get(
                 day_index=obj.date.weekday(), user=obj.user
