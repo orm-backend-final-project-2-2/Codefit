@@ -256,11 +256,13 @@ class UsersRoutineViewSet(viewsets.ModelViewSet):
 
     functions:
     - list: GET /my_health_info/users_routine/
+    - create: POST /my_health_info/users_routine/
     - retrieve: GET /my_health_info/users_routine/<pk>/
-    - unsubscribe: DELETE /my_health_info/users_routine/<pk>/unsubscribe/
+    - partial_update: PATCH /my_health_info/users_routine/<pk>/
+    - destroy: DELETE /my_health_info/users_routine/<pk>/
     """
 
-    http_method_names = ["get", "delete"]
+    http_method_names = ["get", "post", "patch", "delete"]
     serializer_class = UsersRoutineSerializer
     permission_classes = [IsAuthenticated]
 
@@ -278,6 +280,51 @@ class UsersRoutineViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
 
         return Response(serializer.data)
+
+    def perform_create(self, serializer):
+        """
+        새로운 UsersRoutine 생성
+
+        1. 새 Routine 생성
+        2. Routine을 original_routine으로 갖는 새 MirroredRoutine 생성
+        3. 제공받은 ExerciseInRoutine 정보를 이용해 새 ExerciseInRoutine 생성
+        4. 새 UsersRoutine 생성
+        5. Serializer로 UsersRoutine 정보 반환
+        """
+
+        data = serializer.validated_data
+
+        routine = Routine.objects.create(
+            author=self.request.user,
+            title=data["title"],
+        )
+
+        mirrored_routine = MirroredRoutine.objects.create(
+            title=data["title"],
+            author_name=self.request.user.username,
+            original_routine=routine,
+        )
+        data.pop("title")
+
+        exercises_in_routine = data["exercises_in_routine"]
+
+        for exercise_in_routine in exercises_in_routine:
+            ExerciseInRoutine.objects.create(
+                routine=routine,
+                mirrored_routine=mirrored_routine,
+                exercise=exercise_in_routine["exercise"],
+                order=exercise_in_routine["order"],
+            )
+        data.pop("exercises_in_routine")
+
+        serializer.save(
+            user=self.request.user,
+            is_author=True,
+            routine=routine,
+            mirrored_routine=mirrored_routine,
+        )
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class WeeklyRoutineView(APIView):
