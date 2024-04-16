@@ -65,11 +65,6 @@ class ExerciseInRoutineSerializer(WritableNestedModelSerializer):
     루틴에 포함된 운동 정보를 다루는 Serializer
     """
 
-    exercise_info = ExercisesInfoSerializer(source="exercise", read_only=True)
-    exercise = serializers.PrimaryKeyRelatedField(
-        queryset=ExercisesInfo.objects.all(), write_only=True
-    )
-
     class Meta:
         """
         ExerciseInRoutineSerializer의 Meta 클래스
@@ -84,8 +79,29 @@ class ExerciseInRoutineSerializer(WritableNestedModelSerializer):
         """
 
         model = ExerciseInRoutine
-        fields = ["routine", "exercise", "order", "exercise_info"]
-        read_only_fields = ["routine"]
+        fields = ["routine", "mirrored_routine", "order", "exercise"]
+        read_only_fields = ["routine", "mirrored_routine"]
+
+    def validate(self, data):
+        """
+        유효성 검사를 수행하는 메서드
+
+        - 운동 순서가 1 이상인지 확인
+        """
+
+        if data["order"] < 1:
+            raise serializers.ValidationError("운동 순서는 1 이상이어야 합니다.")
+        return data
+
+    def to_representation(self, instance):
+        """인스턴스를 반환하기 전에 호출되는 메서드, 커스텀 출력을 위해 오버라이드"""
+        ret = super().to_representation(instance)
+
+        ret["exercise"] = ExercisesInfoSerializer(instance.exercise).data
+        import json
+
+        print(json.dumps(ret, indent=4))
+        return ret
 
 
 class RoutineSerializer(WritableNestedModelSerializer):
@@ -207,6 +223,9 @@ class UsersRoutineSerializer(serializers.ModelSerializer):
             "need_update",
         ]
 
+    def validate(self, data):
+        return data
+
     def get_author(self, obj):
         return obj.routine.author.id
 
@@ -224,9 +243,6 @@ class UsersRoutineSerializer(serializers.ModelSerializer):
             instance.mirrored_routine.exercises_in_routine, many=True
         ).data
 
-        import json
-
-        print(json.dumps(ret, indent=2))
         return ret
 
 
