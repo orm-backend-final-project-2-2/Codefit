@@ -870,10 +870,49 @@ class UsersRoutineTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = response.json()
-        import json
 
-        print(json.dumps(data, indent=2))
         self.assertEqual(user1_routine.id, data.get("routine"))
+
+    def test_update_users_routine_if_author(self):
+        """
+        유저가 생성한 루틴이 업데이트되었을 시 SideEffect가 제대로 작동하는지 테스트
+
+        reverse_url: users-routine-detail
+        HTTP method: PATCH
+
+        테스트 시나리오:
+        1. 유저 1이 로그인합니다.
+        2. 유저 1이 생성한 UsersRoutine을 업데이트합니다.
+        3. 응답 코드가 200인지 확인합니다.
+        4. Routine의 정보가 업데이트되었는지 확인합니다.
+        5. 업데이트된 Routine의 mirrored_routine이 UsersRoutine의 mirrored_routine과 같은지 확인합니다.
+        6. UsersRoutine의 need_update가 False인지 확인합니다.
+        """
+
+        self.user1.login(self.client)
+
+        user1_routine = UsersRoutine.objects.filter(user=self.user1.instance).first()
+
+        pk = user1_routine.pk
+
+        new_routine = FakeRoutine([self.exercise3, self.exercise4])
+
+        response = self.client.patch(
+            reverse("users-routine-detail", kwargs={"pk": pk}),
+            data=json.dumps(new_routine.request_create()),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+
+        self.assertEqual(
+            user1_routine.routine.mirrored_routine.id, data.get("mirrored_routine")
+        )
+        self.assertEqual(user1_routine.routine.id, data.get("routine"))
+        self.assertEqual(new_routine.base_attr.get("title"), data.get("title"))
+        self.assertFalse(data.get("need_update"))
 
 
 class WeeklyRoutineTestCase(TestCase):

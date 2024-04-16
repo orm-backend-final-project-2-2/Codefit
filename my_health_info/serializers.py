@@ -100,7 +100,6 @@ class ExerciseInRoutineSerializer(WritableNestedModelSerializer):
         ret["exercise"] = ExercisesInfoSerializer(instance.exercise).data
         import json
 
-        print(json.dumps(ret, indent=4))
         return ret
 
 
