@@ -29,8 +29,11 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
 DEBUG = True
 
+ALLOWED_HOSTS = ["34.84.46.59"]
+"""
 ALLOWED_HOSTS = ["*"]
 
+"""
 # Application definition
 
 INSTALLED_APPS = [
@@ -92,14 +95,25 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-
+"""
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+"""
 
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "codefit-postgresql",
+        "USER": "postgres",
+        "PASSWORD": "postgres",
+        "HOST": "34.146.77.148",  # 공개 IP를 사용하는 경우
+        "PORT": "5432",
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -135,10 +149,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = "static/"
-
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -170,7 +185,9 @@ SIMPLE_JWT = {
     "USER_ID_FIELD": "id",  # 사용자 ID 필드
     "USER_ID_CLAIM": "user_id",  # 사용자 ID 클레임
     "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",  # 사용자 인증 규칙
-    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),  # 인증 토큰 클래스
+    "AUTH_TOKEN_CLASSES": (
+        "rest_framework_simplejwt.tokens.AccessToken",
+    ),  # 인증 토큰 클래스
     "TOKEN_TYPE_CLAIM": "token_type",  # 토큰 타입 클레임
     "JTI_CLAIM": "jti",  # JWT ID 클레임
 }
