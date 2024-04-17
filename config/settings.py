@@ -50,10 +50,10 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_yasg",
     # custom_apps
-    # "my_health_info",  # 본인 앱
-    # "exercises_info",  # 본인 앱
+    "my_health_info",  # 본인 앱
+    "exercises_info",  # 본인 앱
     "account",
-    # "community",  # 본인 앱
+    "community",  # 본인 앱
 ]
 
 MIDDLEWARE = [
