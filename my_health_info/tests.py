@@ -498,7 +498,7 @@ class RoutineTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class ExerciseInRoutineTestCase(TestCase):
+class ExerciseInRoutineTestCase(APITestCase):
     """
     목적: Routine 모델과 연결되어 루틴에 포함된 운동들을 관리하는 ExerciseInRoutine 모델에 대한 테스트를 진행합니다.
 
@@ -562,7 +562,7 @@ class ExerciseInRoutineTestCase(TestCase):
         4. Response의 운동들 수가 같은지 확인합니다.
         5. 미리 저장한 배열과 Response의 운동들이 같은지 확인합니다.
         """
-        self.client.force_login(self.user1.instance)
+        self.user.login(self.client)
 
         pk = self.routine1.instance.pk
 
@@ -609,7 +609,7 @@ class ExerciseInRoutineTestCase(TestCase):
             "exercises_in_routine"
         )
 
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         response = self.client.post(
             reverse("routine-list"),
@@ -664,7 +664,7 @@ class ExerciseInRoutineTestCase(TestCase):
 
         pk = self.routine1.instance.pk
 
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         response = self.client.patch(
             reverse("routine-detail", kwargs={"pk": pk}),
@@ -700,7 +700,7 @@ class ExerciseInRoutineTestCase(TestCase):
         6. 해당 루틴 내의 운동이 삭제되지 않았는지 확인합니다.
         7. 해당 루틴 내의 운동들이 삭제되지 않았는지 확인합니다.
         """
-        self.client.force_login(self.user1.instance)
+        self.user1.login(self.client)
 
         pk = self.routine1.instance.pk
 
@@ -1646,7 +1646,7 @@ class RoutineStreakTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @freeze_time(datetime.now() + timedelta(days=2))
+    @freeze_time(datetime.now() + timedelta(days=1))
     def test_create_routine_streak_fail_if_invalid_day_index(self):
         """
         유저가 루틴이 등록되지 않은 요일에 루틴을 수행한 기록을 생성하려 할 때 실패하는지 테스트
