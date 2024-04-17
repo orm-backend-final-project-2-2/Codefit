@@ -1,12 +1,11 @@
-# app_name_server
-
+# Codefit
 app_name의 서버 레포지토리입니다.
 
 ## 간단 소개
 
-app_name은 운동 도우미 웹/앱입니다.
+Codefit은 운동 도우미 웹/앱입니다.
 자신의 운동 기록을 관리할 수 있고, 남들과 이야기할 수 있는 앱입니다.
-app_name은 운동 도우미 웹/
+Codefit은 운동 도우미 웹/
 
 ## 동기
 
