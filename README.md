@@ -95,6 +95,35 @@ Codefit은 운동 도우미 웹/앱입니다.
 ## 설계
 
 ### WBS
+```mermaid
+gantt
+    title CodeFit 개발 일정
+    dateFormat YY-MM-DD
+    axisFormat %Y-%m-%d
+
+    section 기획
+    아이디어 논의 및 기획 : des1, 2024-03-29, 3d
+    요구사항 취합 : des2, after des1, 2d
+    데이터베이스 설계 : des3, after des2, 3d
+
+    section 와이어프레임
+    와이어프레임 제작 : des11, 2024-04-7, 1d
+
+    section 백엔드 개발
+    Account 모듈 개발 : des4, after des3, 3d
+    Community 모듈 개발 : des5, after des4, 3d
+    MyHealthInfo 모듈 개발 : des6, after des5, 3d
+    ExerciseInfo 모듈 개발 : des7, after des6, 2d
+
+    section 프론트엔드 개발
+    프론트엔드 개발 : des8, after des3, 11d
+
+    section CICD
+    CI/CD 설정 및 구성 : des9, after des6, 3d
+
+    section 마무리
+    마무리 : des10, 2024-04-17, 1d
+```
 
 ### Requirements
 
