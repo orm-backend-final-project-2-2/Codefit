@@ -117,15 +117,26 @@ class ExerciseInRoutine(models.Model):
             return f"{self.mirrored_routine.title}의 {self.order}번째 운동: {self.exercise.title}"
 
 
-class ExerciseInRoutineAttribue(models.Model):
+class ExerciseInRoutineAttribute(models.Model):
+    """
+    ExerciseInRoutine에 대한 수행 정보를 저장하는 모델
+
+    exercise_in_routine: ExerciseInRoutine 객체
+    set_count: 세트 수
+    rep_count: 반복 횟수
+    weight: 중량
+    duration: 운동 시간
+    speed: 운동 속도
+    """
+
     exercise_in_routine = models.OneToOneField(
         ExerciseInRoutine, on_delete=models.CASCADE, related_name="exercise_attribute"
     )
-    set_count = models.PositiveIntegerField()
-    rep_count = models.PositiveIntegerField()
-    weight = models.FloatField()
-    duration = models.PositiveIntegerField()
-    speed = models.FloatField()
+    set_count = models.IntegerField(blank=True, default=0)
+    rep_count = models.PositiveIntegerField(blank=True, default=0)
+    weight = models.FloatField(blank=True, default=0)
+    duration = models.PositiveIntegerField(blank=True, default=0)
+    speed = models.FloatField(blank=True, default=0)
 
     class Meta:
         unique_together = ["exercise_in_routine"]

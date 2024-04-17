@@ -12,6 +12,7 @@ from my_health_info.models import (
     RoutineStreak,
     UsersRoutine,
     WeeklyRoutine,
+    ExerciseInRoutineAttribute,
 )
 
 
@@ -60,10 +61,58 @@ class HealthInfoSerializer(serializers.ModelSerializer):
         return data
 
 
+class ExerciseInRoutineAttributeSerializer(serializers.ModelSerializer):
+    """
+    ExerciseInRoutineSerializer에 사용되는 운동 정보 필드를 다루는 Serializer
+    """
+
+    class Meta:
+        """
+        ExerciseInRoutineAttribute의 Meta 클래스
+
+        모델: ExerciseInRoutineAttribute
+
+        필드:
+        - exercise_in_routine: 가리키는 exercise_in_routine
+        - set_count: 세트 수
+        - rep_count: 반복 횟수
+        - weight: 무게
+        - duration: 시간
+        - speed: 속도
+        """
+
+        model = ExerciseInRoutineAttribute
+        fields = [
+            "exercise_in_routine",
+            "set_count",
+            "rep_count",
+            "weight",
+            "duration",
+            "speed",
+        ]
+        read_only_fields = ["exercise_in_routine"]
+
+        def validate(self, data):
+            if data.get("set_count") and data.get("set_count") < 0:
+                raise serializers.ValidationError("세트 수는 0 이상이어야 합니다.")
+            if data.get("rep_count") and data.get("rep_count") < 0:
+                raise serializers.ValidationError("반복 횟수는 0 이상이어야 합니다.")
+            if data.get("weight") and data.get("weight") < 0:
+                raise serializers.ValidationError("무게는 0 이상이어야 합니다.")
+            if data.get("duration") and data.get("duration") < 0:
+                raise serializers.ValidationError("시간은 0 이상이어야 합니다.")
+            if data.get("speed") and data.get("speed") < 0:
+                raise serializers.ValidationError("속도는 0 이상이어야 합니다.")
+
+            return data
+
+
 class ExerciseInRoutineSerializer(WritableNestedModelSerializer):
     """
     루틴에 포함된 운동 정보를 다루는 Serializer
     """
+
+    exercise_attribute = ExerciseInRoutineAttributeSerializer()
 
     class Meta:
         """
@@ -79,7 +128,13 @@ class ExerciseInRoutineSerializer(WritableNestedModelSerializer):
         """
 
         model = ExerciseInRoutine
-        fields = ["routine", "mirrored_routine", "order", "exercise"]
+        fields = [
+            "routine",
+            "mirrored_routine",
+            "order",
+            "exercise",
+            "exercise_attribute",
+        ]
         read_only_fields = ["routine", "mirrored_routine"]
 
     def validate(self, data):
@@ -88,7 +143,6 @@ class ExerciseInRoutineSerializer(WritableNestedModelSerializer):
 
         - 운동 순서가 1 이상인지 확인
         """
-
         if data["order"] < 1:
             raise serializers.ValidationError("운동 순서는 1 이상이어야 합니다.")
         return data

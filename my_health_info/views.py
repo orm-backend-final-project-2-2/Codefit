@@ -23,7 +23,9 @@ from my_health_info.models import (
     RoutineStreak,
     UsersRoutine,
     WeeklyRoutine,
+    ExerciseInRoutineAttribute,
 )
+from exercises_info.models import ExercisesInfo
 from my_health_info.permissions import IsOwnerOrReadOnly
 from my_health_info.serializers import (
     HealthInfoSerializer,
@@ -308,16 +310,50 @@ class UsersRoutineViewSet(viewsets.ModelViewSet):
             original_routine=routine,
         )
         data.pop("title")
-
         exercises_in_routine = data["exercises_in_routine"]
 
         for exercise_in_routine in exercises_in_routine:
-            ExerciseInRoutine.objects.create(
+
+            exercises_in_routine_obj = ExerciseInRoutine.objects.create(
                 routine=routine,
                 mirrored_routine=mirrored_routine,
                 exercise=exercise_in_routine["exercise"],
                 order=exercise_in_routine["order"],
             )
+
+            exercise_attr_request = exercise_in_routine.get("exercise_attribute", None)
+            if exercise_attr_request:
+                exercise = exercise_in_routine["exercise"]
+
+                ExerciseInRoutineAttribute.objects.create(
+                    exercise_in_routine=exercises_in_routine_obj,
+                    set_count=(
+                        exercise_attr_request["set_count"]
+                        if exercise.exercises_attribute.need_set
+                        else 0
+                    ),
+                    rep_count=(
+                        exercise_attr_request["rep_count"]
+                        if exercise.exercises_attribute.need_rep
+                        else 0
+                    ),
+                    weight=(
+                        exercise_attr_request["weight"]
+                        if exercise.exercises_attribute.need_weight
+                        else 0
+                    ),
+                    duration=(
+                        exercise_attr_request["duration"]
+                        if exercise.exercises_attribute.need_duration
+                        else 0
+                    ),
+                    speed=(
+                        exercise_attr_request["speed"]
+                        if exercise.exercises_attribute.need_speed
+                        else 0
+                    ),
+                )
+
         data.pop("exercises_in_routine")
 
         serializer.save(
@@ -363,8 +399,9 @@ class UsersRoutineViewSet(viewsets.ModelViewSet):
             title = data["title"]
 
         if exercise_in_routine_data:
-
-            routine.mirrored_routine = None
+            mirrored_routine = routine.mirrored_routine
+            mirrored_routine.original_routine = None
+            mirrored_routine.save()
             routine.save()
 
             new_mirrored_routine = MirroredRoutine.objects.create(
@@ -380,12 +417,47 @@ class UsersRoutineViewSet(viewsets.ModelViewSet):
 
             for exercise_in_routine in exercise_in_routine_data:
 
-                ExerciseInRoutine.objects.create(
+                exercises_in_routine_obj = ExerciseInRoutine.objects.create(
                     routine=routine,
                     mirrored_routine=new_mirrored_routine,
                     exercise=exercise_in_routine["exercise"],
                     order=exercise_in_routine["order"],
                 )
+
+                exercise_attr_request = exercise_in_routine.get(
+                    "exercise_attribute", None
+                )
+                if exercise_attr_request:
+                    exercise = exercise_in_routine["exercise"]
+
+                    ExerciseInRoutineAttribute.objects.create(
+                        exercise_in_routine=exercises_in_routine_obj,
+                        set_count=(
+                            exercise_attr_request["set_count"]
+                            if exercise.exercises_attribute.need_set
+                            else 0
+                        ),
+                        rep_count=(
+                            exercise_attr_request["rep_count"]
+                            if exercise.exercises_attribute.need_rep
+                            else 0
+                        ),
+                        weight=(
+                            exercise_attr_request["weight"]
+                            if exercise.exercises_attribute.need_weight
+                            else 0
+                        ),
+                        duration=(
+                            exercise_attr_request["duration"]
+                            if exercise.exercises_attribute.need_duration
+                            else 0
+                        ),
+                        speed=(
+                            exercise_attr_request["speed"]
+                            if exercise.exercises_attribute.need_speed
+                            else 0
+                        ),
+                    )
 
             instance.mirrored_routine = new_mirrored_routine
             instance.save()
