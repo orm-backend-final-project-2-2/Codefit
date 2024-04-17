@@ -14,6 +14,7 @@ from my_health_info.models import (
     Routine,
     RoutineStreak,
     WeeklyRoutine,
+    ExerciseInRoutineAttribute,
 )
 from my_health_info.services import UsersRoutineManagementService
 from utils.enums import FocusAreaEnum
@@ -136,6 +137,13 @@ class FakeExerciseInRoutine(FakeModel):
             "exercises_info": self.related_fake_models.get(
                 "exercises_info"
             ).request_create(),
+            "exercise_attribute": {
+                "set_count": self.fake.random_int(1, 5),
+                "rep_count": self.fake.random_int(1, 20),
+                "weight": self.fake.random_int(1, 250),
+                "duration": self.fake.random_int(1, 60),
+                "speed": self.fake.random_int(1, 15),
+            },
         }
 
     def create_instance(self, routine_instance, mirrored_routine_instance):
@@ -151,6 +159,11 @@ class FakeExerciseInRoutine(FakeModel):
             **self.base_attr,
         )
 
+        ExerciseInRoutineAttribute.objects.create(
+            exercise_in_routine=self.instance,
+            **self.related_attr["exercise_attribute"],
+        )
+
         return self.instance
 
     def request_create(self):
@@ -160,7 +173,6 @@ class FakeExerciseInRoutine(FakeModel):
         related_attr["exercise"] = self.related_fake_models.get(
             "exercises_info"
         ).instance.id
-
         related_attr.pop("exercises_info")
 
         return {**base_attr, **related_attr}

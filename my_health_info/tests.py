@@ -330,6 +330,7 @@ class RoutineTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()
+
         self.assertEqual(len(data), routines_count)
 
     def test_request_routine_not_allowed_method(self):
@@ -850,6 +851,8 @@ class UsersRoutineTestCase(APITestCase):
             content_type="application/json",
         )
 
+        data = response.json()
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         self.assertEqual(Routine.objects.count(), routine_count + 1)
@@ -919,7 +922,7 @@ class UsersRoutineTestCase(APITestCase):
         user2_routine.refresh_from_db()
 
         data = response.json()
-
+        print(json.dumps(data, indent=2))
         self.assertEqual(
             user1_routine.mirrored_routine.id, data.get("mirrored_routine")
         )
