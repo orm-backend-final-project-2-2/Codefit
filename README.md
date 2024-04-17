@@ -270,6 +270,8 @@ app_name은 운동 도우미 웹/
 
 ### Diagrams
 
+#### Sequence Diagram
+
 #### Entity-Relationship Diagram
 
 ```mermaid
@@ -490,20 +492,30 @@ jobs:
 
 #### fake_data.py
 
+[fake_data.py](https://github.com/orm-backend-final-project-2-2/final-project-server/blob/main/utils/fake_data.py)
+
 Faker 라이브러리를 사용해 실제 모델의 데이터와 유사한 가짜 데이터를 생성
+
 FakeModel 클래스를 먼저 제작하고, 이를 상속받아 실제 모델을 모방한 FakeModel을 제작
 
 CREATE request에 해당하는 데이터를 생성하거나,
+
 실제 모델 오브젝트를 생성하는 작업을 하였음
 
 #### parse_feature_branch.py
 
+[parse_feature_branch.py](https://github.com/orm-backend-final-project-2-2/final-project-server/blob/main/utils/parse_feature_branch.py)
+
 feature-app_name/FeatureName 을 파싱하여 app_name과 tc_name을 반환하는 파이썬 스크립트
+
 위에서 사용한 github action에서 현재 브런치에서 사용하는 TestCase를 실행하기 위해서 사용하였음
 
 #### reset_database_schemes.py
 
+[reset_database_schemes.py](https://github.com/orm-backend-final-project-2-2/final-project-server/blob/main/utils/reset_database_schemes.py)
+
 다른 사람이 작업한 앱이 develop 브런치에 merge되었을 때, 가끔 데이터베이스가 꼬이는 문제가 일어났음
+
 제작된 앱 이름들과 프로젝트 네임을 받아 마이그레이션을 초기화하고 db를 리셋하는 스크립트
 
 ## 배포
@@ -518,8 +530,7 @@ FE - 크로스플랫폼 제작이기 때문에 기존 경험이 있는 firebase 
 
 모델을 변경시킬때마다 save를 통해 변경해주어야 함
 
-2. 
-
+2.
 
 ## 프로젝트 회고
 
@@ -527,12 +538,6 @@ FE - 크로스플랫폼 제작이기 때문에 기존 경험이 있는 firebase 
 
 ## 최지석
 
-
-
 ## 안효준
 
-
-
 ## 이수현
-
-
