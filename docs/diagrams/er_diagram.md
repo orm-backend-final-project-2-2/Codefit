@@ -2,78 +2,69 @@
 
 ```mermaid
 erDiagram
-    %% 효준
     User {
         int id PK
         str email UK
-        str user_name UK
+        str username UK
         str password
-        int recent_health_info_id FK
+        int last_health_info FK "HealthInfo_id"
         datetime created_at
-        datetime updated_at
-        bool is_deleted "retrieve 하실때 주의!"
     }
 
-    %% 지석
+    User ||--o| HealthInfo : last_health_info
+
     HealthInfo {
         int id PK
-        int user_id FK
+        int user FK "User_id"
+        int age
         float weight
         float height
-        int age
-        float bmi
-        datetime created_at
+        date date
     }
+
+    HealthInfo }|--|| User : user
 
     Routine {
         int id PK
-        str routine_name
-        int likes
+        int author FK "User_id"
+        str title
+        int liked_users FK "User_id"
+        int like_count
     }
 
-    RoutineStreak {
+    Routine }|--o| User : author
+    Routine }|--o{ User : liked_users
+
+    MirroredRoutine {
         int id PK
-        int routine_id FK
-        int user_id FK
-        datetime created_at
-        bool is_routine_completed
+        int original_routine FK "Routine_id"
+        str title
+        str author_name
     }
 
-    User ||--|{ RoutineStreak : has
-    Routine ||--o{ RoutineStreak : has
-
-    UsersRoutine {
+    MirroredRoutine ||--o| Routine : original_routine
+    
+    ExercisesInfo {
         int id PK
-        int user_id FK
-        int routine_id FK
-    }
-
-    WeeklyRoutine {
-        int id PK
-        int user_id FK
-        int day_index
-        int routine_id FK
-        datetime week_start_date
-    }
-
-    %% 빈
-    Exercise {
-        int id PK
+        int author FK "User_id"
         str name
-        str intensity
         str description
         str video_url
     }
 
-    ExerciesFocusArea {
+    ExercisesInfo }|--|| User : author
+
+    FocusArea {
         int id PK
-        int exercise_id FK
+        int exercise FK "Exercise_id"
         str focus_area
     }
 
+    FocusArea }|--|| ExercisesInfo : exercise
+
     ExerciseAttribute {
         int id PK
-        int exercise_id FK
+        int exercise FK "Exercise_id"
         bool need_set
         bool need_rep
         bool need_weight
@@ -81,90 +72,94 @@ erDiagram
         bool need_duration
     }
 
-    Exercise ||--o{ ExerciseAttribute : has
-    Exercise ||--o{ ExerciesFocusArea : has
-
-    %% 지석
+    ExerciseAttribute ||--|| ExercisesInfo : exercise
 
     ExerciseInRoutine {
         int id PK
-        int routine_id FK
-        int exercise_id FK
+        int routine FK "Routine_id"
+        int mirrored_routine FK "MirroredRoutine_id"
+        int exercise FK "Exercise_id"
+        int order
     }
 
-    ExerciseInRoutine ||--o{ Exercise : has
+    ExerciseInRoutine }|--o| Routine : routine
+    ExerciseInRoutine }|--|| MirroredRoutine : mirrored_routine
+    ExerciseInRoutine }|--|| ExercisesInfo : exercise
 
-    RepsInExerciseInRoutine {
+    ExerciseInRoutineAttribute {
         int id PK
-        int exercise_in_routine_id FK
-        int reps
+        int exercise_in_routine FK "ExerciseInRoutine_id"
+        int set
+        int rep
+        float weight
+        float speed
+        float duration
     }
 
-    SetsInExerciseInRoutine {
+    ExerciseInRoutineAttribute ||--|| ExerciseInRoutine : exercise_in_routine
+
+    UsersRoutine {
         int id PK
-        int exercise_in_routine_id FK
-        int sets
+        int user FK "User_id"
+        int routine FK "Routine_id"
+        int mirrored_routine FK "MirroredRoutine_id"
+        bool is_author
+        bool need_update
     }
 
-    WeightInExerciseInRoutine {
+    UsersRoutine }|--|| User : user
+    UsersRoutine }|--o| Routine : routine
+    UsersRoutine }|--|| MirroredRoutine : mirrored_routine
+
+    RoutineStreak {
         int id PK
-        int exercise_in_routine_id FK
-        int weight
+        int user_id FK "User_id"
+        int mirrored_routine FK "MirroredRoutine_id"
+        date date
     }
 
-    DurationInExerciseInRoutine {
+    RoutineStreak }|--|| User : user
+    RoutineStreak }|--o| MirroredRoutine : mirrored_routine
+
+    WeeklyRoutine {
         int id PK
-        int exercise_in_routine_id FK
-        int duration
+        int user FK "User_id"
+        int day_index
+        int users_routine FK "UsersRoutine_id"
     }
 
-    SpeedInExerciseInRoutine {
-        int id PK
-        int exercise_in_routine_id FK
-        int speed
-    }
+    WeeklyRoutine }|--|| User : user
+    WeeklyRoutine }|--|| UsersRoutine : users_routine
 
-    ExerciseInRoutine ||--o{ RepsInExerciseInRoutine : has
-    ExerciseInRoutine ||--o{ SetsInExerciseInRoutine : has
-    ExerciseInRoutine ||--o{ WeightInExerciseInRoutine : has
-    ExerciseInRoutine ||--o{ DurationInExerciseInRoutine : has
-    ExerciseInRoutine ||--o{ SpeedInExerciseInRoutine : has
-
-    %% 수현
     Post {
         int id PK
-        int user_id FK
+        int author FK "User_id"
         str title
         str content
-        int likes
-        bool is_deleted "list retrieve 하실때 주의!"
+        int liked_users FK "User_id"
+        int like_count
     }
+
+    Post }o--|| User : author
+    Post }o--o{ User : liked_users
 
     Comment {
         int id PK
-        int post_id FK
-        int user_id FK
+        int author FK "User_id"
+        int post FK "Post_id"
         str content
-        bool is_deleted "list retrieve 하실때 주의!"
     }
+
+    Comment }o--|| User : author
+    Comment }o--|| Post : post
 
     SubComment {
         int id PK
-        int comment_id FK
-        int user_id FK
+        int author FK "User_id"
+        int comment FK "Comment_id"
         str content
-        bool is_deleted "list retrieve 하실때 주의!"
     }
 
-    User ||--o{ HealthInfo : has
-    User ||--o{ WeeklyRoutine : plans
-    User ||--o{ Post : writes
-    User ||--o{ Comment : writes
-    User ||--o{ SubComment : writes
-    User ||--o{ UsersRoutine : has
-    UsersRoutine ||--o{ Routine : has
-    Routine ||--o{ ExerciseInRoutine : has
-    WeeklyRoutine }|--o{ Routine : uses
-    Post ||--o{ Comment : has
-    Comment ||--o{ SubComment : has
+    SubComment }o--|| User : author
+    SubComment }o--|| Comment : comment
 ```

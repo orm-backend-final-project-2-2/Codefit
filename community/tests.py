@@ -1,10 +1,12 @@
 from django.test import TestCase
-from rest_framework import status
 from django.urls import reverse
+from rest_framework import status
+
+from account.models import CustomUser as User
+from utils.fake_data import FakePost, FakeUser
+
 from .models import Post
 from .serializers import PostSerializer
-from account.models import CustomUser as User
-from utils.fake_data import FakeUser, FakePost
 
 
 class PostTestCase(TestCase):
@@ -128,19 +130,14 @@ class PostTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-<<<<<<< HEAD
-=======
     # TODO: 다른사람도 포스트를 볼 수 있어야 합니다
->>>>>>> 2d3927932fc1f3231e549bac51c362eddde2d686
     def test_get_only_logged_in_user_posts(self):
         """post/ GET 요청시 로그인한 사용자의 Post 객체만 반환하는지 테스트"""
         self.client.force_login(self.user1.instance)
         response = self.client.get(reverse("post-list"))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            len(response.data), 2
-        )  # 숫자 대신 원하는 값을 직접 쿼리로 가져와서 비교하는게 좋습니다.
+        self.assertEqual(len(response.data), 2)  # 숫자 대신 원하는 값을 직접 쿼리로 가져와서 비교하는게 좋습니다.
 
     # TODO: 다른사람도 포스트를 볼 수 있어야 합니다
     def test_get_only_logged_in_user_post_detail(self):

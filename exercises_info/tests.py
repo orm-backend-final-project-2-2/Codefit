@@ -1,13 +1,14 @@
-from django.test import Client, TestCase
+from django.test import Client
 from django.urls import reverse
 from rest_framework import status
-
+from rest_framework.test import APITestCase, APIClient
 from account.models import CustomUser as User
-from exercises_info.models import ExercisesInfo, ExercisesAttribute
+from exercises_info.models import ExercisesAttribute, ExercisesInfo
 from utils.fake_data import FakeExercisesInfo, FakeUser
+import json
 
 
-class ExercisesInfoTestCase(TestCase):
+class ExercisesInfoTestCase(APITestCase):
     """
     목적: ExercisesInfo App의 API 테스트
 
@@ -101,13 +102,13 @@ class ExercisesInfoTestCase(TestCase):
         3. 응답 코드가 201인지 확인
         4. 응답 데이터에 생성한 운동 정보의 제목이 있는지 확인
         """
-        self.client.force_login(self.admin.instance)
+        self.admin.login(self.client)
 
         new_exercise = FakeExercisesInfo()
 
         response = self.client.post(
             reverse("exercises-info-list"),
-            data=new_exercise.request_create(),
+            data=json.dumps(new_exercise.request_create()),
             content_type="application/json",
         )
 
@@ -131,11 +132,11 @@ class ExercisesInfoTestCase(TestCase):
         """
         new_exercise = FakeExercisesInfo()
 
-        self.client.force_login(self.user.instance)
+        self.user.login(self.client)
 
         response = self.client.post(
             reverse("exercises-info-list"),
-            data=new_exercise.request_create(),
+            data=json.dumps(new_exercise.request_create()),
             content_type="application/json",
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -153,13 +154,13 @@ class ExercisesInfoTestCase(TestCase):
         3. 서버에 PATCH 요청을 보내서 운동 정보 수정
         4. 응답 코드가 200인지 확인
         """
-        self.client.force_login(self.admin.instance)
+        self.admin.login(self.client)
 
         new_exercise = FakeExercisesInfo()
 
         response = self.client.patch(
             reverse("exercises-info-detail", kwargs={"pk": self.exercise1.instance.id}),
-            data=new_exercise.request_create(),
+            data=json.dumps(new_exercise.request_create()),
             content_type="application/json",
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -183,11 +184,11 @@ class ExercisesInfoTestCase(TestCase):
         """
         new_exercise = FakeExercisesInfo()
 
-        self.client.force_login(self.user.instance)
+        self.user.login(self.client)
 
         response = self.client.patch(
             reverse("exercises-info-detail", kwargs={"pk": self.exercise1.instance.id}),
-            data=new_exercise.request_create(),
+            data=json.dumps(new_exercise.request_create()),
             content_type="application/json",
         )
 
@@ -205,7 +206,7 @@ class ExercisesInfoTestCase(TestCase):
         2. 서버에 DELETE 요청을 보내서 운동 정보 삭제
         3. 응답 코드가 204인지 확인
         """
-        self.client.force_login(self.admin.instance)
+        self.admin.login(self.client)
 
         response = self.client.delete(
             reverse("exercises-info-detail", kwargs={"pk": self.exercise1.instance.id}),
@@ -225,7 +226,7 @@ class ExercisesInfoTestCase(TestCase):
         2. 서버에 DELETE 요청을 보내서 운동 정보 삭제
         3. 응답 코드가 403인지 확인
         """
-        self.client.force_login(self.user.instance)
+        self.user.login(self.client)
         response = self.client.delete(
             reverse("exercises-info-detail", kwargs={"pk": self.exercise1.instance.id}),
         )
@@ -244,7 +245,7 @@ class ExercisesInfoTestCase(TestCase):
         2. 서버에 POST 요청을 보내서 필수 필드가 누락된 상태로 운동 정보 생성
         3. 응답 코드가 400인지 확인
         """
-        self.client.force_login(self.admin.instance)
+        self.admin.login(self.client)
         response = self.client.post(
             reverse("exercises-info-list"),
             data={},
@@ -263,7 +264,7 @@ class ExercisesInfoTestCase(TestCase):
         2. 서버에 POST 요청을 보내서 Enum에 존재하지 않는 Focus Area를 입력한 상태로 운동 정보 생성
         3. 응답 코드가 400인지 확인
         """
-        self.client.force_login(self.admin.instance)
+        self.admin.login(self.client)
 
         new_exercise = FakeExercisesInfo()
 
@@ -277,7 +278,7 @@ class ExercisesInfoTestCase(TestCase):
 
         response = self.client.post(
             reverse("exercises-info-list"),
-            data=request_data,
+            data=json.dumps(request_data),
             content_type="application/json",
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -295,13 +296,15 @@ class ExercisesInfoTestCase(TestCase):
         3. 서버에 PATCH 요청을 보내서 Focus Area 수정
         4. 응답 코드가 200인지 확인
         """
-        self.client.force_login(self.admin.instance)
+        self.admin.login(self.client)
 
         new_exercise = FakeExercisesInfo()
 
         response = self.client.patch(
             reverse("exercises-info-detail", kwargs={"pk": self.exercise1.instance.id}),
-            data={"focus_areas": new_exercise.request_create().get("focus_areas")},
+            data=json.dumps(
+                {"focus_areas": new_exercise.request_create().get("focus_areas")}
+            ),
             content_type="application/json",
         )
 
@@ -325,7 +328,7 @@ class ExercisesInfoTestCase(TestCase):
         2. 서버에 POST 요청을 보내서 Title의 길이가 100자를 초과한 상태로 운동 정보 생성
         3. 응답 코드가 400인지 확인
         """
-        self.client.force_login(self.admin.instance)
+        self.admin.login(self.client)
 
         new_exercise = FakeExercisesInfo()
 
@@ -334,7 +337,7 @@ class ExercisesInfoTestCase(TestCase):
 
         response = self.client.post(
             reverse("exercises-info-list"),
-            data=request_data,
+            data=json.dumps(request_data),
             content_type="application/json",
         )
 
@@ -352,7 +355,7 @@ class ExercisesInfoTestCase(TestCase):
         2. 서버에 POST 요청을 보내서 Description의 길이가 1000자를 초과한 상태로 운동 정보 생성
         3. 응답 코드가 400인지 확인
         """
-        self.client.force_login(self.admin.instance)
+        self.admin.login(self.client)
 
         new_exercise = FakeExercisesInfo()
 
@@ -361,14 +364,14 @@ class ExercisesInfoTestCase(TestCase):
 
         response = self.client.post(
             reverse("exercises-info-list"),
-            data=request_data,
+            data=json.dumps(request_data),
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-class ExercisesAttributeTestCase(TestCase):
+class ExercisesAttributeTestCase(APITestCase):
     """
     목적: ExercisesInfo App의 ExercisesInfo Model에서 OneToOneField로 연결된 ExercisesAttribute Model의 API 테스트
 
@@ -410,7 +413,7 @@ class ExercisesAttributeTestCase(TestCase):
         5. 응답 데이터에 ExercisesAttribute의 필드 값이 모두 정의된 값과 같은지 확인
         """
 
-        self.client.force_login(self.admin.instance)
+        self.admin.login(self.client)
 
         id = self.exercise1.instance.id
 
@@ -446,13 +449,13 @@ class ExercisesAttributeTestCase(TestCase):
         5. 응답 데이터에 ExercisesAttribute의 필드 값이 모두 정의된 값과 같은지 확인
         """
 
-        self.client.force_login(self.admin.instance)
+        self.admin.login(self.client)
 
         new_exercise = FakeExercisesInfo()
 
         response = self.client.post(
             reverse("exercises-info-list"),
-            data=new_exercise.request_create(),
+            data=json.dumps(new_exercise.request_create()),
             content_type="application/json",
         )
 
@@ -483,7 +486,7 @@ class ExercisesAttributeTestCase(TestCase):
         4. 응답 코드가 400인지 확인
         """
 
-        self.client.force_login(self.admin.instance)
+        self.admin.login(self.client)
 
         new_exercise = FakeExercisesInfo()
 
@@ -492,7 +495,7 @@ class ExercisesAttributeTestCase(TestCase):
 
         response = self.client.post(
             reverse("exercises-info-list"),
-            data=request_data,
+            data=json.dumps(request_data),
             content_type="application/json",
         )
 
@@ -513,7 +516,7 @@ class ExercisesAttributeTestCase(TestCase):
         5. 응답 데이터에 ExercisesAttribute의 필드 값이 모두 False인지 확인
         """
 
-        self.client.force_login(self.admin.instance)
+        self.admin.login(self.client)
 
         new_exercise = FakeExercisesInfo()
 
@@ -522,7 +525,7 @@ class ExercisesAttributeTestCase(TestCase):
 
         response = self.client.post(
             reverse("exercises-info-list"),
-            data=request_data,
+            data=json.dumps(request_data),
             content_type="application/json",
         )
 
@@ -556,7 +559,7 @@ class ExercisesAttributeTestCase(TestCase):
         4. 응답 코드가 400인지 확인
         """
 
-        self.client.force_login(self.admin.instance)
+        self.admin.login(self.client)
 
         new_exercise = FakeExercisesInfo()
 
@@ -565,7 +568,7 @@ class ExercisesAttributeTestCase(TestCase):
 
         response = self.client.post(
             reverse("exercises-info-list"),
-            data=request_data,
+            data=json.dumps(request_data),
             content_type="application/json",
         )
 
@@ -586,13 +589,13 @@ class ExercisesAttributeTestCase(TestCase):
         5. 응답 데이터에 ExercisesAttribute의 필드 값이 모두 정의된 값과 같은지 확인
         """
 
-        self.client.force_login(self.admin.instance)
+        self.admin.login(self.client)
 
         new_exercise = FakeExercisesInfo()
 
         response = self.client.patch(
             reverse("exercises-info-detail", kwargs={"pk": self.exercise1.instance.id}),
-            data=new_exercise.request_create(),
+            data=json.dumps(new_exercise.request_create()),
             content_type="application/json",
         )
 
@@ -623,7 +626,7 @@ class ExercisesAttributeTestCase(TestCase):
         4. ExercisesAttribute가 삭제되었는지 확인
         """
 
-        self.client.force_login(self.admin.instance)
+        self.admin.login(self.client)
 
         exercise_attribute_id = self.exercise1.instance.exercises_attribute.id
 

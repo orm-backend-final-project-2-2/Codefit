@@ -1,7 +1,9 @@
-from rest_framework import serializers
-from django.contrib.auth.hashers import make_password
-from account.models import CustomUser
 import re
+
+from django.contrib.auth.hashers import make_password
+from rest_framework import serializers
+
+from account.models import CustomUser
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -10,9 +12,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
     def validate_password(self, value):
         # 비밀번호에 숫자, 문자, 특수문자를 모두 포함하는지 확인하는 정규 표현식
         if not re.match(r"^(?=.*\d)(?=.*[a-zA-Z])(?=.*[!@#$%^&*()-_+=]).*$", value):
-            raise serializers.ValidationError(
-                "비밀번호는 숫자, 문자, 특수문자를 모두 포함해야 합니다."
-            )
+            raise serializers.ValidationError("비밀번호는 숫자, 문자, 특수문자를 모두 포함해야 합니다.")
         return value
 
     def create(self, validated_data):

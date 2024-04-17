@@ -1,5 +1,5 @@
-import sys
 import re
+import sys
 
 if len(sys.argv) == 2:
     branch_name = sys.argv[1]
