@@ -43,12 +43,14 @@ INSTALLED_APPS = [
     # third_party_apps
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
+    "drf_yasg",
     # custom_apps
-    "my_health_info",  # 본인 앱
-    "exercises_info",  # 본인 앱
+    # "my_health_info",  # 본인 앱
+    # "exercises_info",  # 본인 앱
     "account",
-    "community",  # 본인 앱
+    # "community",  # 본인 앱
 ]
 
 MIDDLEWARE = [
@@ -153,8 +155,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),  # 액세스 토큰 유효기간 (예: 5분)
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),  # 리프레시 토큰 유효기간 (예: 1일)
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),  # 액세스 토큰 유효기간
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),  # 리프레시 토큰 유효기간
     "ROTATE_REFRESH_TOKENS": False,  # 리프레시 토큰 교체 여부
     "BLACKLIST_AFTER_ROTATION": True,  # 토큰 교체 시 이전 토큰 블랙리스트 저장 여부
     "UPDATE_LAST_LOGIN": False,  # 로그인 시 last_login 필드 업데이트 여부
