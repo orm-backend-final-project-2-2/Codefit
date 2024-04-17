@@ -1,5 +1,14 @@
-from django.contrib.auth import authenticate, login
-from rest_framework import status, viewsets
+
+from rest_framework.generics import CreateAPIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.contrib.auth import authenticate, login, logout
+from account.serializers import CustomUserSerializer
+from rest_framework import viewsets
+from account.models import CustomUser
+
 from rest_framework.exceptions import (
     AuthenticationFailed,
     MethodNotAllowed,
@@ -14,6 +23,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.token_blacklist import models
 
 from account.models import CustomUser
 from account.serializers import CustomUserSerializer
@@ -60,7 +70,32 @@ class LoginView(TokenObtainPairView):
 
 
 class LogoutView(APIView):
-    pass
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request, *args, **kwargs):
+        # 세션 종료
+        logout(request)
+
+        # 리프레시 토큰 무효화
+        refresh_token = request.data.get("refresh_token")
+        if refresh_token:
+            try:
+                token = RefreshToken(refresh_token)
+                user_id = token.payload.get("user_id")
+                if user_id:
+                    models.OutstandingToken.objects.filter(user_id=user_id).delete()
+                return Response({"message": "로그아웃 성공"}, status=status.HTTP_200_OK)
+            except Exception as e:
+                return Response(
+                    {"message": "리프레시 토큰 무효화 실패"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            return Response(
+                {"message": "리프레시 토큰이 제공되지 않았습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class ProfileView(APIView):
