@@ -1,4 +1,4 @@
-name: Run Unit Tests
+name: Run Feature Branch Tests
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   test:
-    name: Run Unit Tests
+    name: Run Feature Branch Tests
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
@@ -24,6 +24,8 @@ jobs:
         pip install -r requirements.txt
 
     - name: Run tests
+      env:
+        DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
       run: |
         output=$(python3 utils/parse_feature_branch.py ${{ github.ref }})
         read app_name tc_name <<< $output

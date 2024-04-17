@@ -10,26 +10,26 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
-from pathlib import Path
 import os
+from datetime import timedelta
+from pathlib import Path
 
-env = os.environ
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env.get("DJANGO_SECRET_KEY")
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
@@ -40,6 +40,15 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # third_party_apps
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "corsheaders",
+    # custom_apps
+    "my_health_info",  # 본인 앱
+    "exercises_info",  # 본인 앱
+    "account",
+    "community",  # 본인 앱
 ]
 
 MIDDLEWARE = [
@@ -50,6 +59,11 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    # "rest_framework.middleware.AuthenticationMiddleware",
+    # "rest_framework.middleware.TokenAuthenticationMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -75,6 +89,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+
 
 DATABASES = {
     "default": {
@@ -106,9 +121,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "ko-kr"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Seoul"
 
 USE_I18N = True
 
@@ -120,7 +135,42 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# 기본 유저모델 변경
+AUTH_USER_MODEL = "account.CustomUser"
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),  # 액세스 토큰 유효기간 (예: 5분)
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),  # 리프레시 토큰 유효기간 (예: 1일)
+    "ROTATE_REFRESH_TOKENS": False,  # 리프레시 토큰 교체 여부
+    "BLACKLIST_AFTER_ROTATION": True,  # 토큰 교체 시 이전 토큰 블랙리스트 저장 여부
+    "UPDATE_LAST_LOGIN": False,  # 로그인 시 last_login 필드 업데이트 여부
+    "ALGORITHM": "HS256",  # 암호화 알고리즘
+    "SIGNING_KEY": SECRET_KEY,  # 시크릿 키 (SECRET_KEY 사용)
+    "VERIFYING_KEY": None,  # 검증 키 (자동 생성)
+    "AUDIENCE": None,  # 대상 (선택 사항)
+    "ISSUER": None,  # 발급자 (선택 사항)
+    "AUTH_HEADER_TYPES": ("Bearer",),  # 인증 헤더 타입
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",  # 인증 헤더 이름
+    "USER_ID_FIELD": "id",  # 사용자 ID 필드
+    "USER_ID_CLAIM": "user_id",  # 사용자 ID 클레임
+    "USER_AUTHENTICATION_RULE": "rest_framework_simplejwt.authentication.default_user_authentication_rule",  # 사용자 인증 규칙
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),  # 인증 토큰 클래스
+    "TOKEN_TYPE_CLAIM": "token_type",  # 토큰 타입 클레임
+    "JTI_CLAIM": "jti",  # JWT ID 클레임
+}
+
+CORS_ALLOW_ALL_ORIGINS = True

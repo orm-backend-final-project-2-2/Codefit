@@ -1,3 +1,5 @@
 from django.contrib import admin
 
-# Register your models here.
+from exercises_info.models import ExercisesInfo
+
+admin.site.register(ExercisesInfo)
